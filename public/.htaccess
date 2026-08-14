@@ -1,0 +1,28 @@
+# Apache (Laragon y servidor). Todo pasa por index.php.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Evita que un enlace con barra final duplique contenido para el buscador.
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Los archivos que existen (css, js, imágenes) se sirven directo.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Las cabeceras de seguridad las pone el Kernel en PHP, para que dependan
+    # del entorno. Aquí solo se quita la que delata la versión del servidor.
+    Header always unset X-Powered-By
+</IfModule>
+
+# Nada de listados de directorio.
+Options -Indexes
+
+# Ningún archivo oculto es alcanzable, aunque alguien lo copie a public/.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

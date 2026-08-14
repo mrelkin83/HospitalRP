@@ -1,0 +1,55 @@
+{
+    "name": "hrpl/sitio-web",
+    "description": "Sitio web institucional E.S.E. Hospital Rosario Pumarejo de López",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-mbstring": "*",
+        "ext-intl": "*",
+        "ext-fileinfo": "*",
+        "ext-gd": "*",
+        "ext-sodium": "*",
+        "ext-json": "*",
+        "symfony/http-foundation": "^7.3",
+        "symfony/routing": "^7.3",
+        "symfony/dependency-injection": "^7.3",
+        "symfony/console": "^7.3",
+        "symfony/mailer": "^7.3",
+        "symfony/validator": "^7.3",
+        "symfony/translation": "^7.3",
+        "symfony/config": "^7.3",
+        "symfony/dotenv": "^7.3",
+        "doctrine/dbal": "^4.2",
+        "doctrine/migrations": "^3.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "symfony/var-dumper": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {}
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:feature": "phpunit --testsuite feature",
+        "migrate": "doctrine-migrations migrate --no-interaction",
+        "migrate:down": "doctrine-migrations migrate prev --no-interaction",
+        "migrate:status": "doctrine-migrations status"
+    }
+}

@@ -1,0 +1,23 @@
+# Normalizar finales de línea: LF en el repositorio, siempre.
+# El equipo trabaja en Windows y el servidor es Linux.
+* text=auto eol=lf
+
+*.php   text eol=lf diff=php
+*.sql   text eol=lf
+*.md    text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+
+*.png   binary
+*.jpg   binary
+*.webp  binary
+*.avif  binary
+*.pdf   binary
+*.woff2 binary
+*.ico   binary

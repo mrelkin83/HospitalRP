@@ -1,0 +1,40 @@
+# Dependencias
+/vendor/
+/node_modules/
+
+# Entorno — nunca credenciales en el repositorio (CLAUDE.md §3)
+.env
+.env.*
+!.env.example
+
+# Almacenamiento en tiempo de ejecución. La estructura sí se versiona (.gitkeep),
+# el contenido no: son datos del hospital, no código.
+/storage/uploads/*
+/storage/cache/*
+/storage/logs/*
+/storage/backups/*
+!/storage/*/.gitkeep
+
+# Compilado por Tailwind / Vite
+/public/build/
+/public/hot
+
+# Pruebas y herramientas
+/.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/test-results/
+/playwright-report/
+/.playwright/
+
+# Editores y sistema operativo
+/.idea/
+/.vscode/*
+!/.vscode/extensions.json
+/.fleet/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Laragon
+/.laragon/

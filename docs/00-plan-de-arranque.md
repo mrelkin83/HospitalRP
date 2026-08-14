@@ -143,13 +143,13 @@ añadiría ruido al historial. La discrepancia de la ruta del esquema (§2, punt
 Diez pasos. Cada uno termina en algo verificable y en un commit. Ninguno depende
 del manual de identidad salvo el paso 9, que se hace con tokens provisionales.
 
-| # | Paso | Verificable cuando… |
-|---|---|---|
-| 0 | `git init`, `.gitignore`, `.editorconfig`, mover `CLAUDE.md` a la raíz, crear `docs/BACKLOG.md`, mover el esquema a `database/esquema.sql` | El repositorio tiene historia y la estructura de `CLAUDE.md` §4 existe vacía |
-| 1 | `composer.json`: componentes Symfony permitidos + Doctrine DBAL y Migrations + PHPUnit. PSR-4 `App\` → `src/` | `composer install` corre limpio y el autoload resuelve |
-| 2 | Configuración por entorno (`.env` fuera del repositorio, `.env.example` dentro) | La app arranca en local sin credenciales en git |
-| 3 | Contenedor de dependencias y router de Symfony, `public/index.php` como único punto de entrada | Una ruta `/` responde «hola» con headers de seguridad |
-| 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error |
+| # | Paso | Verificable cuando… | Estado |
+|---|---|---|---|
+| 0 | `git init`, `.gitignore`, `.gitattributes`, `.editorconfig`, `docs/BACKLOG.md`, esquema a `database/esquema.sql` | El repositorio tiene historia y la estructura de `CLAUDE.md` §4 existe vacía | ✅ `e0bb8c9` |
+| 1 | `composer.json`: componentes Symfony permitidos + Doctrine DBAL y Migrations + PHPUnit. PSR-4 `App\` → `src/` | `composer install` corre limpio y el autoload resuelve | ✅ `352d5f7` |
+| 2 | Configuración por entorno (`.env` fuera del repositorio, `.env.example` dentro) | La app arranca en local sin credenciales en git | ✅ `2d7649a` |
+| 3 | Contenedor de dependencias y router de Symfony, `public/index.php` como único punto de entrada | Una ruta `/` responde con las cabeceras de seguridad | ✅ `4652c60` |
+| 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error | ⏳ siguiente |
 | 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte |
 | 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla |
 | 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` |

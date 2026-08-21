@@ -52,7 +52,12 @@ Si algo mejora el segundo criterio a costa del primero, gana el primero.
 | Caché | Redis, con fallback a tabla MySQL |
 | Tests | PHPUnit + Playwright |
 
-**Componentes Symfony permitidos:** `http-foundation`, `routing`, `dependency-injection`, `console`, `mailer`, `validator`, `translation`. Más `doctrine/dbal` y `doctrine/migrations`.
+**Componentes Symfony permitidos:** `http-foundation`, `routing`, `dependency-injection`, `console`, `mailer`, `validator`, `translation`, `html-sanitizer`. Más `doctrine/dbal` y `doctrine/migrations`.
+
+> **Decisión 2026-08-21 — `symfony/html-sanitizer`.** La lista blanca de HTML
+> de CKEditor (§6, Contenido) se aplica con este componente. Escribir un
+> sanitizador a mano es exactamente el tipo de rueda que este documento
+> prohíbe reinventar: un fallo ahí es XSS en el sitio de un hospital.
 
 No escribas a mano un router, un contenedor de dependencias ni un sistema de migraciones. Eso es reconstruir un framework peor.
 

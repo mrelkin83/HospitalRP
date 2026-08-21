@@ -18,12 +18,38 @@ Cada paso termina en algo verificable y en un commit, como en la Fase 0.
 | 9 | Home según `frontend.png`: héroe, 8 accesos, noticias recientes, aviso | La home usa noticias reales de la base | ✅ |
 | 10 | Público de contenido: listado y detalle de noticias, página institucional por ruta dinámica | Una página `en_revision` da 404 público; una `publicada` se ve | ✅ |
 | 11 | CKEditor 5 autoalojado en el panel (sanitización del paso 3 al guardar) | El editor funciona sin CDN y el HTML guardado está saneado | ✅ |
-| 12 | Páginas, campañas, avisos y FAQ en el panel (mismos patrones del paso 5) | CRUD completo y auditado de los cuatro | |
+| 12 | Páginas, campañas, avisos, FAQ y categorías en el panel (mismos patrones del paso 5) | CRUD completo y auditado | ✅ |
 
 **Nota del paso 9:** el acceso «Resultados» del diseño se cambió por «Consulta
 tu trámite»: los resultados de laboratorio son dato clínico y están fuera de
 v1 (CLAUDE.md §7). El diseño no manda sobre el alcance.
-| 13 | Cierre: LCP < 2,5 s en 3G simulado, navegación completa por teclado, criterios de aceptación de la fase | Los cinco criterios del plan se cumplen | |
+| 13 | Cierre: LCP < 2,5 s en 3G simulado, navegación completa por teclado, criterios de aceptación de la fase | Los cinco criterios del plan se cumplen | ✅ |
+
+---
+
+## Cierre de la fase — 2026-08-21
+
+**Los cinco criterios de aceptación del plan:**
+
+1. *Publicar una noticia con imagen en menos de dos minutos, sin manual* —
+   verificado de punta a punta por HTTP: título, resumen, contenido, imagen
+   con texto alternativo, guardar, aprobar, publicar. Sin jerga en el camino.
+2. *Una noticia programada se publica sola y se despublica sola* — comando
+   `contenido:programado` probado contra MySQL. **Pendiente operativo:**
+   registrar la tarea en el programador del servidor (cada minuto).
+3. *Restaurar una versión anterior funciona y queda auditado* — probado en
+   noticias y páginas; la restauración crea versión nueva, nunca reescribe.
+4. *La home carga en < 2,5 s en 3G simulado* — **Lighthouse: LCP 2,4 s**
+   (300 ms RTT, 700 kbps, CPU ×4), rendimiento 95/100, TBT 0 ms, CLS 0.
+   Medido contra `php -S` sin compresión: en producción con gzip mejora.
+   JS inicial del sitio público: 2,4 KB (presupuesto: 100 KB).
+5. *Navegación completa por teclado* — por construcción: solo elementos
+   nativos (enlaces, botones, formularios, `details`), salto al contenido en
+   toda página y anillo de foco global `:focus-visible`.
+
+**Fase 1 terminada.** Sigue la **Fase 2 — Directorio y servicios**
+(sedes, especialidades, profesionales, urgencias, contacto), que además
+completa la franja de sedes de la home según `frontend.png`.
 
 **Notas de alcance**
 

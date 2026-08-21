@@ -20,8 +20,10 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
+use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
@@ -38,6 +40,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\UrgenciasContactoController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -89,6 +92,36 @@ $listadoYDetalle('sedes', '/sedes', SedesPublicoController::class);
 $listadoYDetalle('especialidades', '/especialidades', EspecialidadesPublicoController::class);
 $listadoYDetalle('servicios', '/servicios', ServiciosPublicoController::class);
 $listadoYDetalle('directorio', '/directorio', DirectorioPublicoController::class);
+
+// --- Transparencia y datos abiertos (Fase 4) ---
+
+$rutas->add('transparencia', new Route(
+    path: '/transparencia',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'index']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.datos', new Route(
+    path: '/transparencia/datos-abiertos',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'datosAbiertos']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.datos.descargar', new Route(
+    path: '/transparencia/datos/{id}/descargar',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'descargarRecurso']],
+    requirements: ['id' => '\d+'],
+    methods: ['GET'],
+));
+
+// Las sub-URL con nombre llegan con las redirecciones de la Fase 7;
+// mientras tanto llevan al menú completo en lugar de dar 404.
+$rutas->add('transparencia.subseccion', new Route(
+    path: '/transparencia/{resto}',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'subseccion']],
+    requirements: ['resto' => '[a-z0-9\-/]+'],
+    methods: ['GET'],
+));
 
 // --- Buscador documental (Fase 3) ---
 
@@ -426,6 +459,41 @@ $rutas->add('admin.documentos.publicar', new Route('/admin/documentos/{id}/publi
 $rutas->add('admin.documentos.estado', new Route('/admin/documentos/{id}/estado', $permisoDoc('cambiarEstado', 'documentos.publicar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.documentos.version', new Route('/admin/documentos/{id}/version', $permisoDoc('nuevaVersion'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.documentos.eliminar', new Route('/admin/documentos/{id}/eliminar', $permisoDoc('eliminar'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: transparencia ---
+
+$permisoTransp = static fn (string $metodo): array => [
+    '_controlador' => [TransparenciaController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.editar',
+];
+
+$rutas->add('admin.transparencia', new Route('/admin/transparencia', [
+    '_controlador' => [TransparenciaController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.ver',
+], methods: ['GET']));
+$rutas->add('admin.transparencia.seccion', new Route('/admin/transparencia/secciones/{id}', $permisoTransp('actualizarSeccion'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.transparencia.item.crear', new Route('/admin/transparencia/secciones/{id}/items', $permisoTransp('crearItem'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.transparencia.item.eliminar', new Route('/admin/transparencia/items/{id}/eliminar', $permisoTransp('eliminarItem'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: datos abiertos ---
+
+$permisoDatos = static fn (string $metodo): array => [
+    '_controlador' => [DatasetsController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.editar',
+];
+
+$rutas->add('admin.datasets', new Route('/admin/datasets', [
+    '_controlador' => [DatasetsController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.ver',
+], methods: ['GET']));
+$rutas->add('admin.datasets.crear', new Route('/admin/datasets', $permisoDatos('guardar'), methods: ['POST']));
+$rutas->add('admin.datasets.guardar', new Route('/admin/datasets/{id}', $permisoDatos('guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.datasets.recursos.crear', new Route('/admin/datasets/{id}/recursos', $permisoDatos('agregarRecurso'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.datasets.recursos.eliminar', new Route('/admin/datasets/recursos/{id}/eliminar', $permisoDatos('eliminarRecurso'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: dependencias ---
 

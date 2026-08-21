@@ -17,6 +17,7 @@ use App\Core\Database\ConfigBaseDatos;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Directorio\Command\SembrarDirectorioCommand;
+use App\Modules\Transparencia\Command\SembrarTransparenciaCommand;
 use App\Modules\Sistema\Command\CrearAdminCommand;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use App\Modules\Sistema\Command\SembrarMenusCommand;
@@ -32,5 +33,6 @@ $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditor
 $aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarMenusCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarDirectorioCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarTransparenciaCommand($conexion, $auditoria));
 $aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria)));
 $aplicacion->run();

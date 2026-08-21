@@ -65,5 +65,11 @@ completa (TRD, vigencia, actos), versiones con historial, estados
 vigente/derogado/histórico con `reemplaza_a`, buscador con filtros (< 300 ms
 sobre mil documentos, medido) y ficha HTML legible en móvil con descarga
 contada. 128 pruebas.
-Sigue la **Fase 4 — Transparencia y datos abiertos** según
-`docs/plan-de-desarrollo.md`.
+**Fase 4 — Transparencia y datos abiertos: terminada** (2026-08-21). Menú de
+transparencia con la estructura del Anexo 2 (Res. 1519) sembrada y editable,
+indicador de secciones obligatorias vacías en el panel, enlace a SECOP en
+contratación y datasets descargables en formatos abiertos con descargas
+contadas. 131 pruebas.
+Sigue la **Fase 5 — Motor de trámites y PQRSDF** según
+`docs/plan-de-desarrollo.md` (⚠️ parcialmente bloqueada por las preguntas
+pendientes con el hospital: horarios de bandeja y términos legales).

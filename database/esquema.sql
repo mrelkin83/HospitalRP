@@ -585,7 +585,9 @@ CREATE TABLE transparencia_items (
   PRIMARY KEY (id),
   KEY idx_transpitem_seccion (seccion_id, orden),
   CONSTRAINT fk_transpitem_seccion FOREIGN KEY (seccion_id) REFERENCES transparencia_secciones (id) ON DELETE CASCADE,
-  CONSTRAINT fk_transpitem_documento FOREIGN KEY (documento_id) REFERENCES documentos (id) ON DELETE SET NULL,
+  -- CASCADE y no SET NULL: MySQL 8 (error 3823) no admite el CHECK sobre una
+  -- columna con SET NULL. Corregido en la Fase 4.
+  CONSTRAINT fk_transpitem_documento FOREIGN KEY (documento_id) REFERENCES documentos (id) ON DELETE CASCADE,
   CONSTRAINT chk_transpitem_destino CHECK (documento_id IS NOT NULL OR url_externa IS NOT NULL)
 ) ENGINE=InnoDB;
 

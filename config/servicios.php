@@ -32,8 +32,10 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
+use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
@@ -42,6 +44,8 @@ use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
+use App\Modules\Transparencia\Repository\DatasetRepository;
+use App\Modules\Transparencia\Repository\TransparenciaRepository;
 use App\Http\Web\DirectorioPublicoController;
 use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
@@ -50,6 +54,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
 use App\Modules\Contenido\Repository\CampanaRepository;
@@ -141,6 +146,13 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(DependenciaRepository::class, DependenciaRepository::class)
+        ->setAutowired(true);
+
+    // --- Módulo Transparencia ---
+    $contenedor->register(TransparenciaRepository::class, TransparenciaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(DatasetRepository::class, DatasetRepository::class)
         ->setAutowired(true);
 
     // --- Módulo Documentos ---
@@ -236,6 +248,10 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(TransparenciaPublicoController::class, TransparenciaPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(ArchivoController::class, ArchivoController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -302,6 +318,14 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(DependenciasController::class, DependenciasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(TransparenciaController::class, TransparenciaController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(DatasetsController::class, DatasetsController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

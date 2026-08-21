@@ -34,6 +34,15 @@ final readonly class AlmacenArchivos
         'image/webp' => ['webp'],
         'image/avif' => ['avif'],
         'application/pdf' => ['pdf'],
+        // Formatos abiertos de datos (Fase 4). finfo reporta CSV y a veces
+        // JSON como text/plain: la extensión declarada desambigua, y ninguno
+        // de estos formatos es ejecutable.
+        'text/csv' => ['csv'],
+        'application/json' => ['json'],
+        'text/plain' => ['csv', 'json'],
+        'text/xml' => ['xml'],
+        'application/xml' => ['xml'],
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => ['xlsx'],
     ];
 
     public function __construct(

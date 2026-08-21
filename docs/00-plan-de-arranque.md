@@ -155,8 +155,8 @@ del manual de identidad salvo el paso 9, que se hace con tokens provisionales.
 | 2 | Configuración por entorno (`.env` fuera del repositorio, `.env.example` dentro) | La app arranca en local sin credenciales en git | ✅ `2d7649a` |
 | 3 | Contenedor de dependencias y router de Symfony, `public/index.php` como único punto de entrada | Una ruta `/` responde con las cabeceras de seguridad | ✅ `4652c60` |
 | 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error | ✅ |
-| 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte | ⏳ siguiente |
-| 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla |
+| 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte | ✅ |
+| 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla | ⏳ siguiente |
 | 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` |
 | 8 | Roles y permisos granulares + almacenamiento de archivos (validación por contenido real, fuera del *document root*, entrega por controlador) | Un usuario sin permiso recibe 403; un `.php` renombrado a `.jpg` se rechaza |
 | 9 | Sistema de diseño: tokens de color y tipografía, componentes base, modo oscuro y modos de accesibilidad + pipeline de Tailwind | Página de muestra de componentes con contraste verificado ≥ 4,5:1 |

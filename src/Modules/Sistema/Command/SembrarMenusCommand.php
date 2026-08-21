@@ -39,19 +39,19 @@ final class SembrarMenusCommand extends Command
         ]],
         'superior' => ['Barra superior', 'superior', 1, [
             ['Transparencia', '/transparencia', 1],
-            ['Atención y Servicios a la Ciudadanía', '/atencion', 1],
+            ['Atención y Servicios a la Ciudadanía', '/atencion-ciudadania', 1],
             ['Participa', '/participa', 1],
         ]],
         'pie-enlaces' => ['Pie: enlaces de interés', 'pie_1', 0, [
             ['Mapa del sitio', '/mapa-del-sitio', 0],
-            ['Política de privacidad', '/politica-de-privacidad', 1],
-            ['Política de tratamiento de datos', '/tratamiento-de-datos', 1],
-            ['PQRSDF', '/pqrsdf', 1],
+            ['Política de privacidad', '/politica-privacidad-web', 1],
+            ['Política de tratamiento de datos', '/politica-tratamiento-datos', 1],
+            ['PQRSDF', '/atencion-ciudadania/pqrsdf', 1],
         ]],
         'pie-normatividad' => ['Pie: normatividad', 'pie_2', 0, [
-            ['Sistema Único de Habilitación', '/transparencia', 0],
-            ['Informes y reportes', '/transparencia', 0],
-            ['Datos abiertos', '/datos-abiertos', 0],
+            ['Sistema Único de Habilitación', '/transparencia/normatividad', 0],
+            ['Informes y reportes', '/transparencia/planeacion-presupuesto-informes', 0],
+            ['Datos abiertos', '/transparencia/datos-abiertos', 0],
             ['Notificaciones judiciales', '/notificaciones-judiciales', 1],
         ]],
     ];

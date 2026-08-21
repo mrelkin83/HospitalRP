@@ -125,6 +125,32 @@ final readonly class AlmacenArchivos
         return $fila === false ? null : Archivo::desdeFila($fila);
     }
 
+    /**
+     * @param list<int> $ids
+     * @return array<int, Archivo> indexado por id
+     */
+    public function porIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $filas = $this->conexion->fetchAllAssociative(
+            'SELECT * FROM archivos WHERE id IN (?)',
+            [array_values(array_unique($ids))],
+            [\Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
+
+        $resultado = [];
+
+        foreach ($filas as $fila) {
+            $archivo = Archivo::desdeFila($fila);
+            $resultado[$archivo->id] = $archivo;
+        }
+
+        return $resultado;
+    }
+
     public function rutaAbsoluta(Archivo $archivo): string
     {
         return $this->directorioBase . '/' . $archivo->ruta;

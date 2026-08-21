@@ -142,10 +142,16 @@ final class KernelTest extends TestCase
     {
         $raiz = dirname(__DIR__, 3);
 
+        // Las páginas públicas leen menús, configuración y avisos de la base:
+        // las credenciales de la base de pruebas vienen de phpunit.xml.
         $env = new Env([
             'APP_ENTORNO' => $entorno,
             'APP_DEBUG' => 'true',
             'APP_URL' => 'http://localhost',
+            'DB_HOST' => (string) ($_ENV['DB_HOST'] ?? '127.0.0.1'),
+            'DB_PUERTO' => (string) ($_ENV['DB_PUERTO'] ?? '3306'),
+            'DB_NOMBRE' => (string) ($_ENV['DB_NOMBRE'] ?? 'hrpl_pruebas'),
+            'DB_USUARIO' => (string) ($_ENV['DB_USUARIO'] ?? 'root'),
         ]);
 
         /** @var callable(Env): ContainerBuilder $fabricaContenedor */

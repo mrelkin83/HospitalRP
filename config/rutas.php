@@ -20,6 +20,8 @@ use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MuestraDisenoController;
+use App\Http\Web\NoticiasPublicoController;
+use App\Http\Web\PaginasController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -28,6 +30,25 @@ $rutas = new RouteCollection();
 $rutas->add('inicio', new Route(
     path: '/',
     defaults: ['_controlador' => [InicioController::class, 'index']],
+    methods: ['GET'],
+));
+
+$rutas->add('buscar', new Route(
+    path: '/buscar',
+    defaults: ['_controlador' => [InicioController::class, 'buscar']],
+    methods: ['GET'],
+));
+
+$rutas->add('noticias.listado', new Route(
+    path: '/noticias',
+    defaults: ['_controlador' => [NoticiasPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+$rutas->add('noticias.detalle', new Route(
+    path: '/noticias/{slug}',
+    defaults: ['_controlador' => [NoticiasPublicoController::class, 'detalle']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
     methods: ['GET'],
 ));
 
@@ -230,6 +251,16 @@ $rutas->add('admin.menus.item.eliminar', new Route(
     ],
     requirements: ['id' => '\d+'],
     methods: ['POST'],
+));
+
+// --- Páginas institucionales por ruta dinámica ---
+// SIEMPRE la última: atrapa lo que ninguna ruta fija reclamó. Si la ruta no
+// corresponde a una página publicada, el controlador responde 404.
+$rutas->add('paginas.mostrar', new Route(
+    path: '/{ruta}',
+    defaults: ['_controlador' => [PaginasController::class, 'mostrar']],
+    requirements: ['ruta' => '[a-z0-9\-][a-z0-9\-/]*'],
+    methods: ['GET'],
 ));
 
 return $rutas;

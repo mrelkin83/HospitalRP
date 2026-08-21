@@ -32,8 +32,9 @@
 
         <nav aria-label="Secciones del panel" class="mx-auto max-w-6xl px-4 pb-2">
             <ul class="flex gap-1 overflow-x-auto text-sm font-semibold">
-                <li><a href="/admin" aria-current="page" class="inline-block rounded-md px-3 py-2 no-underline bg-primario-50 text-primario-700 dark:bg-primario-800 dark:text-primario-100">Inicio</a></li>
-                <?php /* Los módulos (Contenido, Trámites, Documentos…) se añaden fase por fase. */ ?>
+                <li><a href="/admin" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Inicio</a></li>
+                <li><a href="/admin/noticias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Noticias</a></li>
+                <?php /* Los demás módulos (páginas, trámites, documentos…) se añaden fase por fase. */ ?>
             </ul>
         </nav>
     </header>

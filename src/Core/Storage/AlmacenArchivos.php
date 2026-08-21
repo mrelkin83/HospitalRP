@@ -42,7 +42,7 @@ final readonly class AlmacenArchivos
     ) {
     }
 
-    public function guardar(UploadedFile $subido, bool $publico, ?int $creadoPor): Archivo
+    public function guardar(UploadedFile $subido, bool $publico, ?int $creadoPor, ?string $textoAlt = null): Archivo
     {
         $tamano = $subido->getSize();
 
@@ -92,6 +92,7 @@ final readonly class AlmacenArchivos
             'hash_sha256' => $hash,
             'ancho' => $ancho,
             'alto' => $alto,
+            'texto_alt' => $textoAlt,
             'publico' => $publico ? 1 : 0,
             'creado_por' => $creadoPor,
         ]);

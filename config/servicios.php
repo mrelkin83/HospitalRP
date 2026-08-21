@@ -25,7 +25,13 @@ use App\Core\Database\ConfigBaseDatos;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
 use App\Http\Admin\LoginController;
+use App\Http\Admin\NoticiasController;
 use App\Http\Admin\PanelController;
+use App\Modules\Contenido\Repository\CategoriaRepository;
+use App\Modules\Contenido\Repository\NoticiaRepository;
+use App\Modules\Contenido\Service\NoticiaService;
+use App\Modules\Contenido\Service\SanitizadorHtml;
+use App\Modules\Contenido\Service\VersionadoService;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MuestraDisenoController;
@@ -94,6 +100,21 @@ return static function (Env $env): ContainerBuilder {
             dirname(__DIR__) . '/storage/uploads',
         ]);
 
+    // --- Módulo Contenido ---
+    $contenedor->register(SanitizadorHtml::class, SanitizadorHtml::class);
+
+    $contenedor->register(VersionadoService::class, VersionadoService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(NoticiaRepository::class, NoticiaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CategoriaRepository::class, CategoriaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(NoticiaService::class, NoticiaService::class)
+        ->setAutowired(true);
+
     // --- Controladores del sitio público ---
     $contenedor->register(InicioController::class, InicioController::class)
         ->setAutowired(true)
@@ -113,6 +134,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(PanelController::class, PanelController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(NoticiasController::class, NoticiasController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

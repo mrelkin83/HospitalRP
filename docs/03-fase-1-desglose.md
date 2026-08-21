@@ -7,11 +7,11 @@ Cada paso termina en algo verificable y en un commit, como en la Fase 0.
 
 | # | Paso | Verificable cuando… | Estado |
 |---|---|---|---|
-| 1 | Migraciones del grupo Contenido: `categorias`, `paginas`, `noticias`, `campanas`, `avisos`, `faq`, `contenido_versiones`, `menus`, `menu_items` | Suben y bajan sin error | ⏳ |
-| 2 | Configuración dinámica (deuda de Fase 0): lectura tipada de la tabla `configuracion` con caché por petición + semillas (teléfonos, dirección, correo, redes) | El pie de página lee un teléfono desde la base | |
-| 3 | Núcleo de contenido: `EstadoAprobacion`, sanitizador HTML por lista blanca, versionado con snapshot JSON y restauración auditada, reglas de visibilidad pública (`publicado` + ventana `publicar_en`/`despublicar_en`) | Restaurar una versión funciona y queda en `auditoria`; un `<script>` en el contenido no sobrevive | |
-| 4 | Tarea programada `contenido:programado` en `bin/consola`: publica y despublica según fechas | Una noticia con `publicar_en` en el pasado pasa a visible al correr el comando | |
-| 5 | Módulo Noticias en el panel: listar, crear, editar, enviar a revisión, aprobar, publicar, programar; imagen destacada con texto alternativo obligatorio | Un funcionario publica una noticia con imagen sin tocar código | |
+| 1 | Migraciones del grupo Contenido: `categorias`, `paginas`, `noticias`, `campanas`, `avisos`, `faq`, `contenido_versiones`, `menus`, `menu_items` | Suben y bajan sin error | ✅ |
+| 2 | Configuración dinámica (deuda de Fase 0): lectura tipada de la tabla `configuracion` con caché por petición + semillas (teléfonos, dirección, correo, redes) | El pie de página lee un teléfono desde la base | ✅ |
+| 3 | Núcleo de contenido: `EstadoAprobacion`, sanitizador HTML por lista blanca, versionado con snapshot JSON y restauración auditada, reglas de visibilidad pública (`publicado` + ventana `publicar_en`/`despublicar_en`) | Restaurar una versión funciona y queda en `auditoria`; un `<script>` en el contenido no sobrevive | ✅ |
+| 4 | Tarea programada `contenido:programado` en `bin/consola`: publica y despublica según fechas | Una noticia con `publicar_en` en el pasado pasa a visible al correr el comando | ✅ |
+| 5 | Módulo Noticias en el panel: listar, crear, editar, enviar a revisión, aprobar, publicar, programar; imagen destacada con texto alternativo obligatorio | Un funcionario publica una noticia con imagen sin tocar código | ✅ |
 | 6 | Biblioteca de medios: subir, listar y elegir imágenes (texto alternativo obligatorio) | Una imagen sin `texto_alt` no se puede guardar | |
 | 7 | Menús editables + semillas de los menús de la Res. 1519 | Cambiar una etiqueta del menú en el panel cambia el sitio público | |
 | 8 | Layout público: barra de accesibilidad, encabezado con navegación, pie según Res. 1519 (con configuración dinámica), aviso activo y modo emergencia | Un aviso `critico` activo transforma la home | |

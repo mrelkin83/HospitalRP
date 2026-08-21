@@ -2,7 +2,7 @@
 /**
  * /contacto — Espera: $config (ConfigDinamica), $sedes (list<Sede>).
  */
-$lineaNacional = $config->texto('contacto.linea_nacional');
+$callCenter = $config->texto('contacto.call_center');
 $pbx = $config->texto('contacto.pbx');
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
@@ -10,8 +10,9 @@ $pbx = $config->texto('contacto.pbx');
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="tarjeta">
-            <h2 class="text-base">Línea nacional</h2>
-            <p class="mt-2"><a class="font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $lineaNacional)) ?>"><?= $e($lineaNacional) ?></a></p>
+            <h2 class="text-base">Citas (call center)</h2>
+            <p class="mt-2"><a class="font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $callCenter)) ?>"><?= $e($callCenter) ?></a></p>
+            <p class="mt-1 text-sm texto-suave break-words"><a href="mailto:<?= $e($config->texto('contacto.correo_citas')) ?>"><?= $e($config->texto('contacto.correo_citas')) ?></a></p>
         </div>
         <div class="tarjeta">
             <h2 class="text-base">PBX</h2>
@@ -30,11 +31,16 @@ $pbx = $config->texto('contacto.pbx');
 
     <p class="mt-6 texto-suave">
         Horario de atención administrativa: <?= $e($config->texto('contacto.horario')) ?> ·
+        Ventanilla única: <a href="mailto:<?= $e($config->texto('contacto.correo_ventanilla')) ?>"><?= $e($config->texto('contacto.correo_ventanilla')) ?></a> ·
         Notificaciones judiciales:
         <a href="mailto:<?= $e($config->texto('contacto.correo_notificaciones')) ?>"><?= $e($config->texto('contacto.correo_notificaciones')) ?></a>
     </p>
+    <p class="mt-2 texto-suave">
+        Línea ética anticorrupción: <?= $e($config->texto('contacto.linea_etica_telefono')) ?> ·
+        <a href="mailto:<?= $e($config->texto('contacto.linea_etica_correo')) ?>"><?= $e($config->texto('contacto.linea_etica_correo')) ?></a>
+    </p>
 
-    <h2 class="mt-10 text-lg">Nuestras sedes</h2>
+    <h2 class="mt-10 text-lg"><?= count($sedes) === 1 ? 'Nuestra sede' : 'Nuestras sedes' ?></h2>
     <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <?php foreach ($sedes as $sede) { ?>
             <li><?= $vistas->render('publico/parciales/tarjeta-sede', ['sede' => $sede]) ?></li>

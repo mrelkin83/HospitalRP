@@ -92,7 +92,7 @@ final class AlertasVencimientoCommand extends Command
                     $destinatario,
                     sprintf('[Trámites] %d solicitud(es) vencidas o por vencer', count($lineas)),
                     "Estas solicitudes requieren atención:\n\n- " . implode("\n- ", $lineas)
-                    . "\n\nGestión: https://hospitalrosariopumarejo.gov.co/admin/tramites",
+                    . "\n\nGestión: https://hrplopez.gov.co/admin/tramites",
                 );
                 $enviados++;
             } catch (Throwable $e) {

@@ -106,7 +106,7 @@ final readonly class GestionTramiteService
                     sprintf(
                         "Hola %s:\n\nTu solicitud con radicado %s cambió de estado: ahora está «%s».\n%s%s\n"
                         . "Consulta el detalle con tu radicado y tu documento en:\n"
-                        . "https://hospitalrosariopumarejo.gov.co/atencion-ciudadania/pqrsdf/consultar\n\n"
+                        . "https://hrplopez.gov.co/atencion-ciudadania/pqrsdf/consultar\n\n"
                         . "E.S.E. Hospital Rosario Pumarejo de López",
                         (string) ($tramite['nombre'] ?? ''),
                         (string) $tramite['radicado'],

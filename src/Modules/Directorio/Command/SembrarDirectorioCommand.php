@@ -24,11 +24,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class SembrarDirectorioCommand extends Command
 {
-    /** @var array<string, array{string, string, string, int}> nombre => [direccion, telefono, horario, urgencias] */
+    /**
+     * El hospital tiene UNA sede (confirmado contra hrplopez.gov.co,
+     * 2026-08-21). Datos reales del sitio actual.
+     *
+     * @var array<string, array{string, string, string, int}> nombre => [direccion, telefono, horario, urgencias]
+     */
     private const array SEDES = [
-        'Sede Principal' => ['Cra. 24 #16-85', '(607) 123 4567', 'Lunes a viernes: 7:00 a. m. – 5:00 p. m.', 1],
-        'Sede La Nevada' => ['Cl. 37 #4-25', '(607) 234 5678', 'Lunes a viernes: 7:00 a. m. – 4:00 p. m.', 1],
-        'Sede San Martín' => ['Cl. 19 #12-45', '(607) 345 6789', 'Lunes a viernes: 7:00 a. m. – 4:00 p. m.', 1],
+        'Sede Principal' => [
+            'Calle 16 No. 17-141, Barrio Hernando Santana (Av. La Popa)',
+            '(605) 5712339',
+            'Administrativo: lunes a viernes, 7:30 a. m. – 12:00 m. y 2:00 – 6:00 p. m.',
+            1,
+        ],
     ];
 
     private const array ESPECIALIDADES = [

@@ -40,38 +40,54 @@ final class SembrarConfiguracionCommand extends Command
             '892.300.445-1',
             'texto', 'entidad', 'NIT', null,
         ],
-        'contacto.linea_nacional' => [
-            '01 8000 123 456',
-            'texto', 'contacto', 'Línea única nacional', 'Verificar el número real antes de salir a producción',
-        ],
         'contacto.pbx' => [
-            '(607) 123 4567',
-            'texto', 'contacto', 'PBX', 'Verificar el número real antes de salir a producción',
+            '(605) 5712339',
+            'texto', 'contacto', 'PBX', null,
         ],
         'contacto.emergencias' => [
-            '(607) 123 4567',
-            'texto', 'contacto', 'Teléfono de emergencias', 'Verificar el número real antes de salir a producción',
+            '(605) 5712339',
+            'texto', 'contacto', 'Teléfono de emergencias', 'Verificar extensión directa de urgencias',
+        ],
+        'contacto.call_center' => [
+            '(+57) 304 3251875',
+            'texto', 'contacto', 'Call center (citas)', 'También 311 4232493 y 311 4131075',
         ],
         'contacto.correo' => [
-            'contacto@hospitalrosariopumarejo.gov.co',
+            'contacto@hrplopez.gov.co',
             'texto', 'contacto', 'Correo de atención al ciudadano', null,
         ],
+        'contacto.correo_citas' => [
+            'citasmedicas@hrplopez.gov.co',
+            'texto', 'contacto', 'Correo de citas médicas', null,
+        ],
+        'contacto.correo_ventanilla' => [
+            'ventanillaunica@hrplopez.gov.co',
+            'texto', 'contacto', 'Ventanilla única (Ext. 3502)', null,
+        ],
         'contacto.correo_notificaciones' => [
-            'notificacionesjudiciales@hospitalrosariopumarejo.gov.co',
+            'notificacionesjudiciales@hrplopez.gov.co',
             'texto', 'contacto', 'Correo de notificaciones judiciales', 'Obligatorio según la Res. 1519',
         ],
+        'contacto.linea_etica_correo' => [
+            'oficialcumplimiento@hrplopez.gov.co',
+            'texto', 'contacto', 'Línea ética anticorrupción (correo)', null,
+        ],
+        'contacto.linea_etica_telefono' => [
+            '(+57) 318 3546240',
+            'texto', 'contacto', 'Línea ética anticorrupción (teléfono)', null,
+        ],
         'contacto.direccion' => [
-            'Cra. 24 #16-85, Valledupar, Cesar',
-            'texto', 'contacto', 'Dirección de la sede principal', null,
+            'Calle 16 No. 17-141, Barrio Hernando Santana (Av. La Popa), Valledupar, Cesar',
+            'texto', 'contacto', 'Dirección de la sede', null,
         ],
         'contacto.horario' => [
-            'Lunes a viernes, 7:00 a. m. a 5:00 p. m.',
+            'Lunes a viernes, 7:30 a. m. a 12:00 m. y 2:00 a 6:00 p. m.',
             'texto', 'contacto', 'Horario de atención administrativa', null,
         ],
-        'redes.facebook' => ['', 'texto', 'redes', 'Facebook (URL)', null],
-        'redes.instagram' => ['', 'texto', 'redes', 'Instagram (URL)', null],
-        'redes.youtube' => ['', 'texto', 'redes', 'YouTube (URL)', null],
-        'redes.x' => ['', 'texto', 'redes', 'X / Twitter (URL)', null],
+        'redes.facebook' => ['https://www.facebook.com/Hospital-Rosario-Pumarejo-De-Lopez', 'texto', 'redes', 'Facebook (URL)', 'Verificar URL exacta'],
+        'redes.instagram' => ['https://www.instagram.com/hospitalrosariovalledupar', 'texto', 'redes', 'Instagram (URL)', null],
+        'redes.youtube' => ['https://www.youtube.com/channel/UCdbJFQt1lBHhGjOpSC62SEQ', 'texto', 'redes', 'YouTube (URL)', null],
+        'redes.x' => ['https://x.com/ESEHospitalRos1', 'texto', 'redes', 'X / Twitter (URL)', null],
         'redes.linkedin' => ['', 'texto', 'redes', 'LinkedIn (URL)', null],
     ];
 

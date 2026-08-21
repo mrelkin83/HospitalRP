@@ -50,11 +50,11 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <?php } ?>
             </nav>
             <p class="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-                <span>Línea nacional:
-                    <a class="text-white font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.linea_nacional'))) ?>"><?= $e($config->texto('contacto.linea_nacional')) ?></a>
+                <span>Citas:
+                    <a class="text-white font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.call_center'))) ?>"><?= $e($config->texto('contacto.call_center')) ?></a>
                 </span>
-                <span>Emergencias:
-                    <a class="text-white font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.emergencias'))) ?>"><?= $e($config->texto('contacto.emergencias')) ?></a>
+                <span>PBX:
+                    <a class="text-white font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.pbx'))) ?>"><?= $e($config->texto('contacto.pbx')) ?></a>
                 </span>
             </p>
         </div>
@@ -146,8 +146,12 @@ $enlaceNav = static fn (array $item): string => sprintf(
             <div>
                 <h2 class="text-white text-base font-bold">Atención al ciudadano</h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm text-primario-100">
-                    <li>Línea nacional: <?= $e($config->texto('contacto.linea_nacional')) ?></li>
                     <li>PBX: <?= $e($config->texto('contacto.pbx')) ?></li>
+                    <li>Citas (call center): <?= $e($config->texto('contacto.call_center')) ?></li>
+                    <li class="break-words">Línea ética anticorrupción:<br>
+                        <?= $e($config->texto('contacto.linea_etica_telefono')) ?> ·
+                        <a class="text-primario-100 no-underline hover:underline" href="mailto:<?= $e($config->texto('contacto.linea_etica_correo')) ?>"><?= $e($config->texto('contacto.linea_etica_correo')) ?></a>
+                    </li>
                     <li><a class="text-primario-100 no-underline hover:underline break-words" href="mailto:<?= $e($config->texto('contacto.correo')) ?>"><?= $e($config->texto('contacto.correo')) ?></a></li>
                     <li class="break-words">Notificaciones judiciales:<br>
                         <a class="text-primario-100 no-underline hover:underline" href="mailto:<?= $e($config->texto('contacto.correo_notificaciones')) ?>"><?= $e($config->texto('contacto.correo_notificaciones')) ?></a>

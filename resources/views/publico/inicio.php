@@ -127,8 +127,10 @@ $accesos = [
 <?php if ($sedes !== []) { ?>
     <section class="mx-auto max-w-6xl px-4 py-6 pb-12" aria-labelledby="sedes-titulo">
         <div class="flex items-baseline gap-4">
-            <h2 id="sedes-titulo">Nuestras sedes</h2>
-            <a class="ms-auto whitespace-nowrap" href="/sedes">Ver todas →</a>
+            <h2 id="sedes-titulo"><?= count($sedes) === 1 ? 'Nuestra sede' : 'Nuestras sedes' ?></h2>
+            <?php if (count($sedes) > 1) { ?>
+                <a class="ms-auto whitespace-nowrap" href="/sedes">Ver todas →</a>
+            <?php } ?>
         </div>
         <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <?php foreach ($sedes as $sede) { ?>

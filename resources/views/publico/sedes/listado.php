@@ -4,7 +4,7 @@
  */
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
-    <h1>Nuestras sedes</h1>
+    <h1><?= count($sedes) === 1 ? 'Nuestra sede' : 'Nuestras sedes' ?></h1>
     <p class="mt-3 texto-suave max-w-prose">Direcciones, teléfonos y horarios de atención.</p>
 
     <?php if ($sedes === []) { ?>

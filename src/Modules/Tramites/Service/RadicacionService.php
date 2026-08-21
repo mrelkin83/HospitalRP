@@ -180,7 +180,7 @@ final readonly class RadicacionService
                     "Hola %s:\n\nTu solicitud «%s» quedó radicada con el número %s.\n\n"
                     . "Fecha límite de respuesta: %s.\n\n"
                     . "Puedes consultar el estado en cualquier momento con tu radicado y tu número de documento en:\n"
-                    . "https://hospitalrosariopumarejo.gov.co/atencion-ciudadania/pqrsdf/consultar\n\n"
+                    . "https://hrplopez.gov.co/atencion-ciudadania/pqrsdf/consultar\n\n"
                     . "E.S.E. Hospital Rosario Pumarejo de López",
                     $solicitud->nombre ?? '',
                     $solicitud->asunto,

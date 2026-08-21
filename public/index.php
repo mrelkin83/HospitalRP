@@ -12,6 +12,16 @@ declare(strict_types=1);
 use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\Env;
 use App\Http\Kernel;
+
+// Solo para `php -S` en desarrollo: los archivos estáticos existentes los
+// sirve el propio servidor embebido. Apache/Nginx nunca entran aquí por ellos.
+if (PHP_SAPI === 'cli-server') {
+    $rutaPedida = __DIR__ . parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+
+    if (is_file($rutaPedida)) {
+        return false;
+    }
+}
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouteCollection;

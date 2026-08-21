@@ -26,6 +26,7 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
+use App\Http\Web\MuestraDisenoController;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -90,6 +91,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(ArchivoController::class, ArchivoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(MuestraDisenoController::class, MuestraDisenoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

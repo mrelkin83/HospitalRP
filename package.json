@@ -1,0 +1,13 @@
+{
+  "name": "hrpl-sitio-web",
+  "private": true,
+  "description": "Frontend del sitio web institucional E.S.E. Hospital Rosario Pumarejo de López",
+  "scripts": {
+    "css": "tailwindcss -i resources/css/app.css -o public/build/app.css --minify",
+    "css:watch": "tailwindcss -i resources/css/app.css -o public/build/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

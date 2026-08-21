@@ -1,0 +1,371 @@
+/* =====================================================================
+   Sistema de diseño — E.S.E. Hospital Rosario Pumarejo de López
+   Fase 0, paso 9. Tailwind CSS v4: la configuración vive aquí, no en JS.
+
+   ÚNICO archivo de tokens (decisión B del plan de arranque): la paleta se
+   derivó de frontend.png (decisión F) y es provisional hasta que llegue el
+   manual de identidad. Sustituirla = editar este archivo, no las pantallas.
+
+   Todo par texto/fondo usado por los tokens semánticos está verificado
+   ≥ 4.5:1 (WCAG 2.1 AA) por tests/Unit/Diseno/ContrasteTest.php.
+   El verde de marca (#2F9A72, 3.5:1 sobre blanco) es SOLO decorativo:
+   nunca se usa para texto sobre claro.
+   ===================================================================== */
+
+@import "tailwindcss";
+
+@source "../views";
+@source "../../src/Http";
+
+/* El modo oscuro lo activa el visitante (barra de accesibilidad), no solo
+   el sistema operativo. `data-tema` manda; sin él, decide el sistema. */
+@custom-variant dark (&:where([data-tema="oscuro"], [data-tema="oscuro"] *));
+
+@theme {
+    /* --- Tipografía ---
+       Pila del sistema, provisional hasta el manual de identidad: carga en
+       0 ms y no filtra visitas a un CDN de fuentes (CLAUDE.md §6). */
+    --font-sans: 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* --- Marca (de frontend.png) --- */
+    --color-primario-50: #EAF0FE;
+    --color-primario-100: #D4E0FD;
+    --color-primario-200: #A9C1FB;
+    --color-primario-300: #7C9CFF;
+    --color-primario-400: #4A6BF5;
+    --color-primario-500: #0035ED;
+    --color-primario-600: #0030C9;
+    --color-primario-700: #002AA8;
+    --color-primario-800: #0A1F6E;
+    --color-primario-900: #041646;
+
+    --color-tinta: #041646;
+
+    /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
+    --color-marca-verde: #2F9A72;
+
+    /* --- Estados --- */
+    --color-exito-600: #166B4C;
+    --color-exito-100: #E7F5EE;
+    --color-exito-900: #14532D;
+    --color-aviso-600: #92400E;
+    --color-aviso-100: #FDF3E3;
+    --color-aviso-900: #6B3308;
+    --color-error-600: #B3251E;
+    --color-error-100: #FDEBEA;
+    --color-error-900: #7F1D18;
+
+    /* --- Neutros --- */
+    --color-gris-50: #F5F7FB;
+    --color-gris-100: #E9EDF4;
+    --color-gris-200: #D7DDE8;
+    --color-gris-400: #9AA4B5;
+    --color-gris-600: #4B5563;
+    --color-gris-700: #374151;
+    --color-gris-800: #1F2937;
+
+    /* --- Geometría --- */
+    --radius-tarjeta: 0.75rem;
+    --radius-control: 0.5rem;
+}
+
+/* =====================================================================
+   Tokens semánticos: lo que usan las plantillas. Cambian con el tema,
+   las utilidades de Tailwind no.
+   ===================================================================== */
+:root {
+    --fondo: #FFFFFF;
+    --superficie: var(--color-gris-50);
+    --borde: var(--color-gris-200);
+    --texto: var(--color-gris-800);
+    --texto-suave: var(--color-gris-600);
+    --titular: var(--color-tinta);
+    --enlace: var(--color-primario-600);
+    --accion: var(--color-primario-500);
+    --accion-intensa: var(--color-primario-600);
+    --texto-sobre-accion: #FFFFFF;
+    --anillo: var(--color-primario-500);
+}
+
+[data-tema="oscuro"] {
+    --fondo: #0B1220;
+    --superficie: #131C2E;
+    --borde: #2A3650;
+    --texto: #E7ECF5;
+    --texto-suave: #A9B4C6;
+    --titular: #E7ECF5;
+    --enlace: #8FA8FF;
+    --accion: #2547E8;
+    --accion-intensa: #4A6BF5;
+    --texto-sobre-accion: #FFFFFF;
+    --anillo: #8FA8FF;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-tema]) {
+        --fondo: #0B1220;
+        --superficie: #131C2E;
+        --borde: #2A3650;
+        --texto: #E7ECF5;
+        --texto-suave: #A9B4C6;
+        --titular: #E7ECF5;
+        --enlace: #8FA8FF;
+        --accion: #2547E8;
+        --accion-intensa: #4A6BF5;
+        --texto-sobre-accion: #FFFFFF;
+        --anillo: #8FA8FF;
+    }
+}
+
+/* --- Modo de alto contraste (barra de accesibilidad, Res. 1519) --- */
+[data-contraste="alto"] {
+    --texto: #000000;
+    --texto-suave: #1F2937;
+    --titular: #000000;
+    --borde: #374151;
+    --enlace: #002AA8;
+}
+
+[data-tema="oscuro"][data-contraste="alto"] {
+    --texto: #FFFFFF;
+    --texto-suave: #E7ECF5;
+    --titular: #FFFFFF;
+    --borde: #9AA4B5;
+    --enlace: #A9C1FB;
+}
+
+[data-contraste="alto"] a {
+    text-decoration: underline;
+}
+
+/* --- Tamaño de letra (botones A− / A / A+) ---
+   Escala en rem: al crecer la raíz crece todo proporcionalmente. */
+[data-fuente="mayor"] {
+    font-size: 112.5%;
+}
+
+[data-fuente="maxima"] {
+    font-size: 125%;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+@layer base {
+    body {
+        background-color: var(--fondo);
+        color: var(--texto);
+        font-family: var(--font-sans);
+        /* 16px mínimo (CLAUDE.md §6); fluida hasta 17.5px en pantallas grandes */
+        font-size: clamp(1rem, 0.95rem + 0.25vw, 1.094rem);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+        color: var(--titular);
+        font-weight: 700;
+        line-height: 1.15;
+        text-wrap: balance;
+    }
+
+    h1 { font-size: clamp(1.75rem, 1.3rem + 2vw, 3rem); letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.375rem, 1.15rem + 1vw, 2rem); letter-spacing: -0.01em; }
+    h3 { font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem); }
+
+    a {
+        color: var(--enlace);
+        text-underline-offset: 0.2em;
+    }
+
+    /* Foco visible en TODO elemento interactivo (WCAG 2.4.7). */
+    :focus-visible {
+        outline: 3px solid var(--anillo);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* =====================================================================
+   Utilidades semánticas: la CSP prohíbe style="" inline (script-src y
+   style-src 'self'), así que los tokens semánticos se aplican con clases.
+   ===================================================================== */
+@utility texto-suave {
+    color: var(--texto-suave);
+}
+
+@utility texto-titular {
+    color: var(--titular);
+}
+
+@utility fondo-superficie {
+    background-color: var(--superficie);
+}
+
+@utility borde-suave {
+    border-color: var(--borde);
+}
+
+/* =====================================================================
+   Componentes base. Pocos y de verdad: crecen cuando una fase los pida.
+   ===================================================================== */
+@layer components {
+    /* Salto al contenido: primer elemento enfocable de toda página. */
+    .salto-contenido {
+        position: absolute;
+        left: -9999px;
+        z-index: 50;
+        padding: 0.75rem 1.25rem;
+        background-color: var(--accion);
+        color: var(--texto-sobre-accion);
+        border-radius: var(--radius-control);
+    }
+
+    .salto-contenido:focus-visible {
+        left: 0.75rem;
+        top: 0.75rem;
+    }
+
+    .boton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        /* ≥ 44px de área táctil (CLAUDE.md §6) */
+        min-height: 2.75rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: var(--radius-control);
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background-color 150ms ease, border-color 150ms ease;
+        text-decoration: none;
+    }
+
+    .boton-primario {
+        background-color: var(--accion);
+        color: var(--texto-sobre-accion);
+    }
+
+    .boton-primario:hover {
+        background-color: var(--accion-intensa);
+    }
+
+    .boton-secundario {
+        background-color: transparent;
+        color: var(--enlace);
+        border-color: var(--borde);
+    }
+
+    .boton-secundario:hover {
+        border-color: var(--enlace);
+    }
+
+    .boton-peligro {
+        background-color: var(--color-error-600);
+        color: #FFFFFF;
+    }
+
+    .campo {
+        display: block;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--borde);
+        border-radius: var(--radius-control);
+        background-color: var(--fondo);
+        color: var(--texto);
+    }
+
+    .campo:focus-visible {
+        outline-offset: 0;
+        border-color: var(--anillo);
+    }
+
+    .etiqueta {
+        display: block;
+        margin-bottom: 0.375rem;
+        font-weight: 600;
+        color: var(--titular);
+    }
+
+    .ayuda-campo {
+        margin-top: 0.375rem;
+        font-size: 0.875em;
+        color: var(--texto-suave);
+    }
+
+    .error-campo {
+        margin-top: 0.375rem;
+        font-size: 0.875em;
+        font-weight: 600;
+        color: var(--color-error-600);
+    }
+
+    .tarjeta {
+        background-color: var(--fondo);
+        border: 1px solid var(--borde);
+        border-radius: var(--radius-tarjeta);
+        padding: 1.25rem;
+    }
+
+    .alerta {
+        display: flex;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-tarjeta);
+        border: 1px solid;
+    }
+
+    .alerta-exito {
+        background-color: var(--color-exito-100);
+        border-color: var(--color-exito-600);
+        color: var(--color-exito-900);
+    }
+
+    .alerta-aviso {
+        background-color: var(--color-aviso-100);
+        border-color: var(--color-aviso-600);
+        color: var(--color-aviso-900);
+    }
+
+    .alerta-error {
+        background-color: var(--color-error-100);
+        border-color: var(--color-error-600);
+        color: var(--color-error-900);
+    }
+
+    .insignia {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.625rem;
+        border-radius: 999px;
+        font-size: 0.8125em;
+        font-weight: 600;
+    }
+
+    .insignia-exito {
+        background-color: var(--color-exito-100);
+        color: var(--color-exito-900);
+    }
+
+    .insignia-aviso {
+        background-color: var(--color-aviso-100);
+        color: var(--color-aviso-900);
+    }
+
+    .insignia-error {
+        background-color: var(--color-error-100);
+        color: var(--color-error-900);
+    }
+}

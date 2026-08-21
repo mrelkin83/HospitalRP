@@ -159,8 +159,8 @@ del manual de identidad salvo el paso 9, que se hace con tokens provisionales.
 | 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla | ✅ |
 | 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` | ✅ |
 | 8 | Roles y permisos granulares + almacenamiento de archivos (validación por contenido real, fuera del *document root*, entrega por controlador) | Un usuario sin permiso recibe 403; un `.php` renombrado a `.jpg` se rechaza | ✅ |
-| 9 | Sistema de diseño: tokens de color y tipografía, componentes base, modo oscuro y modos de accesibilidad + pipeline de Tailwind | Página de muestra de componentes con contraste verificado ≥ 4,5:1 | ⏳ siguiente |
-| 10 | Cascarón del panel (navegación, sesión, layout responsivo) + PHPUnit + CI básica | Los tests pasan en CI y el panel se usa desde un celular |
+| 9 | Sistema de diseño: tokens de color y tipografía, componentes base, modo oscuro y modos de accesibilidad + pipeline de Tailwind | Página de muestra de componentes con contraste verificado ≥ 4,5:1 | ✅ |
+| 10 | Cascarón del panel (navegación, sesión, layout responsivo) + PHPUnit + CI básica | Los tests pasan en CI y el panel se usa desde un celular | ⏳ siguiente |
 
 **Criterios de aceptación de la fase** (los de `plan-de-desarrollo.md`, sin cambios):
 un usuario inicia sesión, ve el panel vacío y cierra sesión · toda acción queda en

@@ -16,6 +16,7 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
+use App\Http\Web\MuestraDisenoController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -24,6 +25,13 @@ $rutas = new RouteCollection();
 $rutas->add('inicio', new Route(
     path: '/',
     defaults: ['_controlador' => [InicioController::class, 'index']],
+    methods: ['GET'],
+));
+
+// Muestra del sistema de diseño: el controlador responde 404 en producción.
+$rutas->add('diseno.muestra', new Route(
+    path: '/diseno',
+    defaults: ['_controlador' => [MuestraDisenoController::class, 'index']],
     methods: ['GET'],
 ));
 

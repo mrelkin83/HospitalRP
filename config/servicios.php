@@ -51,6 +51,7 @@ use App\Modules\Tramites\Service\CalculadoraDiasHabiles;
 use App\Modules\Tramites\Service\GeneradorRadicado;
 use App\Modules\Tramites\Service\GestionTramiteService;
 use App\Modules\Tramites\Service\RadicacionService;
+use App\Modules\Cumplimiento\Repository\PoliticaRepository;
 use App\Ports\NotificadorCorreo;
 use App\Modules\Transparencia\Repository\DatasetRepository;
 use App\Modules\Transparencia\Repository\TransparenciaRepository;
@@ -62,6 +63,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
@@ -186,6 +188,9 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(GestionTramiteService::class, GestionTramiteService::class)
         ->setAutowired(true);
 
+    $contenedor->register(PoliticaRepository::class, PoliticaRepository::class)
+        ->setAutowired(true);
+
     // --- Módulo Documentos ---
     $contenedor->register(DocumentoRepository::class, DocumentoRepository::class)
         ->setAutowired(true);
@@ -280,6 +285,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(TransparenciaPublicoController::class, TransparenciaPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(TramitesPublicoController::class, TramitesPublicoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

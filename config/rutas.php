@@ -40,6 +40,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\UrgenciasContactoController;
 use Symfony\Component\Routing\Route;
@@ -92,6 +93,65 @@ $listadoYDetalle('sedes', '/sedes', SedesPublicoController::class);
 $listadoYDetalle('especialidades', '/especialidades', EspecialidadesPublicoController::class);
 $listadoYDetalle('servicios', '/servicios', ServiciosPublicoController::class);
 $listadoYDetalle('directorio', '/directorio', DirectorioPublicoController::class);
+
+// --- Trámites y PQRSDF (Fase 5) ---
+
+$rutas->add('atencion', new Route(
+    path: '/atencion-ciudadania',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'indiceAtencion']],
+    methods: ['GET'],
+));
+
+$rutas->add('tramites.listado', new Route(
+    path: '/atencion-ciudadania/tramites',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+$rutas->add('tramites.exito', new Route(
+    path: '/atencion-ciudadania/tramites/{slug}/radicado',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'radicadoExitoso']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('tramites.formulario', new Route(
+    path: '/atencion-ciudadania/tramites/{slug}',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'formulario']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('tramites.radicar', new Route(
+    path: '/atencion-ciudadania/tramites/{slug}',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'radicar']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['POST'],
+));
+
+$rutas->add('tramites.consultar', new Route(
+    path: '/atencion-ciudadania/pqrsdf/consultar',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'consultar']],
+    methods: ['GET', 'POST'],
+));
+
+$rutas->add('tramites.pqrsdf', new Route(
+    path: '/atencion-ciudadania/pqrsdf',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'atajoPqrsdf']],
+    methods: ['GET'],
+));
+
+$rutas->add('tramites.citas', new Route(
+    path: '/citas',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'atajoCitas']],
+    methods: ['GET'],
+));
+
+$rutas->add('politica.tratamiento', new Route(
+    path: '/politica-tratamiento-datos',
+    defaults: ['_controlador' => [TramitesPublicoController::class, 'politicaTratamiento']],
+    methods: ['GET'],
+));
 
 // --- Transparencia y datos abiertos (Fase 4) ---
 

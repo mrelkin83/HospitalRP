@@ -12,10 +12,15 @@ declare(strict_types=1);
  * Las rutas se irán añadiendo fase por fase; no adelantar ninguna.
  */
 
+use App\Http\Admin\AvisosController;
+use App\Http\Admin\CampanasController;
+use App\Http\Admin\CategoriasController;
+use App\Http\Admin\FaqController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
@@ -179,6 +184,138 @@ $rutas->add('admin.noticias.eliminar', new Route(
     path: '/admin/noticias/{id}/eliminar',
     defaults: [
         '_controlador' => [NoticiasController::class, 'eliminar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+// --- Panel: contenido editorial (páginas y campañas, mismo flujo que noticias) ---
+
+$crudEditorial = static function (string $nombre, string $prefijo, string $controlador) use ($rutas): void {
+    $privada = static fn (string $metodo, ?string $permiso = null): array => [
+        '_controlador' => [$controlador, $metodo],
+        '_acceso' => 'privado',
+        '_permiso' => $permiso ?? 'contenido.editar',
+    ];
+
+    $rutas->add($nombre, new Route($prefijo, $privada('listado', 'contenido.ver'), methods: ['GET']));
+    $rutas->add($nombre . '.nueva', new Route($prefijo . '/nueva', $privada('formularioNueva'), methods: ['GET']));
+    $rutas->add($nombre . '.guardar', new Route($prefijo, $privada('guardar'), methods: ['POST']));
+    $rutas->add($nombre . '.editar', new Route($prefijo . '/{id}', $privada('formularioEditar'), ['id' => '\d+'], methods: ['GET']));
+    $rutas->add($nombre . '.actualizar', new Route($prefijo . '/{id}', $privada('actualizar'), ['id' => '\d+'], methods: ['POST']));
+    $rutas->add($nombre . '.estado', new Route($prefijo . '/{id}/estado', $privada('cambiarEstado'), ['id' => '\d+'], methods: ['POST']));
+    $rutas->add($nombre . '.restaurar', new Route($prefijo . '/{id}/restaurar', $privada('restaurar'), ['id' => '\d+'], methods: ['POST']));
+    $rutas->add($nombre . '.eliminar', new Route($prefijo . '/{id}/eliminar', $privada('eliminar'), ['id' => '\d+'], methods: ['POST']));
+};
+
+$crudEditorial('admin.paginas', '/admin/paginas', PaginasAdminController::class);
+$crudEditorial('admin.campanas', '/admin/campanas', CampanasController::class);
+
+// --- Panel: avisos ---
+
+$rutas->add('admin.avisos', new Route(
+    path: '/admin/avisos',
+    defaults: [
+        '_controlador' => [AvisosController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.ver',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.avisos.crear', new Route(
+    path: '/admin/avisos',
+    defaults: [
+        '_controlador' => [AvisosController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.avisos.guardar', new Route(
+    path: '/admin/avisos/{id}',
+    defaults: [
+        '_controlador' => [AvisosController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+// --- Panel: preguntas frecuentes ---
+
+$rutas->add('admin.faq', new Route(
+    path: '/admin/faq',
+    defaults: [
+        '_controlador' => [FaqController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.ver',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.faq.crear', new Route(
+    path: '/admin/faq',
+    defaults: [
+        '_controlador' => [FaqController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.faq.guardar', new Route(
+    path: '/admin/faq/{id}',
+    defaults: [
+        '_controlador' => [FaqController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.faq.eliminar', new Route(
+    path: '/admin/faq/{id}/eliminar',
+    defaults: [
+        '_controlador' => [FaqController::class, 'eliminar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+// --- Panel: categorías ---
+
+$rutas->add('admin.categorias', new Route(
+    path: '/admin/categorias',
+    defaults: [
+        '_controlador' => [CategoriasController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.ver',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.categorias.crear', new Route(
+    path: '/admin/categorias',
+    defaults: [
+        '_controlador' => [CategoriasController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.categorias.guardar', new Route(
+    path: '/admin/categorias/{id}',
+    defaults: [
+        '_controlador' => [CategoriasController::class, 'guardar'],
         '_acceso' => 'privado',
         '_permiso' => 'contenido.editar',
     ],

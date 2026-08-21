@@ -42,9 +42,14 @@ $conEditor ??= false;
             <ul class="flex gap-1 overflow-x-auto text-sm font-semibold">
                 <li><a href="/admin" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Inicio</a></li>
                 <li><a href="/admin/noticias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Noticias</a></li>
+                <li><a href="/admin/paginas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Páginas</a></li>
+                <li><a href="/admin/campanas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Campañas</a></li>
+                <li><a href="/admin/avisos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Avisos</a></li>
+                <li><a href="/admin/faq" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">FAQ</a></li>
+                <li><a href="/admin/categorias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Categorías</a></li>
                 <li><a href="/admin/medios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Medios</a></li>
                 <li><a href="/admin/menus" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Menús</a></li>
-                <?php /* Los demás módulos (páginas, trámites, documentos…) se añaden fase por fase. */ ?>
+                <?php /* Trámites, documentos y transparencia se añaden fase por fase. */ ?>
             </ul>
         </nav>
     </header>

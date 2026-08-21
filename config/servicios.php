@@ -24,19 +24,28 @@ use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
+use App\Http\Admin\AvisosController;
+use App\Http\Admin\CampanasController;
+use App\Http\Admin\CategoriasController;
+use App\Http\Admin\FaqController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Http\Web\LayoutPublico;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Modules\Contenido\Repository\AvisoRepository;
+use App\Modules\Contenido\Repository\CampanaRepository;
 use App\Modules\Contenido\Repository\CategoriaRepository;
+use App\Modules\Contenido\Repository\FaqRepository;
 use App\Modules\Contenido\Repository\NoticiaRepository;
 use App\Modules\Contenido\Repository\PaginaRepository;
+use App\Modules\Contenido\Service\CampanaService;
+use App\Modules\Contenido\Service\PaginaService;
 use App\Modules\Contenido\Service\NoticiaService;
 use App\Modules\Contenido\Service\SanitizadorHtml;
 use App\Modules\Contenido\Service\VersionadoService;
@@ -127,6 +136,18 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(NoticiaService::class, NoticiaService::class)
         ->setAutowired(true);
 
+    $contenedor->register(CampanaRepository::class, CampanaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(FaqRepository::class, FaqRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(PaginaService::class, PaginaService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CampanaService::class, CampanaService::class)
+        ->setAutowired(true);
+
     $contenedor->register(AvisoRepository::class, AvisoRepository::class)
         ->setAutowired(true);
 
@@ -171,6 +192,26 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MediosController::class, MediosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(PaginasAdminController::class, PaginasAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CampanasController::class, CampanasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(AvisosController::class, AvisosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(FaqController::class, FaqController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CategoriasController::class, CategoriasController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

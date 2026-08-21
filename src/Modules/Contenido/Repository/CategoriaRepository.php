@@ -13,6 +13,44 @@ final readonly class CategoriaRepository
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function listarParaPanel(): array
+    {
+        return $this->conexion->fetchAllAssociative(
+            'SELECT * FROM categorias ORDER BY tipo, orden, nombre',
+        );
+    }
+
+    /**
+     * @return ?array<string, mixed>
+     */
+    public function porId(int $id): ?array
+    {
+        $fila = $this->conexion->fetchAssociative('SELECT * FROM categorias WHERE id = ?', [$id]);
+
+        return $fila === false ? null : $fila;
+    }
+
+    /**
+     * @param array<string, mixed> $campos
+     */
+    public function crear(array $campos): int
+    {
+        $this->conexion->insert('categorias', $campos);
+
+        return (int) $this->conexion->lastInsertId();
+    }
+
+    /**
+     * @param array<string, mixed> $campos
+     */
+    public function actualizar(int $id, array $campos): void
+    {
+        $this->conexion->update('categorias', $campos, ['id' => $id]);
+    }
+
+    /**
      * @return list<array{id: int, nombre: string}>
      */
     public function activasPorTipo(string $tipo): array

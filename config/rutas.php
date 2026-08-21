@@ -45,6 +45,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
+use App\Http\Web\SeoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
@@ -226,6 +227,20 @@ $rutas->add('documentos.ficha', new Route(
     path: '/documentos/{id}-{slug}',
     defaults: ['_controlador' => [DocumentosPublicoController::class, 'ficha']],
     requirements: ['id' => '\d+', 'slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+// --- SEO técnico (Fase 7) ---
+
+$rutas->add('seo.robots', new Route(
+    path: '/robots.txt',
+    defaults: ['_controlador' => [SeoController::class, 'robots']],
+    methods: ['GET'],
+));
+
+$rutas->add('seo.sitemap', new Route(
+    path: '/sitemap.xml',
+    defaults: ['_controlador' => [SeoController::class, 'sitemap']],
     methods: ['GET'],
 ));
 

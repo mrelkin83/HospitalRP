@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Web;
 
+use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\ConfigDinamica;
 use App\Core\Support\Vistas;
 use App\Modules\Contenido\Repository\AvisoRepository;
@@ -20,6 +21,7 @@ final readonly class LayoutPublico
     public function __construct(
         private Vistas $vistas,
         private ConfigDinamica $config,
+        private ConfigAplicacion $aplicacion,
         private MenuRepository $menus,
         private AvisoRepository $avisos,
     ) {
@@ -35,6 +37,13 @@ final readonly class LayoutPublico
     ): Response {
         $aviso = $this->avisos->vigente();
 
+        // Ruta actual para el canonical y OpenGraph. Se toma del superglobal
+        // y no de un parámetro: evitaría pasar el Request por cada uno de
+        // los controladores públicos solo para esto.
+        $rutaActual = rawurldecode(
+            (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH),
+        );
+
         $html = $this->vistas->render('publico/base', [
             'titulo' => $titulo,
             'descripcion' => $descripcion,
@@ -48,6 +57,7 @@ final readonly class LayoutPublico
             'menuPie1' => $this->menus->itemsPorUbicacion('pie_1'),
             'menuPie2' => $this->menus->itemsPorUbicacion('pie_2'),
             'config' => $this->config,
+            'urlCanonica' => $this->aplicacion->url . ($rutaActual === '/' ? '/' : $rutaActual),
         ]);
 
         $respuesta = new Response($html, $estado, ['Content-Type' => 'text/html; charset=utf-8']);

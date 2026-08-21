@@ -72,6 +72,7 @@ use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
+use App\Http\Web\SeoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
@@ -286,6 +287,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(FaqPublicoController::class, FaqPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(SeoController::class, SeoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

@@ -28,6 +28,38 @@ $enlaceNav = static fn (array $item): string => sprintf(
     <?php if ($descripcion !== null) { ?>
         <meta name="description" content="<?= $e($descripcion) ?>">
     <?php } ?>
+    <?php if (!$noindex) { ?>
+        <link rel="canonical" href="<?= $e($urlCanonica) ?>">
+    <?php } ?>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<?= $e($nombreEntidad) ?>">
+    <meta property="og:title" content="<?= $e($tituloCompleto) ?>">
+    <?php if ($descripcion !== null) { ?>
+        <meta property="og:description" content="<?= $e($descripcion) ?>">
+    <?php } ?>
+    <meta property="og:url" content="<?= $e($urlCanonica) ?>">
+    <meta property="og:locale" content="es_CO">
+    <meta name="theme-color" content="#041646">
+    <?php if ($esPortada) {
+        // Schema.org del hospital con los datos administrables del panel.
+        $esquema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Hospital',
+            'name' => $nombreEntidad,
+            'url' => $urlCanonica,
+            'telephone' => $config->texto('contacto.pbx'),
+            'email' => $config->texto('contacto.correo'),
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $config->texto('contacto.direccion'),
+                'addressLocality' => 'Valledupar',
+                'addressRegion' => 'Cesar',
+                'addressCountry' => 'CO',
+            ],
+        ];
+    ?>
+        <script type="application/ld+json"><?= json_encode($esquema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) ?></script>
+    <?php } ?>
     <link rel="stylesheet" href="/build/app.css">
     <script src="/js/sitio.js"></script>
     <script src="/js/filtro.js" defer></script>

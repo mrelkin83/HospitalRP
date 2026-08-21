@@ -85,6 +85,22 @@ final readonly class IndiceBusquedaRepository
         );
     }
 
+    /**
+     * URLs públicas para el sitemap, la más reciente primero por si dos
+     * entradas comparten URL (FAQ, datasets).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function urlsParaSitemap(): array
+    {
+        return $this->conexion->fetchAllAssociative(
+            'SELECT url, MAX(actualizado_en) AS actualizado_en
+               FROM indice_busqueda
+              GROUP BY url
+              ORDER BY url',
+        );
+    }
+
     public function registrarBusqueda(string $termino, int $resultados): void
     {
         $this->conexion->insert('busquedas_log', [

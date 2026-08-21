@@ -40,6 +40,7 @@ use App\Http\Admin\TiposTramiteController;
 use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
+use App\Http\Admin\PoliticasController;
 use App\Http\Admin\PanelController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
@@ -63,6 +64,7 @@ use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\LayoutPublico;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
+use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
@@ -294,6 +296,10 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(PoliticasPublicoController::class, PoliticasPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(ArchivoController::class, ArchivoController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -372,6 +378,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(TiposTramiteController::class, TiposTramiteController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(PoliticasController::class, PoliticasController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

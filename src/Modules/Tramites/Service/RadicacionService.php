@@ -7,6 +7,7 @@ namespace App\Modules\Tramites\Service;
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
+use App\Core\Config\ConfigDinamica;
 use App\Modules\Tramites\Entity\TipoTramite;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Request\SolicitudTramite;
@@ -32,6 +33,7 @@ final readonly class RadicacionService
         private CalculadoraDiasHabiles $diasHabiles,
         private AuditoriaService $auditoria,
         private NotificadorCorreo $correo,
+        private ConfigDinamica $config,
     ) {
     }
 
@@ -142,8 +144,81 @@ final readonly class RadicacionService
         ));
 
         $this->notificarSinRomper($tipo, $solicitud, $resultado);
+        $this->procesarRevocacionSiAplica($tipo, $solicitud, $resultado);
 
         return $resultado;
+    }
+
+    /**
+     * Criterio de la Fase 6: revocar una autorización queda registrado y
+     * notifica al responsable. Al radicar la revocatoria de habeas data se
+     * marcan `revocado_en` las autorizaciones previas del mismo documento
+     * (salvo la de este trámite: sin ella no se podría tramitar la propia
+     * revocatoria) y se avisa al oficial de cumplimiento.
+     *
+     * Modelo de confianza: la identidad NO se verifica en línea (mismo
+     * modelo que la consulta pública). Marcar `revocado_en` no destruye la
+     * evidencia —la fila queda intacta, con su aceptación original— y
+     * revocar en falso es el error conservador para la privacidad; el
+     * hospital verifica la identidad al responder el trámite por la bandeja
+     * antes de suprimir dato alguno.
+     *
+     * @param array{radicado: string, vence_en: string, tramite_id: int} $resultado
+     */
+    private function procesarRevocacionSiAplica(TipoTramite $tipo, SolicitudTramite $solicitud, array $resultado): void
+    {
+        if ($tipo->slug !== 'habeas-data'
+            || $solicitud->numeroDocumento === null
+            || !in_array('Revocar mi autorización', $solicitud->valores, true)
+        ) {
+            return;
+        }
+
+        $revocadas = $this->conexion->executeStatement(
+            'UPDATE autorizaciones_datos SET revocado_en = NOW()
+              WHERE numero_documento = ? AND revocado_en IS NULL AND (origen_id IS NULL OR origen_id <> ? OR origen <> \'tramite\')',
+            [$solicitud->numeroDocumento, $resultado['tramite_id']],
+        );
+
+        $this->auditoria->registrar(new RegistroAuditoria(
+            accion: AccionAuditoria::RevocacionAutorizacion,
+            entidad: 'autorizaciones_datos',
+            entidadId: $resultado['tramite_id'],
+            descripcion: sprintf(
+                'Revocatoria radicada (%s): %d autorizaciones marcadas como revocadas',
+                $resultado['radicado'],
+                (int) $revocadas,
+            ),
+            usuarioNombre: 'ciudadano (web)',
+        ));
+
+        $responsable = $this->config->texto('contacto.linea_etica_correo', $this->config->texto('contacto.correo'));
+
+        if ($responsable === '') {
+            return;
+        }
+
+        try {
+            $this->correo->enviar(
+                $responsable,
+                sprintf('[Habeas data] Revocatoria de autorización — %s', $resultado['radicado']),
+                sprintf(
+                    "Se radicó una revocatoria de autorización de tratamiento de datos.\n\n"
+                    . "Radicado: %s\nAutorizaciones marcadas como revocadas: %d\n\n"
+                    . "Gestión: https://hrplopez.gov.co/admin/tramites",
+                    $resultado['radicado'],
+                    (int) $revocadas,
+                ),
+            );
+        } catch (Throwable $e) {
+            $this->auditoria->registrar(new RegistroAuditoria(
+                accion: AccionAuditoria::CambioEstado,
+                entidad: 'tramites',
+                entidadId: $resultado['tramite_id'],
+                descripcion: sprintf('FALLO al notificar la revocatoria: %s', mb_substr($e->getMessage(), 0, 300)),
+                usuarioNombre: 'sistema',
+            ));
+        }
     }
 
     // --- soporte ---

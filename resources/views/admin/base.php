@@ -50,6 +50,7 @@ $conEditor ??= false;
                 <li><a href="/admin/tramites" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Trámites</a></li>
                 <li><a href="/admin/tipos-tramite" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Tipos de trámite</a></li>
                 <li><a href="/admin/documentos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Documentos</a></li>
+                <li><a href="/admin/politicas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Políticas</a></li>
                 <li><a href="/admin/transparencia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Transparencia</a></li>
                 <li><a href="/admin/datasets" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Datos abiertos</a></li>
                 <li><a href="/admin/dependencias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Dependencias</a></li>

@@ -16,6 +16,7 @@ use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
+use App\Modules\Cumplimiento\Command\SembrarCumplimientoCommand;
 use App\Modules\Directorio\Command\SembrarDirectorioCommand;
 use App\Adapters\Correo\NotificadorSymfonyMailer;
 use App\Modules\Tramites\Command\AlertasVencimientoCommand;
@@ -41,6 +42,7 @@ $aplicacion->add(new SembrarDirectorioCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarTransparenciaCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarFestivosCommand($conexion));
 $aplicacion->add(new SembrarTramitesCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarCumplimientoCommand($conexion, $auditoria));
 $aplicacion->add(new AlertasVencimientoCommand(
     new TramiteRepository($conexion),
     NotificadorSymfonyMailer::desde($env),

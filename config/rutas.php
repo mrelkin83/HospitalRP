@@ -29,6 +29,7 @@ use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
+use App\Http\Admin\PoliticasController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
@@ -40,6 +41,7 @@ use App\Http\Web\InicioController;
 use App\Http\Web\MuestraDisenoController;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
+use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
@@ -149,11 +151,23 @@ $rutas->add('tramites.citas', new Route(
     methods: ['GET'],
 ));
 
-$rutas->add('politica.tratamiento', new Route(
-    path: '/politica-tratamiento-datos',
-    defaults: ['_controlador' => [TramitesPublicoController::class, 'politicaTratamiento']],
-    methods: ['GET'],
-));
+// --- Políticas públicas (Fase 6): cada ruta fija su tipo ---
+
+foreach ([
+    'politica.tratamiento' => ['/politica-tratamiento-datos', 'tratamiento_datos'],
+    'politica.privacidad' => ['/politica-privacidad-web', 'aviso_privacidad'],
+    'politica.cookies' => ['/politica-de-cookies', 'cookies'],
+    'politica.accesibilidad' => ['/accesibilidad', 'accesibilidad'],
+] as $nombrePolitica => [$rutaPolitica, $tipoPolitica]) {
+    $rutas->add($nombrePolitica, new Route(
+        path: $rutaPolitica,
+        defaults: [
+            '_controlador' => [PoliticasPublicoController::class, 'mostrar'],
+            '_tipo_politica' => $tipoPolitica,
+        ],
+        methods: ['GET'],
+    ));
+}
 
 // --- Transparencia y datos abiertos (Fase 4) ---
 
@@ -549,6 +563,19 @@ $rutas->add('admin.tipostramite.crear', new Route('/admin/tipos-tramite', $permi
 $rutas->add('admin.tipostramite.guardar', new Route('/admin/tipos-tramite/{id}', $permisoTipos('guardar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tipostramite.campo.crear', new Route('/admin/tipos-tramite/{id}/campos', $permisoTipos('crearCampo'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tipostramite.campo.eliminar', new Route('/admin/tipos-tramite/campos/{id}/eliminar', $permisoTipos('eliminarCampo'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: políticas ---
+
+$rutas->add('admin.politicas', new Route('/admin/politicas', [
+    '_controlador' => [PoliticasController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'cumplimiento.politicas',
+], methods: ['GET']));
+$rutas->add('admin.politicas.publicar', new Route('/admin/politicas', [
+    '_controlador' => [PoliticasController::class, 'publicarVersion'],
+    '_acceso' => 'privado',
+    '_permiso' => 'cumplimiento.politicas',
+], methods: ['POST']));
 
 // --- Panel: transparencia ---
 

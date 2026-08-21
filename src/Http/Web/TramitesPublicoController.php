@@ -7,7 +7,6 @@ namespace App\Http\Web;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Storage\ArchivoInvalidoException;
 use App\Core\Support\Vistas;
-use App\Modules\Cumplimiento\Repository\PoliticaRepository;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Request\SolicitudTramite;
@@ -31,7 +30,6 @@ final readonly class TramitesPublicoController
         private TramiteRepository $tramites,
         private RadicacionService $radicacion,
         private AlmacenArchivos $almacen,
-        private PoliticaRepository $politicas,
     ) {
     }
 
@@ -177,21 +175,6 @@ final readonly class TramitesPublicoController
                 'resultado' => $resultado,
                 'noEncontrado' => $noEncontrado,
             ]),
-        );
-    }
-
-    public function politicaTratamiento(Request $peticion): Response
-    {
-        $politica = $this->politicas->activaPorTipo('tratamiento_datos');
-
-        if ($politica === null) {
-            return $this->noEncontrado();
-        }
-
-        return $this->layout->responder(
-            titulo: (string) $politica['titulo'],
-            descripcion: 'Política de tratamiento de datos personales de la E.S.E. Hospital Rosario Pumarejo de López.',
-            contenido: $this->vistas->render('publico/tramites/politica', ['politica' => $politica]),
         );
     }
 

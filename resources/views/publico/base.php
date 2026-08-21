@@ -31,6 +31,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
     <link rel="stylesheet" href="/build/app.css">
     <script src="/js/sitio.js"></script>
     <script src="/js/filtro.js" defer></script>
+    <script src="/js/consentimiento.js" defer></script>
 </head>
 <body>
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
@@ -182,5 +183,28 @@ $enlaceNav = static fn (array $item): string => sprintf(
             </p>
         </div>
     </footer>
+
+    <?php /* --- Aviso de cookies (Fase 6): oculto hasta que el JS confirme
+             que no hay consentimiento previo. Sin JS no hay scripts de
+             terceros, así que tampoco hace falta el aviso. --- */ ?>
+    <div data-banner-cookies hidden
+         class="fixed inset-x-0 bottom-0 z-50 border-t borde-suave fondo-superficie shadow-lg"
+         role="region" aria-label="Aviso de cookies">
+        <div class="mx-auto max-w-6xl px-4 py-4 flex flex-wrap items-center gap-4">
+            <p class="min-w-0 flex-1 text-sm">
+                Este sitio usa cookies esenciales para funcionar. Las analíticas son
+                opcionales y solo se activan si las aceptas.
+                <a href="/politica-de-cookies">Conoce la política de cookies</a>.
+            </p>
+            <label class="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="analiticas" value="1">
+                Permitir analíticas
+            </label>
+            <span class="flex gap-2">
+                <button type="button" class="boton boton-secundario" data-cookies="seleccion">Guardar selección</button>
+                <button type="button" class="boton boton-primario" data-cookies="todas">Aceptar todas</button>
+            </span>
+        </div>
+    </div>
 </body>
 </html>

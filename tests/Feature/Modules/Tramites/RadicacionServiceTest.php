@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Modules\Tramites;
 
 use App\Core\Audit\AuditoriaService;
+use App\Core\Config\ConfigDinamica;
 use App\Modules\Tramites\Command\SembrarTramitesCommand;
 use App\Modules\Tramites\Entity\TipoTramite;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
@@ -163,6 +164,7 @@ final class RadicacionServiceTest extends TestCase
             new CalculadoraDiasHabiles(self::$conexion),
             new AuditoriaService(self::$conexion),
             $this->correo,
+            new ConfigDinamica(self::$conexion),
         );
     }
 

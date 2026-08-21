@@ -77,5 +77,11 @@ hábiles con festivos calculados, formulario dinámico por tipo, casilla de
 autorización con evidencia (Ley 1581), consulta pública por radicado +
 documento, bandeja con semáforo de vencimientos, tipos configurables desde el
 panel y alertas por correo. 144 pruebas.
-Sigue la **Fase 6 — Cumplimiento y datos personales** según
-`docs/plan-de-desarrollo.md`.
+**Fase 6 — Cumplimiento y datos personales: terminada** (2026-08-21).
+Políticas versionadas con vigencia (las publicadas jamás se editan), páginas
+de tratamiento de datos, privacidad, cookies y accesibilidad, banner de
+cookies con consentimiento granular que bloquea todo script de terceros
+futuro, y revocación de habeas data registrada, auditada y notificada.
+Además: sede única con los datos reales del hospital (hrplopez.gov.co) e
+inventario del sitio Joomla actual. 147 pruebas.
+Sigue la **Fase 7 — Búsqueda, SEO, PWA y accesibilidad**.

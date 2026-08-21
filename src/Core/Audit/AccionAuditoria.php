@@ -24,6 +24,9 @@ enum AccionAuditoria: string
     case Despublicacion = 'despublicar';
     case CambioEstado = 'cambio_estado';
 
+    // Datos personales (Fase 6)
+    case RevocacionAutorizacion = 'revocar_autorizacion';
+
     // Autenticación (Fase 0, paso 7)
     case InicioSesion = 'inicio_sesion';
     case CierreSesion = 'cierre_sesion';

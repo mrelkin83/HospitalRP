@@ -50,6 +50,24 @@ $campos = static function (array $f, array $categorias, string $tokenCsrf) use (
     <div class="alerta alerta-error mt-4" role="alert"><?= $e($error) ?></div>
 <?php } ?>
 
+<?php if ($sinResultado !== []) { ?>
+    <section class="tarjeta mt-6" aria-labelledby="sin-resultado-titulo">
+        <h2 id="sin-resultado-titulo" class="text-base font-semibold texto-titular">Lo que la gente busca y no encuentra</h2>
+        <p class="mt-1 text-sm texto-suave">
+            Búsquedas del sitio sin ningún resultado en los últimos 90 días.
+            Si alguna merece respuesta, créala aquí abajo como pregunta frecuente.
+        </p>
+        <ul class="mt-3 flex flex-wrap gap-2">
+            <?php foreach ($sinResultado as $fila) { ?>
+                <li class="insignia insignia-aviso">
+                    <?= $e((string) $fila['termino']) ?>
+                    <span class="texto-suave">×<?= (int) $fila['veces'] ?></span>
+                </li>
+            <?php } ?>
+        </ul>
+    </section>
+<?php } ?>
+
 <details class="tarjeta mt-6">
     <summary class="cursor-pointer font-semibold texto-titular">Crear pregunta</summary>
     <form class="mt-4" method="post" action="/admin/faq">

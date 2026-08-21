@@ -154,6 +154,17 @@ final class BusquedaTest extends TestCase
         );
     }
 
+    public function testElRegistroDeBusquedasTieneTopePorMinuto(): void
+    {
+        for ($i = 0; $i < 60; $i++) {
+            self::$conexion->insert('busquedas_log', ['termino' => 'relleno ' . $i, 'resultados' => 0]);
+        }
+
+        $this->buscador->buscar('algo nuevo que registrar');
+
+        self::assertSame(60, (int) self::$conexion->fetchOne('SELECT COUNT(*) FROM busquedas_log'));
+    }
+
     // --- soporte ---
 
     private function contarIndice(string $tipo, int $entidadId): int

@@ -101,8 +101,22 @@ final readonly class IndiceBusquedaRepository
         );
     }
 
+    /**
+     * El registro tiene un tope global por minuto: sin él, un script podría
+     * llenar el disco a punta de términos aleatorios (rate limiting de
+     * búsqueda, CLAUDE.md §6). Pasado el tope la búsqueda sigue
+     * funcionando; solo deja de registrarse.
+     */
     public function registrarBusqueda(string $termino, int $resultados): void
     {
+        $recientes = (int) $this->conexion->fetchOne(
+            'SELECT COUNT(*) FROM busquedas_log WHERE creado_en >= NOW() - INTERVAL 1 MINUTE',
+        );
+
+        if ($recientes >= 60) {
+            return;
+        }
+
         $this->conexion->insert('busquedas_log', [
             'termino' => mb_substr($termino, 0, 255),
             'resultados' => $resultados,

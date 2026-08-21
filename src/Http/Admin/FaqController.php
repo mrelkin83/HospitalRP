@@ -7,6 +7,7 @@ namespace App\Http\Admin;
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
@@ -30,6 +31,7 @@ final readonly class FaqController
         private CategoriaRepository $categorias,
         private AuditoriaService $auditoria,
         private IndexadorService $indexador,
+        private IndiceBusquedaRepository $indiceBusqueda,
     ) {
     }
 
@@ -38,6 +40,7 @@ final readonly class FaqController
         return $this->pagina($this->vistas->render('admin/faq/listado', [
             'preguntas' => $this->faq->listarParaPanel(),
             'categorias' => $this->categorias->activasPorTipo('faq'),
+            'sinResultado' => $this->indiceBusqueda->terminosSinResultado(),
             'mensaje' => $peticion->query->has('guardado') ? 'Cambios guardados.' : null,
             'error' => $peticion->query->has('invalido') ? 'La pregunta y la respuesta son obligatorias.' : null,
             'tokenCsrf' => $this->sesion->tokenCsrf(),

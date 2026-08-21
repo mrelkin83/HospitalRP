@@ -175,6 +175,10 @@
 
     a {
         color: var(--enlace);
+        /* Subrayado explícito: el preflight lo elimina y un enlace dentro de
+           un párrafo no puede distinguirse solo por color (WCAG 1.4.1). Los
+           de navegación lo quitan con .no-underline, que ahí sí es válido. */
+        text-decoration-line: underline;
         text-underline-offset: 0.2em;
     }
 
@@ -272,6 +276,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        text-decoration-line: none;
         gap: 0.5rem;
         /* ≥ 44px de área táctil (CLAUDE.md §6) */
         min-height: 2.75rem;

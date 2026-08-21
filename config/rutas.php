@@ -23,6 +23,8 @@ use App\Http\Admin\NoticiasController;
 use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
+use App\Http\Admin\BandejaTramitesController;
+use App\Http\Admin\TiposTramiteController;
 use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
@@ -519,6 +521,34 @@ $rutas->add('admin.documentos.publicar', new Route('/admin/documentos/{id}/publi
 $rutas->add('admin.documentos.estado', new Route('/admin/documentos/{id}/estado', $permisoDoc('cambiarEstado', 'documentos.publicar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.documentos.version', new Route('/admin/documentos/{id}/version', $permisoDoc('nuevaVersion'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.documentos.eliminar', new Route('/admin/documentos/{id}/eliminar', $permisoDoc('eliminar'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: bandeja de trámites ---
+
+$permisoTram = static fn (string $metodo): array => [
+    '_controlador' => [BandejaTramitesController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'tramites.gestionar',
+];
+
+$rutas->add('admin.tramites', new Route('/admin/tramites', $permisoTram('bandeja'), methods: ['GET']));
+$rutas->add('admin.tramites.detalle', new Route('/admin/tramites/{id}', $permisoTram('detalle'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.tramites.estado', new Route('/admin/tramites/{id}/estado', $permisoTram('cambiarEstado'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.tramites.asignar', new Route('/admin/tramites/{id}/asignar', $permisoTram('asignar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.tramites.nota', new Route('/admin/tramites/{id}/nota', $permisoTram('agregarNota'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: tipos de trámite configurables ---
+
+$permisoTipos = static fn (string $metodo): array => [
+    '_controlador' => [TiposTramiteController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'tramites.configurar',
+];
+
+$rutas->add('admin.tipostramite', new Route('/admin/tipos-tramite', $permisoTipos('listado'), methods: ['GET']));
+$rutas->add('admin.tipostramite.crear', new Route('/admin/tipos-tramite', $permisoTipos('guardar'), methods: ['POST']));
+$rutas->add('admin.tipostramite.guardar', new Route('/admin/tipos-tramite/{id}', $permisoTipos('guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.tipostramite.campo.crear', new Route('/admin/tipos-tramite/{id}/campos', $permisoTipos('crearCampo'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.tipostramite.campo.eliminar', new Route('/admin/tipos-tramite/campos/{id}/eliminar', $permisoTipos('eliminarCampo'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: transparencia ---
 

@@ -47,6 +47,8 @@ $conEditor ??= false;
                 <li><a href="/admin/avisos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Avisos</a></li>
                 <li><a href="/admin/faq" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">FAQ</a></li>
                 <li><a href="/admin/categorias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Categorías</a></li>
+                <li><a href="/admin/tramites" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Trámites</a></li>
+                <li><a href="/admin/tipos-tramite" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Tipos de trámite</a></li>
                 <li><a href="/admin/documentos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Documentos</a></li>
                 <li><a href="/admin/transparencia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Transparencia</a></li>
                 <li><a href="/admin/datasets" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Datos abiertos</a></li>

@@ -15,7 +15,8 @@ final readonly class TramiteRepository
 {
     private const string SELECT_BANDEJA = 'SELECT t.*, tt.nombre AS tipo_nombre, e.codigo AS estado_codigo,
             e.nombre AS estado_nombre, e.color AS estado_color, e.es_final AS estado_es_final,
-            u.nombre AS asignado_nombre, dep.nombre AS dependencia_nombre
+            u.nombre AS asignado_nombre, u.correo AS asignado_correo,
+            tt.notificar_correos AS tipo_notificar_correos, dep.nombre AS dependencia_nombre
        FROM tramites t
        JOIN tipos_tramite tt ON tt.id = t.tipo_tramite_id
        JOIN tramite_estados e ON e.id = t.estado_id

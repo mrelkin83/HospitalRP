@@ -35,6 +35,8 @@ use App\Http\Admin\NoticiasController;
 use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
+use App\Http\Admin\BandejaTramitesController;
+use App\Http\Admin\TiposTramiteController;
 use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
@@ -362,6 +364,14 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(TransparenciaController::class, TransparenciaController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(BandejaTramitesController::class, BandejaTramitesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(TiposTramiteController::class, TiposTramiteController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

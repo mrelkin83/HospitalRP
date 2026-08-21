@@ -22,6 +22,7 @@ use App\Core\Config\Env;
 use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Core\Storage\AlmacenArchivos;
+use App\Core\Support\Vistas;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
@@ -77,6 +78,10 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(AutorizacionService::class, AutorizacionService::class)
         ->setAutowired(true)
         ->setPublic(true);
+
+    // --- Vistas ---
+    $contenedor->register(Vistas::class, Vistas::class)
+        ->setArguments([dirname(__DIR__) . '/resources/views']);
 
     // --- Almacenamiento de archivos ---
     $contenedor->register(AlmacenArchivos::class, AlmacenArchivos::class)

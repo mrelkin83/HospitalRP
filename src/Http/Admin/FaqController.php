@@ -6,6 +6,8 @@ namespace App\Http\Admin;
 
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
@@ -27,6 +29,7 @@ final readonly class FaqController
         private FaqRepository $faq,
         private CategoriaRepository $categorias,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -78,6 +81,8 @@ final readonly class FaqController
             $this->auditar($peticion, AccionAuditoria::Creacion, $id, sprintf('Creó la pregunta frecuente «%s»', $pregunta));
         }
 
+        $this->indexador->reindexar(TipoIndice::Faq, $id);
+
         return new RedirectResponse('/admin/faq?guardado=1', Response::HTTP_SEE_OTHER);
     }
 
@@ -96,6 +101,7 @@ final readonly class FaqController
                 'Eliminó la pregunta frecuente «%s»',
                 (string) $fila['pregunta'],
             ));
+            $this->indexador->reindexar(TipoIndice::Faq, $id);
         }
 
         return new RedirectResponse('/admin/faq?guardado=1', Response::HTTP_SEE_OTHER);

@@ -55,22 +55,4 @@ final readonly class InicioController
             esPortada: true,
         );
     }
-
-    /**
-     * El buscador real llega en la Fase 6; mientras tanto la ruta existe y
-     * responde con honestidad en vez de dar 404.
-     */
-    public function buscar(Request $peticion): Response
-    {
-        return $this->layout->responder(
-            titulo: 'Buscador',
-            descripcion: null,
-            contenido: $this->vistas->render('publico/mensaje', [
-                'encabezado' => 'El buscador está en construcción',
-                'mensaje' => 'Muy pronto podrás buscar en todo el sitio desde aquí. '
-                    . 'Mientras tanto, usa el menú principal o comunícate con nuestras líneas de atención.',
-            ]),
-            noindex: true,
-        );
-    }
 }

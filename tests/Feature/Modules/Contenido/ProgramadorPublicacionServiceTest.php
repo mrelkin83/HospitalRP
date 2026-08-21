@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Modules\Contenido;
 
 use App\Core\Audit\AuditoriaService;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -34,6 +36,7 @@ final class ProgramadorPublicacionServiceTest extends TestCase
         $this->programador = new ProgramadorPublicacionService(
             self::$conexion,
             new AuditoriaService(self::$conexion),
+            new IndexadorService(self::$conexion, new IndiceBusquedaRepository(self::$conexion)),
         );
     }
 

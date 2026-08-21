@@ -34,7 +34,9 @@ use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Http\Web\ArchivoController;
+use App\Http\Web\BuscarController;
 use App\Http\Web\DirectorioPublicoController;
+use App\Http\Web\FaqPublicoController;
 use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\InicioController;
@@ -60,7 +62,7 @@ $rutas->add('inicio', new Route(
 
 $rutas->add('buscar', new Route(
     path: '/buscar',
-    defaults: ['_controlador' => [InicioController::class, 'buscar']],
+    defaults: ['_controlador' => [BuscarController::class, 'buscar']],
     methods: ['GET'],
 ));
 
@@ -103,6 +105,12 @@ $listadoYDetalle('directorio', '/directorio', DirectorioPublicoController::class
 $rutas->add('atencion', new Route(
     path: '/atencion-ciudadania',
     defaults: ['_controlador' => [TramitesPublicoController::class, 'indiceAtencion']],
+    methods: ['GET'],
+));
+
+$rutas->add('atencion.faq', new Route(
+    path: '/atencion-ciudadania/preguntas-frecuentes',
+    defaults: ['_controlador' => [FaqPublicoController::class, 'listado']],
     methods: ['GET'],
 ));
 

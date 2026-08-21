@@ -46,6 +46,9 @@ use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Adapters\Correo\NotificadorSymfonyMailer;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
+use App\Modules\Busqueda\Service\BuscadorService;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
@@ -58,9 +61,11 @@ use App\Modules\Cumplimiento\Repository\PoliticaRepository;
 use App\Ports\NotificadorCorreo;
 use App\Modules\Transparencia\Repository\DatasetRepository;
 use App\Modules\Transparencia\Repository\TransparenciaRepository;
+use App\Http\Web\BuscarController;
 use App\Http\Web\DirectorioPublicoController;
 use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
+use App\Http\Web\FaqPublicoController;
 use App\Http\Web\LayoutPublico;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
@@ -202,6 +207,16 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(DocumentoService::class, DocumentoService::class)
         ->setAutowired(true);
 
+    // --- Módulo Búsqueda ---
+    $contenedor->register(IndiceBusquedaRepository::class, IndiceBusquedaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(IndexadorService::class, IndexadorService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(BuscadorService::class, BuscadorService::class)
+        ->setAutowired(true);
+
     // --- Módulo Contenido ---
     $contenedor->register(SanitizadorHtml::class, SanitizadorHtml::class);
 
@@ -257,6 +272,14 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(NoticiasPublicoController::class, NoticiasPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(BuscarController::class, BuscarController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(FaqPublicoController::class, FaqPublicoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

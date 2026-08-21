@@ -8,6 +8,8 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Documentos\Entity\Documento;
 use App\Modules\Documentos\Entity\EstadoDocumento;
 use App\Modules\Documentos\Exception\PublicacionIncompletaException;
@@ -26,6 +28,7 @@ final readonly class DocumentoService
     public function __construct(
         private DocumentoRepository $documentos,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -47,6 +50,7 @@ final readonly class DocumentoService
         $this->documentos->sincronizarEtiquetas($id, $datos->etiquetasComoLista());
 
         $this->auditar(AccionAuditoria::Actualizacion, $id, sprintf('Actualizó el documento «%s»', $datos->titulo), $actor);
+        $this->indexador->reindexar(TipoIndice::Documento, $id);
     }
 
     /**
@@ -81,6 +85,7 @@ final readonly class DocumentoService
 
         $this->documentos->cambiarPublicado($id, true, $actor->usuarioId);
         $this->auditar(AccionAuditoria::Publicacion, $id, sprintf('Publicó el documento «%s»', $documento->titulo), $actor);
+        $this->indexador->reindexar(TipoIndice::Documento, $id);
     }
 
     public function despublicar(int $id, Actor $actor): void
@@ -89,6 +94,7 @@ final readonly class DocumentoService
 
         $this->documentos->cambiarPublicado($id, false, $actor->usuarioId);
         $this->auditar(AccionAuditoria::Despublicacion, $id, sprintf('Retiró del sitio el documento «%s»', $documento->titulo), $actor);
+        $this->indexador->reindexar(TipoIndice::Documento, $id);
     }
 
     public function cambiarEstado(int $id, EstadoDocumento $estado, Actor $actor): void
@@ -102,6 +108,7 @@ final readonly class DocumentoService
             $documento->estado->etiqueta(),
             $estado->etiqueta(),
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Documento, $id);
     }
 
     public function nuevaVersion(int $id, int $archivoId, ?string $notas, Actor $actor): int
@@ -125,6 +132,7 @@ final readonly class DocumentoService
 
         $this->documentos->eliminarLogicamente($id, $actor->usuarioId);
         $this->auditar(AccionAuditoria::Eliminacion, $id, sprintf('Envió a la papelera el documento «%s»', $documento->titulo), $actor);
+        $this->indexador->reindexar(TipoIndice::Documento, $id);
     }
 
     // --- soporte ---

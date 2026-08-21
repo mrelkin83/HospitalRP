@@ -6,6 +6,8 @@ namespace App\Http\Admin;
 
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
@@ -28,6 +30,7 @@ final readonly class EspecialidadesController
         private EspecialidadRepository $especialidades,
         private SedeRepository $sedes,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -97,6 +100,8 @@ final readonly class EspecialidadesController
             ip: $actor->ip,
             userAgent: $actor->userAgent,
         ));
+
+        $this->indexador->reindexar(TipoIndice::Especialidad, $id);
 
         return new RedirectResponse('/admin/especialidades?guardado=1', Response::HTTP_SEE_OTHER);
     }

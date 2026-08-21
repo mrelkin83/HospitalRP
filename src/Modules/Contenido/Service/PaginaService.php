@@ -8,6 +8,8 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 use App\Modules\Contenido\Entity\Pagina;
 use App\Modules\Contenido\Exception\TransicionEstadoInvalidaException;
@@ -28,6 +30,7 @@ final readonly class PaginaService
         private SanitizadorHtml $sanitizador,
         private VersionadoService $versionado,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -42,6 +45,7 @@ final readonly class PaginaService
 
         $this->versionar($id, 'Primera versión', $actor);
         $this->auditar(AccionAuditoria::Creacion, $id, sprintf('Creó la página «%s» (%s)', $datos->titulo, $datos->ruta), $actor);
+        $this->indexador->reindexar(TipoIndice::Pagina, $id);
 
         return $id;
     }
@@ -64,6 +68,7 @@ final readonly class PaginaService
             $datos->titulo,
             $version,
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Pagina, $id);
     }
 
     public function cambiarEstado(int $id, EstadoAprobacion $destino, Actor $actor): void
@@ -90,6 +95,7 @@ final readonly class PaginaService
             $pagina->estado->etiqueta(),
             $destino->etiqueta(),
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Pagina, $id);
     }
 
     public function restaurar(int $id, int $version, Actor $actor): void
@@ -110,6 +116,7 @@ final readonly class PaginaService
             $version,
             $nueva,
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Pagina, $id);
     }
 
     /**
@@ -128,6 +135,7 @@ final readonly class PaginaService
             $pagina->titulo,
             $pagina->ruta,
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Pagina, $id);
 
         return true;
     }

@@ -6,6 +6,8 @@ namespace App\Http\Admin;
 
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
@@ -31,6 +33,7 @@ final readonly class TiposTramiteController
         private TipoTramiteRepository $tipos,
         private DependenciaRepository $dependencias,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -120,6 +123,7 @@ final readonly class TiposTramiteController
             $dias,
             $campos['tipo_dias'],
         ));
+        $this->indexador->reindexar(TipoIndice::TipoTramite, $id);
 
         return new RedirectResponse('/admin/tipos-tramite?guardado=1', Response::HTTP_SEE_OTHER);
     }

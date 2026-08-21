@@ -6,6 +6,8 @@ namespace Tests\Feature\Modules\Documentos;
 
 use App\Core\Audit\AuditoriaService;
 use App\Core\Auth\Actor;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Documentos\Entity\EstadoDocumento;
 use App\Modules\Documentos\Exception\PublicacionIncompletaException;
 use App\Modules\Documentos\Repository\DocumentoRepository;
@@ -45,7 +47,11 @@ final class DocumentoServiceTest extends TestCase
         self::$conexion->executeStatement("DELETE FROM dependencias WHERE nombre LIKE 'Prueba%'");
 
         $this->documentos = new DocumentoRepository(self::$conexion);
-        $this->servicio = new DocumentoService($this->documentos, new AuditoriaService(self::$conexion));
+        $this->servicio = new DocumentoService(
+            $this->documentos,
+            new AuditoriaService(self::$conexion),
+            new IndexadorService(self::$conexion, new IndiceBusquedaRepository(self::$conexion)),
+        );
         $this->actor = new Actor(7, 'María Pérez', '203.0.113.7', 'PHPUnit');
 
         self::$conexion->insert('archivos', [

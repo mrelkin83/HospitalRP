@@ -6,6 +6,8 @@ namespace App\Http\Admin;
 
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
@@ -30,6 +32,7 @@ final readonly class SedesController
         private SedeRepository $sedes,
         private AlmacenArchivos $almacen,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -114,6 +117,8 @@ final readonly class SedesController
             $id = $this->sedes->crear($campos);
             $this->auditar($peticion, AccionAuditoria::Creacion, $id, sprintf('Creó la sede «%s»', $nombre));
         }
+
+        $this->indexador->reindexar(TipoIndice::Sede, $id);
 
         return new RedirectResponse('/admin/sedes?guardado=1', Response::HTTP_SEE_OTHER);
     }

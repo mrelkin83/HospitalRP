@@ -6,6 +6,8 @@ namespace Tests\Feature\Modules\Contenido;
 
 use App\Core\Audit\AuditoriaService;
 use App\Core\Auth\Actor;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 use App\Modules\Contenido\Exception\TransicionEstadoInvalidaException;
 use App\Modules\Contenido\Repository\NoticiaRepository;
@@ -43,6 +45,7 @@ final class NoticiaServiceTest extends TestCase
             new SanitizadorHtml(),
             new VersionadoService(self::$conexion),
             new AuditoriaService(self::$conexion),
+            new IndexadorService(self::$conexion, new IndiceBusquedaRepository(self::$conexion)),
         );
         $this->actor = new Actor(7, 'María Pérez', '203.0.113.7', 'PHPUnit');
     }

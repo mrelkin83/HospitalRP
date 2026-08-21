@@ -14,6 +14,9 @@ use App\Core\Audit\AuditoriaService;
 use App\Core\Auth\HasherPassword;
 use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
+use App\Modules\Busqueda\Command\IndexarCommand;
+use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Cumplimiento\Command\SembrarCumplimientoCommand;
@@ -33,6 +36,7 @@ $env = require dirname(__DIR__) . '/config/bootstrap.php';
 
 $conexion = ConexionFactory::crear(ConfigBaseDatos::desde($env));
 $auditoria = new AuditoriaService($conexion);
+$indexador = new IndexadorService($conexion, new IndiceBusquedaRepository($conexion));
 
 $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — consola', 'fase-0');
 $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
@@ -48,5 +52,6 @@ $aplicacion->add(new AlertasVencimientoCommand(
     NotificadorSymfonyMailer::desde($env),
     $auditoria,
 ));
-$aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria)));
+$aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria, $indexador)));
+$aplicacion->add(new IndexarCommand($indexador));
 $aplicacion->run();

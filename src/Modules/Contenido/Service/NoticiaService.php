@@ -8,6 +8,8 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 use App\Modules\Contenido\Entity\Noticia;
 use App\Modules\Contenido\Exception\TransicionEstadoInvalidaException;
@@ -29,6 +31,7 @@ final readonly class NoticiaService
         private SanitizadorHtml $sanitizador,
         private VersionadoService $versionado,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -43,6 +46,7 @@ final readonly class NoticiaService
 
         $this->versionar($id, 'Primera versión', $actor);
         $this->auditar(AccionAuditoria::Creacion, $id, sprintf('Creó la noticia «%s»', $datos->titulo), $actor);
+        $this->indexador->reindexar(TipoIndice::Noticia, $id);
 
         return $id;
     }
@@ -66,6 +70,7 @@ final readonly class NoticiaService
             sprintf('Actualizó la noticia «%s» (versión %d)', $datos->titulo, $version),
             $actor,
         );
+        $this->indexador->reindexar(TipoIndice::Noticia, $id);
     }
 
     public function cambiarEstado(int $id, EstadoAprobacion $destino, Actor $actor): void
@@ -92,6 +97,7 @@ final readonly class NoticiaService
             $noticia->estado->etiqueta(),
             $destino->etiqueta(),
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Noticia, $id);
     }
 
     /**
@@ -117,6 +123,7 @@ final readonly class NoticiaService
             $version,
             $nueva,
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Noticia, $id);
     }
 
     public function eliminar(int $id, Actor $actor): void
@@ -128,6 +135,7 @@ final readonly class NoticiaService
             'Envió a la papelera la noticia «%s»',
             $noticia->titulo,
         ), $actor);
+        $this->indexador->reindexar(TipoIndice::Noticia, $id);
     }
 
     // --- soporte ---

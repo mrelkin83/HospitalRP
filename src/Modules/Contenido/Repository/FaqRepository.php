@@ -26,6 +26,22 @@ final readonly class FaqRepository
     }
 
     /**
+     * Página pública: solo las publicadas, en el orden editorial.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listarPublicadas(): array
+    {
+        return $this->conexion->fetchAllAssociative(
+            'SELECT f.id, f.pregunta, f.respuesta, c.nombre AS categoria_nombre
+               FROM faq f
+               LEFT JOIN categorias c ON c.id = f.categoria_id
+              WHERE f.publicada = 1
+              ORDER BY c.nombre IS NULL, c.nombre, f.orden, f.id',
+        );
+    }
+
+    /**
      * @return ?array<string, mixed>
      */
     public function porId(int $id): ?array

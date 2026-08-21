@@ -7,6 +7,8 @@ namespace App\Modules\Contenido\Service;
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
+use App\Modules\Busqueda\Entity\TipoIndice;
+use App\Modules\Busqueda\Service\IndexadorService;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -28,6 +30,7 @@ final readonly class ProgramadorPublicacionService
     public function __construct(
         private Connection $conexion,
         private AuditoriaService $auditoria,
+        private IndexadorService $indexador,
     ) {
     }
 
@@ -67,6 +70,7 @@ final readonly class ProgramadorPublicacionService
                 'Publicada según programación: «%s»',
                 $fila['titulo'],
             ));
+            $this->indexador->reindexar($this->tipoIndice($tabla), (int) $fila['id']);
         }
 
         return count($filas);
@@ -94,9 +98,15 @@ final readonly class ProgramadorPublicacionService
                 'Despublicada según programación: «%s». Vuelve a borrador.',
                 $fila['titulo'],
             ));
+            $this->indexador->reindexar($this->tipoIndice($tabla), (int) $fila['id']);
         }
 
         return count($filas);
+    }
+
+    private function tipoIndice(string $tabla): TipoIndice
+    {
+        return $tabla === 'noticias' ? TipoIndice::Noticia : TipoIndice::Pagina;
     }
 
     private function auditar(AccionAuditoria $accion, string $entidad, int $id, string $descripcion): void

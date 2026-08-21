@@ -15,6 +15,7 @@ use App\Core\Auth\HasherPassword;
 use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Modules\Sistema\Command\CrearAdminCommand;
+use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use Symfony\Component\Console\Application;
 
 $env = require dirname(__DIR__) . '/config/bootstrap.php';
@@ -24,4 +25,5 @@ $auditoria = new AuditoriaService($conexion);
 
 $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — consola', 'fase-0');
 $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
+$aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
 $aplicacion->run();

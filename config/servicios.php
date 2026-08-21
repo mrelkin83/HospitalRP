@@ -18,6 +18,7 @@ use App\Core\Auth\HasherPassword;
 use App\Core\Auth\Sesion;
 use App\Core\Auth\UsuarioRepository;
 use App\Core\Config\ConfigAplicacion;
+use App\Core\Config\ConfigDinamica;
 use App\Core\Config\Env;
 use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
@@ -54,6 +55,9 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(Connection::class, Connection::class)
         ->setFactory([ConexionFactory::class, 'crear'])
         ->setArguments([new Reference(ConfigBaseDatos::class)]);
+
+    $contenedor->register(ConfigDinamica::class, ConfigDinamica::class)
+        ->setAutowired(true);
 
     // --- Auditoría ---
     $contenedor->register(AuditoriaService::class, AuditoriaService::class)

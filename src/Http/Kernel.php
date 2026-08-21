@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use App\Core\Auth\AutorizacionService;
+use App\Core\Auth\Sesion;
 use App\Core\Config\ConfigAplicacion;
 use App\Http\Exception\ControladorInvalidoException;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
@@ -66,7 +69,54 @@ final readonly class Kernel
 
         $peticion->attributes->add($parametros);
 
+        $rechazo = $this->controlarAcceso($parametros);
+
+        if ($rechazo !== null) {
+            return $rechazo;
+        }
+
         return $this->invocar($parametros['_controlador'] ?? null, $peticion);
+    }
+
+    /**
+     * Control de acceso declarado en la ruta, no repetido en cada controlador:
+     * `_acceso: privado` exige sesión; `_permiso: modulo.accion` exige además
+     * ese permiso del rol. Devuelve null cuando el acceso procede.
+     *
+     * @param array<string, mixed> $parametros
+     */
+    private function controlarAcceso(array $parametros): ?Response
+    {
+        if (($parametros['_acceso'] ?? 'publico') !== 'privado') {
+            return null;
+        }
+
+        /** @var Sesion $sesion */
+        $sesion = $this->contenedor->get(Sesion::class);
+        $sesion->iniciar();
+
+        $usuarioId = $sesion->usuarioId();
+
+        if ($usuarioId === null) {
+            return new RedirectResponse('/admin/entrar', Response::HTTP_SEE_OTHER);
+        }
+
+        $permiso = $parametros['_permiso'] ?? null;
+
+        if (is_string($permiso) && $permiso !== '') {
+            /** @var AutorizacionService $autorizacion */
+            $autorizacion = $this->contenedor->get(AutorizacionService::class);
+
+            if (!$autorizacion->puede($usuarioId, $permiso)) {
+                return $this->paginaDeEstado(
+                    Response::HTTP_FORBIDDEN,
+                    'Acceso denegado',
+                    'Tu cuenta no tiene permiso para entrar a esta sección. Si crees que deberías tenerlo, pídelo al administrador del sitio.',
+                );
+            }
+        }
+
+        return null;
     }
 
     private function invocar(mixed $referencia, Request $peticion): Response

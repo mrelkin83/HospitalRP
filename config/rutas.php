@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 use App\Http\Admin\LoginController;
 use App\Http\Admin\PanelController;
+use App\Http\Web\ArchivoController;
 use App\Http\Web\InicioController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -23,6 +24,13 @@ $rutas = new RouteCollection();
 $rutas->add('inicio', new Route(
     path: '/',
     defaults: ['_controlador' => [InicioController::class, 'index']],
+    methods: ['GET'],
+));
+
+$rutas->add('archivos.entregar', new Route(
+    path: '/archivos/{id}',
+    defaults: ['_controlador' => [ArchivoController::class, 'entregar']],
+    requirements: ['id' => '\d+'],
     methods: ['GET'],
 ));
 
@@ -48,7 +56,12 @@ $rutas->add('admin.salir', new Route(
 
 $rutas->add('admin.panel', new Route(
     path: '/admin',
-    defaults: ['_controlador' => [PanelController::class, 'index']],
+    defaults: [
+        '_controlador' => [PanelController::class, 'index'],
+        // Cualquier usuario autenticado ve el cascarón; los módulos del panel
+        // declararán además su `_permiso` («contenido.ver», etc.).
+        '_acceso' => 'privado',
+    ],
     methods: ['GET'],
 ));
 

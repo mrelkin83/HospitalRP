@@ -32,5 +32,11 @@
         <env name="APP_ENTORNO" value="pruebas"/>
         <env name="APP_DEBUG" value="true"/>
         <env name="APP_URL" value="http://localhost"/>
+        <!-- Base de pruebas separada: las pruebas de integración migran y
+             ensucian esta base, nunca la de desarrollo. -->
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PUERTO" value="3306"/>
+        <env name="DB_NOMBRE" value="hrpl_pruebas"/>
+        <env name="DB_USUARIO" value="root"/>
     </php>
 </phpunit>

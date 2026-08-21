@@ -131,6 +131,16 @@ CREATE TABLE auditoria (
   KEY idx_auditoria_fecha (creado_en)
 ) ENGINE=InnoDB;
 
+-- El append-only se hace cumplir en la base, no por cortesía del código:
+-- cualquier UPDATE o DELETE falla, venga de donde venga.
+CREATE TRIGGER trg_auditoria_sin_update
+BEFORE UPDATE ON auditoria FOR EACH ROW
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'auditoria es append-only: UPDATE prohibido';
+
+CREATE TRIGGER trg_auditoria_sin_delete
+BEFORE DELETE ON auditoria FOR EACH ROW
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'auditoria es append-only: DELETE prohibido';
+
 CREATE TABLE menus (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   nombre          VARCHAR(80)  NOT NULL,

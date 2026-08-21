@@ -11,6 +11,7 @@ declare(strict_types=1);
  * autowiring y se mantiene privado.
  */
 
+use App\Core\Audit\AuditoriaService;
 use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\Env;
 use App\Core\Database\ConexionFactory;
@@ -45,6 +46,13 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(Connection::class, Connection::class)
         ->setFactory([ConexionFactory::class, 'crear'])
         ->setArguments([new Reference(ConfigBaseDatos::class)])
+        ->setPublic(true);
+
+    // --- Auditoría ---
+    // Pública por la misma razón que la conexión: sus consumidores llegan en
+    // el paso 7 (autenticación). Volver privada entonces.
+    $contenedor->register(AuditoriaService::class, AuditoriaService::class)
+        ->setAutowired(true)
         ->setPublic(true);
 
     // --- Controladores del sitio público ---

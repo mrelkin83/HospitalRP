@@ -51,4 +51,6 @@ Mailpit (incluido en Laragon) se usa para probar el envío de correo sin enviar 
 
 ## Estado
 
-**Fase 0 — Fundación.** En curso.
+**Fase 0 — Fundación: terminada** (2026-08-21). Autenticación, permisos,
+auditoría append-only, almacén de archivos, sistema de diseño y cascarón del
+panel, con 87 pruebas. Sigue la **Fase 1** según `docs/plan-de-desarrollo.md`.

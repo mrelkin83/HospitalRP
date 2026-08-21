@@ -34,6 +34,10 @@ final class AlmacenArchivosTest extends TestCase
 
     protected function setUp(): void
     {
+        // documentos referencia archivos con ON DELETE RESTRICT: se limpian
+        // primero los documentos que otras clases de prueba hayan dejado.
+        self::$conexion->executeStatement('DELETE FROM documento_versiones');
+        self::$conexion->executeStatement('DELETE FROM documentos');
         self::$conexion->executeStatement('DELETE FROM archivos');
 
         $this->directorioBase = sys_get_temp_dir() . '/hrpl_uploads_' . bin2hex(random_bytes(6));

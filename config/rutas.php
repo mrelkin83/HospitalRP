@@ -20,6 +20,8 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\DependenciasController;
+use App\Http\Admin\DocumentosController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
@@ -28,6 +30,7 @@ use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\DirectorioPublicoController;
+use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MuestraDisenoController;
@@ -86,6 +89,28 @@ $listadoYDetalle('sedes', '/sedes', SedesPublicoController::class);
 $listadoYDetalle('especialidades', '/especialidades', EspecialidadesPublicoController::class);
 $listadoYDetalle('servicios', '/servicios', ServiciosPublicoController::class);
 $listadoYDetalle('directorio', '/directorio', DirectorioPublicoController::class);
+
+// --- Buscador documental (Fase 3) ---
+
+$rutas->add('documentos.buscador', new Route(
+    path: '/documentos',
+    defaults: ['_controlador' => [DocumentosPublicoController::class, 'buscador']],
+    methods: ['GET'],
+));
+
+$rutas->add('documentos.descargar', new Route(
+    path: '/documentos/{id}/descargar',
+    defaults: ['_controlador' => [DocumentosPublicoController::class, 'descargar']],
+    requirements: ['id' => '\d+'],
+    methods: ['GET'],
+));
+
+$rutas->add('documentos.ficha', new Route(
+    path: '/documentos/{id}-{slug}',
+    defaults: ['_controlador' => [DocumentosPublicoController::class, 'ficha']],
+    requirements: ['id' => '\d+', 'slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
 
 $rutas->add('urgencias', new Route(
     path: '/urgencias',
@@ -383,6 +408,57 @@ $crudDirectorio('admin.sedes', '/admin/sedes', SedesController::class);
 $crudDirectorio('admin.especialidades', '/admin/especialidades', EspecialidadesController::class);
 $crudDirectorio('admin.servicios', '/admin/servicios', ServiciosController::class);
 $crudDirectorio('admin.profesionales', '/admin/profesionales', ProfesionalesController::class);
+
+// --- Panel: gestión documental ---
+
+$permisoDoc = static fn (string $metodo, string $permiso = 'documentos.editar'): array => [
+    '_controlador' => [DocumentosController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => $permiso,
+];
+
+$rutas->add('admin.documentos', new Route('/admin/documentos', $permisoDoc('listado', 'documentos.ver'), methods: ['GET']));
+$rutas->add('admin.documentos.nuevo', new Route('/admin/documentos/nuevo', $permisoDoc('formularioNueva'), methods: ['GET']));
+$rutas->add('admin.documentos.guardar', new Route('/admin/documentos', $permisoDoc('guardar'), methods: ['POST']));
+$rutas->add('admin.documentos.editar', new Route('/admin/documentos/{id}', $permisoDoc('formularioEditar'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.documentos.actualizar', new Route('/admin/documentos/{id}', $permisoDoc('actualizar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.documentos.publicar', new Route('/admin/documentos/{id}/publicar', $permisoDoc('publicar', 'documentos.publicar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.documentos.estado', new Route('/admin/documentos/{id}/estado', $permisoDoc('cambiarEstado', 'documentos.publicar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.documentos.version', new Route('/admin/documentos/{id}/version', $permisoDoc('nuevaVersion'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.documentos.eliminar', new Route('/admin/documentos/{id}/eliminar', $permisoDoc('eliminar'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: dependencias ---
+
+$rutas->add('admin.dependencias', new Route(
+    path: '/admin/dependencias',
+    defaults: [
+        '_controlador' => [DependenciasController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.dependencias',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.dependencias.crear', new Route(
+    path: '/admin/dependencias',
+    defaults: [
+        '_controlador' => [DependenciasController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.dependencias',
+    ],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.dependencias.guardar', new Route(
+    path: '/admin/dependencias/{id}',
+    defaults: [
+        '_controlador' => [DependenciasController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.dependencias',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
 
 // --- Panel: biblioteca de medios ---
 

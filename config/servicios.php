@@ -32,14 +32,18 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\DependenciasController;
+use App\Http\Admin\DocumentosController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
+use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Http\Web\DirectorioPublicoController;
+use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\LayoutPublico;
 use App\Http\Web\NoticiasPublicoController;
@@ -56,6 +60,8 @@ use App\Modules\Contenido\Repository\PaginaRepository;
 use App\Modules\Contenido\Service\CampanaService;
 use App\Modules\Contenido\Service\PaginaService;
 use App\Modules\Directorio\Repository\EspecialidadRepository;
+use App\Modules\Documentos\Repository\DocumentoRepository;
+use App\Modules\Documentos\Service\DocumentoService;
 use App\Modules\Directorio\Repository\ProfesionalRepository;
 use App\Modules\Directorio\Repository\SedeRepository;
 use App\Modules\Directorio\Repository\ServicioRepository;
@@ -132,6 +138,16 @@ return static function (Env $env): ContainerBuilder {
 
     // --- Módulo Sistema ---
     $contenedor->register(MenuRepository::class, MenuRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(DependenciaRepository::class, DependenciaRepository::class)
+        ->setAutowired(true);
+
+    // --- Módulo Documentos ---
+    $contenedor->register(DocumentoRepository::class, DocumentoRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(DocumentoService::class, DocumentoService::class)
         ->setAutowired(true);
 
     // --- Módulo Contenido ---
@@ -216,6 +232,10 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(DocumentosPublicoController::class, DocumentosPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(ArchivoController::class, ArchivoController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -274,6 +294,14 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(ProfesionalesController::class, ProfesionalesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(DocumentosController::class, DocumentosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(DependenciasController::class, DependenciasController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

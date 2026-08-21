@@ -60,4 +60,10 @@ menús editables y modo emergencia. 120 pruebas.
 especialidades, servicios y directorio médico administrables y publicados, con
 filtro por sede sin recargar, páginas de urgencias y contacto, y la regla dura
 de que ningún profesional se publica sin autorización expresa. 123 pruebas.
-Sigue la **Fase 3 — Gestión documental** según `docs/plan-de-desarrollo.md`.
+**Fase 3 — Gestión documental: terminada** (2026-08-21). Documentos con ficha
+completa (TRD, vigencia, actos), versiones con historial, estados
+vigente/derogado/histórico con `reemplaza_a`, buscador con filtros (< 300 ms
+sobre mil documentos, medido) y ficha HTML legible en móvil con descarga
+contada. 128 pruebas.
+Sigue la **Fase 4 — Transparencia y datos abiertos** según
+`docs/plan-de-desarrollo.md`.

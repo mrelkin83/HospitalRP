@@ -7,7 +7,7 @@
 | 1 | Migración: `indice_busqueda`, `busquedas_log`, `redirecciones` | Sube y baja sin error | ✅ up→down→up verificado |
 | 2 | Índice unificado: reconstrucción total por comando + reindexación por evento en los servicios editoriales (noticias, páginas, documentos) | Publicar una noticia la deja buscable sin correr nada a mano | ✅ hooks en servicios editoriales, 7 controladores admin y programador; `busqueda:indexar` como red de seguridad |
 | 3 | Buscador global `/buscar`: FULLTEXT sobre el índice, resultados agrupados por tipo, registro de búsquedas (las sin resultado alimentan FAQ) | «certificado laboral» devuelve el trámite de certificados | ✅ test + E2E HTTP; prefijo booleano (sin stemming en MySQL); FAQ pública nueva en /atencion-ciudadania/preguntas-frecuentes |
-| 4 | Redirecciones 301: tabla con contador de hits, resolución en el 404 del Kernel y semilla con las URLs del Joomla (inventario docs/08) | Una URL vieja del Joomla responde 301 hacia la nueva | |
+| 4 | Redirecciones 301: tabla con contador de hits, resolución en el 404 del Kernel y semilla con las URLs del Joomla (inventario docs/08) | Una URL vieja del Joomla responde 301 hacia la nueva | ✅ exactos + prefijos `*` con contador de hits; resolución en Kernel y en el catch-all; semilla `semillas:redirecciones`; E2E verificado |
 | 5 | SEO: robots.txt, sitemap.xml dinámico, canonical, OpenGraph y JSON-LD `Hospital`/`MedicalOrganization` | Lighthouse SEO ≥ 95 en móvil | |
 | 6 | PWA: manifest, iconos, service worker con cascarón offline, instalable | Lighthouse detecta la PWA instalable | |
 | 7 | Accesibilidad: alternador «reducir movimiento» (completa los modos de la Res. 1519) + auditoría estructural WCAG de las cinco rutas principales | Lighthouse accesibilidad = 100 | |

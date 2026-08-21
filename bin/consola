@@ -30,6 +30,8 @@ use App\Modules\Transparencia\Command\SembrarTransparenciaCommand;
 use App\Modules\Sistema\Command\CrearAdminCommand;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use App\Modules\Sistema\Command\SembrarMenusCommand;
+use App\Modules\Sistema\Command\SembrarRedireccionesCommand;
+use App\Modules\Sistema\Repository\RedireccionRepository;
 use Symfony\Component\Console\Application;
 
 $env = require dirname(__DIR__) . '/config/bootstrap.php';
@@ -54,4 +56,5 @@ $aplicacion->add(new AlertasVencimientoCommand(
 ));
 $aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria, $indexador)));
 $aplicacion->add(new IndexarCommand($indexador));
+$aplicacion->add(new SembrarRedireccionesCommand(new RedireccionRepository($conexion)));
 $aplicacion->run();

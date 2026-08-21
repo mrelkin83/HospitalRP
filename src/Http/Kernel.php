@@ -8,6 +8,7 @@ use App\Core\Auth\AutorizacionService;
 use App\Core\Auth\Sesion;
 use App\Core\Config\ConfigAplicacion;
 use App\Http\Exception\ControladorInvalidoException;
+use App\Modules\Sistema\Repository\RedireccionRepository;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,6 +58,14 @@ final readonly class Kernel
         try {
             $parametros = $comparador->match($peticion->getPathInfo());
         } catch (ResourceNotFoundException) {
+            // Antes del 404: las URL del sitio Joomla anterior siguen citadas
+            // en oficios y buscadores, y responden 301 hacia su equivalente.
+            $redireccion = $this->redirigirSiCorresponde($peticion);
+
+            if ($redireccion !== null) {
+                return $redireccion;
+            }
+
             return $this->paginaDeEstado(
                 Response::HTTP_NOT_FOUND,
                 'Página no encontrada',
@@ -79,6 +88,30 @@ final readonly class Kernel
         }
 
         return $this->invocar($parametros['_controlador'] ?? null, $peticion);
+    }
+
+    private function redirigirSiCorresponde(Request $peticion): ?Response
+    {
+        if ($peticion->getMethod() !== 'GET') {
+            return null;
+        }
+
+        /** @var RedireccionRepository $redirecciones */
+        $redirecciones = $this->contenedor->get(RedireccionRepository::class);
+
+        // La URI cruda, no getPathInfo(): las URL del Joomla contienen
+        // «index.php» y Symfony lo interpretaría como base y recortaría
+        // el camino («/sitio/index.php/es/x» quedaría como «/es/x»).
+        $ruta = rawurldecode((string) parse_url($peticion->getRequestUri(), PHP_URL_PATH));
+        $destino = $redirecciones->destinoPara($ruta);
+
+        if ($destino === null) {
+            return null;
+        }
+
+        $redirecciones->registrarHit($destino['id']);
+
+        return new RedirectResponse($destino['destino'], $destino['codigo']);
     }
 
     /**

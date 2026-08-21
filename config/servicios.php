@@ -51,6 +51,7 @@ use App\Modules\Busqueda\Service\BuscadorService;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
+use App\Modules\Sistema\Repository\RedireccionRepository;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Service\CalculadoraDiasHabiles;
@@ -206,6 +207,11 @@ return static function (Env $env): ContainerBuilder {
 
     $contenedor->register(DocumentoService::class, DocumentoService::class)
         ->setAutowired(true);
+
+    // El Kernel la consulta en los 404, igual que Sesion: pública.
+    $contenedor->register(RedireccionRepository::class, RedireccionRepository::class)
+        ->setAutowired(true)
+        ->setPublic(true);
 
     // --- Módulo Búsqueda ---
     $contenedor->register(IndiceBusquedaRepository::class, IndiceBusquedaRepository::class)

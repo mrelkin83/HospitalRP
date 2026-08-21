@@ -7,6 +7,8 @@ namespace App\Http\Web;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
 use App\Modules\Contenido\Repository\PaginaRepository;
+use App\Modules\Sistema\Repository\RedireccionRepository;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,6 +24,7 @@ final readonly class PaginasController
         private Vistas $vistas,
         private PaginaRepository $paginas,
         private AlmacenArchivos $almacen,
+        private RedireccionRepository $redirecciones,
     ) {
     }
 
@@ -30,6 +33,18 @@ final readonly class PaginasController
         $pagina = $this->paginas->publicaPorRuta((string) $peticion->attributes->get('ruta'));
 
         if ($pagina === null) {
+            // Igual que el 404 del Kernel: una URL vieja con redirección
+            // registrada responde 301 en lugar de morir aquí.
+            $destino = $this->redirecciones->destinoPara(
+                rawurldecode((string) parse_url($peticion->getRequestUri(), PHP_URL_PATH)),
+            );
+
+            if ($destino !== null) {
+                $this->redirecciones->registrarHit($destino['id']);
+
+                return new RedirectResponse($destino['destino'], $destino['codigo']);
+            }
+
             return $this->layout->responder(
                 titulo: 'Página no encontrada',
                 descripcion: null,

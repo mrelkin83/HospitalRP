@@ -17,7 +17,7 @@ Cada paso termina en algo verificable y en un commit, como en la Fase 0.
 | 8 | Layout público: barra de accesibilidad, encabezado con navegación, pie según Res. 1519 (con configuración dinámica), aviso activo y modo emergencia | Un aviso `critico` activo transforma la home | ✅ |
 | 9 | Home según `frontend.png`: héroe, 8 accesos, noticias recientes, aviso | La home usa noticias reales de la base | ✅ |
 | 10 | Público de contenido: listado y detalle de noticias, página institucional por ruta dinámica | Una página `en_revision` da 404 público; una `publicada` se ve | ✅ |
-| 11 | CKEditor 5 autoalojado en el panel (sanitización del paso 3 al guardar) | El editor funciona sin CDN y el HTML guardado está saneado | |
+| 11 | CKEditor 5 autoalojado en el panel (sanitización del paso 3 al guardar) | El editor funciona sin CDN y el HTML guardado está saneado | ✅ |
 | 12 | Páginas, campañas, avisos y FAQ en el panel (mismos patrones del paso 5) | CRUD completo y auditado de los cuatro | |
 
 **Nota del paso 9:** el acceso «Resultados» del diseño se cambió por «Consulta

@@ -80,7 +80,7 @@ $error = static function (string $campo) use ($errores, $e): string {
 
         <div>
             <label class="etiqueta" for="contenido">Contenido</label>
-            <textarea class="campo" id="contenido" name="contenido" rows="14"
+            <textarea class="campo" id="contenido" name="contenido" rows="14" data-editor="contenido"
                       <?= isset($errores['contenido']) ? 'aria-invalid="true" aria-describedby="error-contenido"' : '' ?>><?= $e($valorContenido) ?></textarea>
             <?= $error('contenido') ?>
         </div>

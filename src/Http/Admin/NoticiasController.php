@@ -55,7 +55,7 @@ final readonly class NoticiasController
 
     public function formularioNueva(Request $peticion): Response
     {
-        return $this->pagina('Nueva noticia', $this->renderFormulario(null, null, []));
+        return $this->pagina('Nueva noticia', $this->renderFormulario(null, null, []), conEditor: true);
     }
 
     public function guardar(Request $peticion): Response
@@ -69,7 +69,7 @@ final readonly class NoticiasController
         $imagenId = $this->procesarImagen($peticion, $errores);
 
         if ($errores !== []) {
-            return $this->pagina('Nueva noticia', $this->renderFormulario(null, $datos, $errores), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->pagina('Nueva noticia', $this->renderFormulario(null, $datos, $errores), Response::HTTP_UNPROCESSABLE_ENTITY, conEditor: true);
         }
 
         $id = $this->servicio->crear($datos, $imagenId, Actor::desde($this->sesion, $peticion));
@@ -85,7 +85,7 @@ final readonly class NoticiasController
             return $this->noEncontrada();
         }
 
-        return $this->pagina('Editar noticia', $this->renderFormulario($noticia, null, [], $this->mensajeDeEstado($peticion)));
+        return $this->pagina('Editar noticia', $this->renderFormulario($noticia, null, [], $this->mensajeDeEstado($peticion)), conEditor: true);
     }
 
     public function actualizar(Request $peticion): Response
@@ -105,7 +105,7 @@ final readonly class NoticiasController
         $imagenId = $this->procesarImagen($peticion, $errores) ?? $noticia->imagenId;
 
         if ($errores !== []) {
-            return $this->pagina('Editar noticia', $this->renderFormulario($noticia, $datos, $errores), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->pagina('Editar noticia', $this->renderFormulario($noticia, $datos, $errores), Response::HTTP_UNPROCESSABLE_ENTITY, conEditor: true);
         }
 
         $this->servicio->actualizar($noticia->id, $datos, $imagenId, Actor::desde($this->sesion, $peticion));
@@ -221,7 +221,7 @@ final readonly class NoticiasController
         ]);
     }
 
-    private function pagina(string $titulo, string $contenido, int $estado = Response::HTTP_OK): Response
+    private function pagina(string $titulo, string $contenido, int $estado = Response::HTTP_OK, bool $conEditor = false): Response
     {
         $this->sesion->iniciar();
 
@@ -230,6 +230,7 @@ final readonly class NoticiasController
             'usuarioNombre' => $this->sesion->usuarioNombre() ?? 'Usuario',
             'tokenCsrf' => $this->sesion->tokenCsrf(),
             'contenido' => $contenido,
+            'conEditor' => $conEditor,
         ]);
 
         $respuesta = new Response($html, $estado, ['Content-Type' => 'text/html; charset=utf-8']);

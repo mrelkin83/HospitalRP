@@ -44,7 +44,10 @@ final readonly class Kernel
             $respuesta = $this->respuestaDeError($error);
         }
 
-        return $this->aplicarCabecerasDeSeguridad($respuesta);
+        return $this->aplicarCabecerasDeSeguridad(
+            $respuesta,
+            $peticion->attributes->get('_acceso') === 'privado',
+        );
     }
 
     private function despachar(Request $peticion): Response
@@ -159,7 +162,7 @@ final readonly class Kernel
      * permiso se abre uno por uno y con motivo, nunca con un `unsafe-inline`
      * global: eso deja el sitio institucional abierto a XSS.
      */
-    private function aplicarCabecerasDeSeguridad(Response $respuesta): Response
+    private function aplicarCabecerasDeSeguridad(Response $respuesta, bool $esPanel = false): Response
     {
         $cabeceras = $respuesta->headers;
 
@@ -170,7 +173,9 @@ final readonly class Kernel
             "frame-ancestors 'none'",
             "object-src 'none'",
             "img-src 'self' data:",
-            "style-src 'self'",
+            // Solo en el panel (autenticado): CKEditor posiciona sus menús con
+            // estilos inline. El sitio público conserva style-src estricto.
+            $esPanel ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
             "script-src 'self'",
             // Fuentes variables autoalojadas: nada de CDN de terceros (privacidad).
             "font-src 'self'",

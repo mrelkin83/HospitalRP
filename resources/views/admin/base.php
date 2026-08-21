@@ -3,7 +3,9 @@
  * Cascarón del panel administrativo.
  * Espera: $titulo (string), $usuarioNombre (string), $tokenCsrf (string),
  * $contenido (HTML ya compuesto y escapado por la vista de página).
+ * Opcional: $conEditor (bool) — carga CKEditor 5 autoalojado.
  */
+$conEditor ??= false;
 ?>
 <!doctype html>
 <html lang="es">
@@ -13,6 +15,12 @@
     <meta name="robots" content="noindex">
     <title><?= $e($titulo) ?> — Panel · E.S.E. Hospital Rosario Pumarejo de López</title>
     <link rel="stylesheet" href="/build/app.css">
+    <?php if ($conEditor) { ?>
+        <link rel="stylesheet" href="/vendor/ckeditor5/ckeditor5.css">
+        <script src="/vendor/ckeditor5/ckeditor5.umd.js" defer></script>
+        <script src="/vendor/ckeditor5/translations/es.umd.js" defer></script>
+        <script src="/js/editor.js" defer></script>
+    <?php } ?>
 </head>
 <body>
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>

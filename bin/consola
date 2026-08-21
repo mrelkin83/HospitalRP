@@ -16,6 +16,7 @@ use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
+use App\Modules\Directorio\Command\SembrarDirectorioCommand;
 use App\Modules\Sistema\Command\CrearAdminCommand;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use App\Modules\Sistema\Command\SembrarMenusCommand;
@@ -30,5 +31,6 @@ $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — co
 $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
 $aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarMenusCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarDirectorioCommand($conexion, $auditoria));
 $aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria)));
 $aplicacion->run();

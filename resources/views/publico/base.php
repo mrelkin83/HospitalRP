@@ -30,6 +30,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
     <?php } ?>
     <link rel="stylesheet" href="/build/app.css">
     <script src="/js/sitio.js"></script>
+    <script src="/js/filtro.js" defer></script>
 </head>
 <body>
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>

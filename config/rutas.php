@@ -20,13 +20,22 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
+use App\Http\Admin\ProfesionalesController;
+use App\Http\Admin\SedesController;
+use App\Http\Admin\ServiciosController;
 use App\Http\Web\ArchivoController;
+use App\Http\Web\DirectorioPublicoController;
+use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MuestraDisenoController;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
+use App\Http\Web\SedesPublicoController;
+use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\UrgenciasContactoController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -54,6 +63,39 @@ $rutas->add('noticias.detalle', new Route(
     path: '/noticias/{slug}',
     defaults: ['_controlador' => [NoticiasPublicoController::class, 'detalle']],
     requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+// --- Directorio y servicios (Fase 2) ---
+
+$listadoYDetalle = static function (string $nombre, string $prefijo, string $controlador) use ($rutas): void {
+    $rutas->add($nombre, new Route(
+        $prefijo,
+        ['_controlador' => [$controlador, 'listado']],
+        methods: ['GET'],
+    ));
+    $rutas->add($nombre . '.detalle', new Route(
+        $prefijo . '/{slug}',
+        ['_controlador' => [$controlador, 'detalle']],
+        ['slug' => '[a-z0-9\-]+'],
+        methods: ['GET'],
+    ));
+};
+
+$listadoYDetalle('sedes', '/sedes', SedesPublicoController::class);
+$listadoYDetalle('especialidades', '/especialidades', EspecialidadesPublicoController::class);
+$listadoYDetalle('servicios', '/servicios', ServiciosPublicoController::class);
+$listadoYDetalle('directorio', '/directorio', DirectorioPublicoController::class);
+
+$rutas->add('urgencias', new Route(
+    path: '/urgencias',
+    defaults: ['_controlador' => [UrgenciasContactoController::class, 'urgencias']],
+    methods: ['GET'],
+));
+
+$rutas->add('contacto', new Route(
+    path: '/contacto',
+    defaults: ['_controlador' => [UrgenciasContactoController::class, 'contacto']],
     methods: ['GET'],
 ));
 
@@ -322,6 +364,25 @@ $rutas->add('admin.categorias.guardar', new Route(
     requirements: ['id' => '\d+'],
     methods: ['POST'],
 ));
+
+// --- Panel: directorio (sedes, especialidades, servicios, profesionales) ---
+
+$crudDirectorio = static function (string $nombre, string $prefijo, string $controlador) use ($rutas): void {
+    $privada = static fn (string $metodo, string $permiso): array => [
+        '_controlador' => [$controlador, $metodo],
+        '_acceso' => 'privado',
+        '_permiso' => $permiso,
+    ];
+
+    $rutas->add($nombre, new Route($prefijo, $privada('listado', 'directorio.ver'), methods: ['GET']));
+    $rutas->add($nombre . '.crear', new Route($prefijo, $privada('guardar', 'directorio.editar'), methods: ['POST']));
+    $rutas->add($nombre . '.guardar', new Route($prefijo . '/{id}', $privada('guardar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
+};
+
+$crudDirectorio('admin.sedes', '/admin/sedes', SedesController::class);
+$crudDirectorio('admin.especialidades', '/admin/especialidades', EspecialidadesController::class);
+$crudDirectorio('admin.servicios', '/admin/servicios', ServiciosController::class);
+$crudDirectorio('admin.profesionales', '/admin/profesionales', ProfesionalesController::class);
 
 // --- Panel: biblioteca de medios ---
 

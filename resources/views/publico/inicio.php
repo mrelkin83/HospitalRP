@@ -8,7 +8,8 @@
  * ese acceso es «Consulta tu trámite» (radicado), que sí existe.
  *
  * Espera: $noticias (list<Noticia>), $config (ConfigDinamica),
- *         $imagenes (array<int, Archivo> imágenes de las noticias por id).
+ *         $imagenes (array<int, Archivo> imágenes de las noticias por id),
+ *         $sedes (list<Sede>, máximo 3 para la franja).
  */
 
 use App\Core\Support\Fechas;
@@ -117,6 +118,21 @@ $accesos = [
                         </div>
                     </article>
                 </li>
+            <?php } ?>
+        </ul>
+    </section>
+<?php } ?>
+
+<?php /* --- Nuestras sedes (frontend.png, bloque 4) --- */ ?>
+<?php if ($sedes !== []) { ?>
+    <section class="mx-auto max-w-6xl px-4 py-6 pb-12" aria-labelledby="sedes-titulo">
+        <div class="flex items-baseline gap-4">
+            <h2 id="sedes-titulo">Nuestras sedes</h2>
+            <a class="ms-auto whitespace-nowrap" href="/sedes">Ver todas →</a>
+        </div>
+        <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <?php foreach ($sedes as $sede) { ?>
+                <li><?= $vistas->render('publico/parciales/tarjeta-sede', ['sede' => $sede]) ?></li>
             <?php } ?>
         </ul>
     </section>

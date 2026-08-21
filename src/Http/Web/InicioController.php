@@ -8,6 +8,7 @@ use App\Core\Config\ConfigDinamica;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
 use App\Modules\Contenido\Repository\NoticiaRepository;
+use App\Modules\Directorio\Repository\SedeRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,6 +24,7 @@ final readonly class InicioController
         private Vistas $vistas,
         private ConfigDinamica $config,
         private NoticiaRepository $noticias,
+        private SedeRepository $sedes,
         private AlmacenArchivos $almacen,
     ) {
     }
@@ -30,6 +32,7 @@ final readonly class InicioController
     public function index(Request $peticion): Response
     {
         $noticias = $this->noticias->publicasRecientes(3);
+        $sedes = array_slice($this->sedes->activasPublicas(), 0, 3);
 
         $imagenes = $this->almacen->porIds(array_values(array_filter(array_map(
             static fn ($n): ?int => $n->imagenId,
@@ -46,6 +49,7 @@ final readonly class InicioController
             contenido: $this->vistas->render('publico/inicio', [
                 'noticias' => $noticias,
                 'imagenes' => $imagenes,
+                'sedes' => $sedes,
                 'config' => $this->config,
             ]),
             esPortada: true,

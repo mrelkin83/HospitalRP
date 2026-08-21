@@ -56,4 +56,8 @@ Mailpit (incluido en Laragon) se usa para probar el envío de correo sin enviar 
 `frontend.png` con LCP 2,4 s en 3G simulado, noticias/páginas/campañas/avisos/FAQ
 administrables con aprobación, versionado y auditoría, CKEditor autoalojado,
 menús editables y modo emergencia. 120 pruebas.
-Sigue la **Fase 2 — Directorio y servicios** según `docs/plan-de-desarrollo.md`.
+**Fase 2 — Directorio y servicios: terminada** (2026-08-21). Sedes,
+especialidades, servicios y directorio médico administrables y publicados, con
+filtro por sede sin recargar, páginas de urgencias y contacto, y la regla dura
+de que ningún profesional se publica sin autorización expresa. 123 pruebas.
+Sigue la **Fase 3 — Gestión documental** según `docs/plan-de-desarrollo.md`.

@@ -32,12 +32,21 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
+use App\Http\Admin\ProfesionalesController;
+use App\Http\Admin\SedesController;
+use App\Http\Admin\ServiciosController;
 use App\Modules\Sistema\Repository\MenuRepository;
+use App\Http\Web\DirectorioPublicoController;
+use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\LayoutPublico;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
+use App\Http\Web\SedesPublicoController;
+use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
 use App\Modules\Contenido\Repository\CampanaRepository;
 use App\Modules\Contenido\Repository\CategoriaRepository;
@@ -46,6 +55,10 @@ use App\Modules\Contenido\Repository\NoticiaRepository;
 use App\Modules\Contenido\Repository\PaginaRepository;
 use App\Modules\Contenido\Service\CampanaService;
 use App\Modules\Contenido\Service\PaginaService;
+use App\Modules\Directorio\Repository\EspecialidadRepository;
+use App\Modules\Directorio\Repository\ProfesionalRepository;
+use App\Modules\Directorio\Repository\SedeRepository;
+use App\Modules\Directorio\Repository\ServicioRepository;
 use App\Modules\Contenido\Service\NoticiaService;
 use App\Modules\Contenido\Service\SanitizadorHtml;
 use App\Modules\Contenido\Service\VersionadoService;
@@ -151,6 +164,19 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(AvisoRepository::class, AvisoRepository::class)
         ->setAutowired(true);
 
+    // --- Módulo Directorio ---
+    $contenedor->register(SedeRepository::class, SedeRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(EspecialidadRepository::class, EspecialidadRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ServicioRepository::class, ServicioRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ProfesionalRepository::class, ProfesionalRepository::class)
+        ->setAutowired(true);
+
     $contenedor->register(PaginaRepository::class, PaginaRepository::class)
         ->setAutowired(true);
 
@@ -167,6 +193,26 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(PaginasController::class, PaginasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(SedesPublicoController::class, SedesPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EspecialidadesPublicoController::class, EspecialidadesPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ServiciosPublicoController::class, ServiciosPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(DirectorioPublicoController::class, DirectorioPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(UrgenciasContactoController::class, UrgenciasContactoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 
@@ -212,6 +258,22 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(CategoriasController::class, CategoriasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(SedesController::class, SedesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EspecialidadesController::class, EspecialidadesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ServiciosController::class, ServiciosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ProfesionalesController::class, ProfesionalesController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

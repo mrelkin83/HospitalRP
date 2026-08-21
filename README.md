@@ -70,6 +70,12 @@ transparencia con la estructura del Anexo 2 (Res. 1519) sembrada y editable,
 indicador de secciones obligatorias vacías en el panel, enlace a SECOP en
 contratación y datasets descargables en formatos abiertos con descargas
 contadas. 131 pruebas.
-Sigue la **Fase 5 — Motor de trámites y PQRSDF** según
-`docs/plan-de-desarrollo.md` (⚠️ parcialmente bloqueada por las preguntas
-pendientes con el hospital: horarios de bandeja y términos legales).
+**Fase 5 — Motor de trámites y PQRSDF: terminada** (2026-08-21, con términos
+PROVISIONALES de la Ley 1755 pendientes de validación jurídica). Radicación en
+línea con radicado único bajo concurrencia probada, vencimientos en días
+hábiles con festivos calculados, formulario dinámico por tipo, casilla de
+autorización con evidencia (Ley 1581), consulta pública por radicado +
+documento, bandeja con semáforo de vencimientos, tipos configurables desde el
+panel y alertas por correo. 144 pruebas.
+Sigue la **Fase 6 — Cumplimiento y datos personales** según
+`docs/plan-de-desarrollo.md`.

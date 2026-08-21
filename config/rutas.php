@@ -12,6 +12,8 @@ declare(strict_types=1);
  * Las rutas se irán añadiendo fase por fase; no adelantar ninguna.
  */
 
+use App\Http\Admin\LoginController;
+use App\Http\Admin\PanelController;
 use App\Http\Web\InicioController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -21,6 +23,32 @@ $rutas = new RouteCollection();
 $rutas->add('inicio', new Route(
     path: '/',
     defaults: ['_controlador' => [InicioController::class, 'index']],
+    methods: ['GET'],
+));
+
+// --- Panel administrativo ---
+
+$rutas->add('admin.entrar.formulario', new Route(
+    path: '/admin/entrar',
+    defaults: ['_controlador' => [LoginController::class, 'formulario']],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.entrar', new Route(
+    path: '/admin/entrar',
+    defaults: ['_controlador' => [LoginController::class, 'entrar']],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.salir', new Route(
+    path: '/admin/salir',
+    defaults: ['_controlador' => [LoginController::class, 'salir']],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.panel', new Route(
+    path: '/admin',
+    defaults: ['_controlador' => [PanelController::class, 'index']],
     methods: ['GET'],
 ));
 

@@ -157,8 +157,8 @@ del manual de identidad salvo el paso 9, que se hace con tokens provisionales.
 | 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error | ✅ |
 | 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte | ✅ |
 | 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla | ✅ |
-| 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` | ⏳ siguiente |
-| 8 | Roles y permisos granulares + almacenamiento de archivos (validación por contenido real, fuera del *document root*, entrega por controlador) | Un usuario sin permiso recibe 403; un `.php` renombrado a `.jpg` se rechaza |
+| 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` | ✅ |
+| 8 | Roles y permisos granulares + almacenamiento de archivos (validación por contenido real, fuera del *document root*, entrega por controlador) | Un usuario sin permiso recibe 403; un `.php` renombrado a `.jpg` se rechaza | ⏳ siguiente |
 | 9 | Sistema de diseño: tokens de color y tipografía, componentes base, modo oscuro y modos de accesibilidad + pipeline de Tailwind | Página de muestra de componentes con contraste verificado ≥ 4,5:1 |
 | 10 | Cascarón del panel (navegación, sesión, layout responsivo) + PHPUnit + CI básica | Los tests pasan en CI y el panel se usa desde un celular |
 

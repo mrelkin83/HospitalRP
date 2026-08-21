@@ -18,6 +18,7 @@ use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Sistema\Command\CrearAdminCommand;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
+use App\Modules\Sistema\Command\SembrarMenusCommand;
 use Symfony\Component\Console\Application;
 
 $env = require dirname(__DIR__) . '/config/bootstrap.php';
@@ -28,5 +29,6 @@ $auditoria = new AuditoriaService($conexion);
 $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — consola', 'fase-0');
 $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
 $aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarMenusCommand($conexion, $auditoria));
 $aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria)));
 $aplicacion->run();

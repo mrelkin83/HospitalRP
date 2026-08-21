@@ -20,6 +20,7 @@ final readonly class Archivo
         public string $hashSha256,
         public ?int $ancho,
         public ?int $alto,
+        public ?string $textoAlt,
         public bool $publico,
     ) {
     }
@@ -39,6 +40,7 @@ final readonly class Archivo
             hashSha256: (string) $fila['hash_sha256'],
             ancho: isset($fila['ancho']) ? (int) $fila['ancho'] : null,
             alto: isset($fila['alto']) ? (int) $fila['alto'] : null,
+            textoAlt: isset($fila['texto_alt']) ? (string) $fila['texto_alt'] : null,
             publico: (bool) $fila['publico'],
         );
     }

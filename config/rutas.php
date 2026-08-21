@@ -13,6 +13,8 @@ declare(strict_types=1);
  */
 
 use App\Http\Admin\LoginController;
+use App\Http\Admin\MediosController;
+use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
 use App\Http\Admin\PanelController;
 use App\Http\Web\ArchivoController;
@@ -158,6 +160,73 @@ $rutas->add('admin.noticias.eliminar', new Route(
         '_controlador' => [NoticiasController::class, 'eliminar'],
         '_acceso' => 'privado',
         '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+// --- Panel: biblioteca de medios ---
+
+$rutas->add('admin.medios', new Route(
+    path: '/admin/medios',
+    defaults: [
+        '_controlador' => [MediosController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.medios.subir', new Route(
+    path: '/admin/medios',
+    defaults: [
+        '_controlador' => [MediosController::class, 'subir'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['POST'],
+));
+
+// --- Panel: menús ---
+
+$rutas->add('admin.menus', new Route(
+    path: '/admin/menus',
+    defaults: [
+        '_controlador' => [MenusController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.menus',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.menus.item.guardar', new Route(
+    path: '/admin/menus/items/{id}',
+    defaults: [
+        '_controlador' => [MenusController::class, 'guardarItem'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.menus',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.menus.item.crear', new Route(
+    path: '/admin/menus/{id}/items',
+    defaults: [
+        '_controlador' => [MenusController::class, 'crearItem'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.menus',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.menus.item.eliminar', new Route(
+    path: '/admin/menus/items/{id}/eliminar',
+    defaults: [
+        '_controlador' => [MenusController::class, 'eliminarItem'],
+        '_acceso' => 'privado',
+        '_permiso' => 'sistema.menus',
     ],
     requirements: ['id' => '\d+'],
     methods: ['POST'],

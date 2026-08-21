@@ -104,6 +104,20 @@ final readonly class AlmacenArchivos
         return Archivo::desdeFila($fila);
     }
 
+    /**
+     * Imágenes recientes para la biblioteca de medios del panel.
+     *
+     * @return list<Archivo>
+     */
+    public function imagenesRecientes(int $limite = 60): array
+    {
+        $filas = $this->conexion->fetchAllAssociative(
+            "SELECT * FROM archivos WHERE mime LIKE 'image/%' ORDER BY id DESC LIMIT " . max(1, $limite),
+        );
+
+        return array_map(Archivo::desdeFila(...), $filas);
+    }
+
     public function porId(int $id): ?Archivo
     {
         $fila = $this->conexion->fetchAssociative('SELECT * FROM archivos WHERE id = ?', [$id]);

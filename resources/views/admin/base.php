@@ -34,6 +34,8 @@
             <ul class="flex gap-1 overflow-x-auto text-sm font-semibold">
                 <li><a href="/admin" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Inicio</a></li>
                 <li><a href="/admin/noticias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Noticias</a></li>
+                <li><a href="/admin/medios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Medios</a></li>
+                <li><a href="/admin/menus" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Menús</a></li>
                 <?php /* Los demás módulos (páginas, trámites, documentos…) se añaden fase por fase. */ ?>
             </ul>
         </nav>

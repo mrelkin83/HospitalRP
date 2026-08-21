@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\Env;
+use App\Core\Database\ConexionFactory;
+use App\Core\Database\ConfigBaseDatos;
 use App\Http\Web\InicioController;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -27,6 +30,21 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(ConfigAplicacion::class, ConfigAplicacion::class)
         ->setFactory([ConfigAplicacion::class, 'desde'])
         ->setArguments([new Reference(Env::class)])
+        ->setPublic(true);
+
+    // --- Base de datos ---
+    // Perezosa por diseño de DBAL: registrar la conexión no abre socket alguno;
+    // el primer query lo abre. Una página sin consultas no paga la conexión.
+    $contenedor->register(ConfigBaseDatos::class, ConfigBaseDatos::class)
+        ->setFactory([ConfigBaseDatos::class, 'desde'])
+        ->setArguments([new Reference(Env::class)]);
+
+    // Pública mientras ningún repositorio la referencie: el contenedor compilado
+    // elimina los servicios privados sin consumidores. Volver privada cuando
+    // exista el primer repositorio.
+    $contenedor->register(Connection::class, Connection::class)
+        ->setFactory([ConexionFactory::class, 'crear'])
+        ->setArguments([new Reference(ConfigBaseDatos::class)])
         ->setPublic(true);
 
     // --- Controladores del sitio público ---

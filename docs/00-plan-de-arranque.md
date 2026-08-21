@@ -129,6 +129,11 @@ datos es superficie de riesgo innecesaria. Las migraciones de Doctrine y el clie
 | **C** | Skills de terceros a instalar | ✅ **Ninguna.** Se avanza con las 115 ya instaladas. Consecuencia asumida: la conformidad WCAG y el presupuesto de rendimiento se verifican con los MCP de Chrome DevTools y Playwright, no con una skill dedicada. |
 | **D** | MCPs | ✅ **Los tres configurados** (ámbito local, en `C:\Users\ELKIN\.claude.json`): `chrome-devtools`, `playwright`, `context7`. |
 | **E** | Preguntas 1, 2 y 9 de `02-valoracion` Parte H | ⏳ **Pendientes, no bloquean la Fase 0 pero sí la Fase 5.** Hay que iniciarlas ya con el hospital porque dependen de terceros. |
+| **F** | Referencia visual del sitio público | ✅ **2026-08-21: `frontend.png` (raíz del repo) es el diseño objetivo.** Supersede la paleta «derivada del Joomla» de la decisión B: los tokens del paso 9 se derivan de esa imagen (azul primario, héroe con foto, 8 accesos rápidos), verificando contraste AA. `stitch_hospital_digital_experience_home/` es un borrador anterior y no manda. |
+
+> **Nota 2026-08-21 — reinstalación del sistema operativo.** Se perdió la base
+> `hrpl` local sin respaldo. Sin consecuencias: la fase iba por el paso 3 y no
+> existían migraciones ni datos. Se recreó vacía con `utf8mb4_0900_ai_ci`.
 
 ### Nota sobre la ubicación de `CLAUDE.md`
 
@@ -149,8 +154,8 @@ del manual de identidad salvo el paso 9, que se hace con tokens provisionales.
 | 1 | `composer.json`: componentes Symfony permitidos + Doctrine DBAL y Migrations + PHPUnit. PSR-4 `App\` → `src/` | `composer install` corre limpio y el autoload resuelve | ✅ `352d5f7` |
 | 2 | Configuración por entorno (`.env` fuera del repositorio, `.env.example` dentro) | La app arranca en local sin credenciales en git | ✅ `2d7649a` |
 | 3 | Contenedor de dependencias y router de Symfony, `public/index.php` como único punto de entrada | Una ruta `/` responde con las cabeceras de seguridad | ✅ `4652c60` |
-| 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error | ⏳ siguiente |
-| 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte |
+| 4 | Conexión a base de datos + Doctrine Migrations funcionando | `migrations:migrate` sube y **baja** sin error | ✅ |
+| 5 | Migraciones del grupo Sistema: `roles`, `dependencias`, `usuarios`, `archivos`, `configuracion`, `auditoria` | Las seis tablas existen y el `down()` las revierte | ⏳ siguiente |
 | 6 | Auditoría: servicio central, tabla append-only, sin `UPDATE` ni `DELETE` | Un insert queda; un intento de update falla |
 | 7 | Autenticación: login, logout, Argon2id, bloqueo por intentos, regeneración de ID de sesión, CSRF, cookies `HttpOnly`/`Secure`/`SameSite=Strict` | Un usuario entra, ve el panel vacío y sale. Todo queda en `auditoria` |
 | 8 | Roles y permisos granulares + almacenamiento de archivos (validación por contenido real, fuera del *document root*, entrega por controlador) | Un usuario sin permiso recibe 403; un `.php` renombrado a `.jpg` se rechaza |

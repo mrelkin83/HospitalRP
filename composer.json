@@ -48,8 +48,9 @@
         "test": "phpunit",
         "test:unit": "phpunit --testsuite unit",
         "test:feature": "phpunit --testsuite feature",
-        "migrate": "doctrine-migrations migrate --no-interaction",
-        "migrate:down": "doctrine-migrations migrate prev --no-interaction",
-        "migrate:status": "doctrine-migrations status"
+        "migrate": "doctrine-migrations migrate --configuration=config/migraciones.php --db-configuration=config/migraciones-bd.php --no-interaction",
+        "migrate:down": "doctrine-migrations migrate prev --configuration=config/migraciones.php --db-configuration=config/migraciones-bd.php --no-interaction",
+        "migrate:status": "doctrine-migrations status --configuration=config/migraciones.php --db-configuration=config/migraciones-bd.php",
+        "migrate:generar": "doctrine-migrations generate --configuration=config/migraciones.php --db-configuration=config/migraciones-bd.php"
     }
 }

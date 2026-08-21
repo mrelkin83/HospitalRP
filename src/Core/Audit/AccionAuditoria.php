@@ -17,6 +17,12 @@ enum AccionAuditoria: string
     case Creacion = 'crear';
     case Actualizacion = 'actualizar';
     case Eliminacion = 'eliminar';
+    case Restauracion = 'restaurar';
+
+    // Publicación de contenido (Fase 1)
+    case Publicacion = 'publicar';
+    case Despublicacion = 'despublicar';
+    case CambioEstado = 'cambio_estado';
 
     // Autenticación (Fase 0, paso 7)
     case InicioSesion = 'inicio_sesion';

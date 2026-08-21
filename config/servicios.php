@@ -42,8 +42,16 @@ use App\Http\Admin\PanelController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
+use App\Adapters\Correo\NotificadorSymfonyMailer;
 use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
+use App\Modules\Tramites\Repository\TipoTramiteRepository;
+use App\Modules\Tramites\Repository\TramiteRepository;
+use App\Modules\Tramites\Service\CalculadoraDiasHabiles;
+use App\Modules\Tramites\Service\GeneradorRadicado;
+use App\Modules\Tramites\Service\GestionTramiteService;
+use App\Modules\Tramites\Service\RadicacionService;
+use App\Ports\NotificadorCorreo;
 use App\Modules\Transparencia\Repository\DatasetRepository;
 use App\Modules\Transparencia\Repository\TransparenciaRepository;
 use App\Http\Web\DirectorioPublicoController;
@@ -153,6 +161,29 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(DatasetRepository::class, DatasetRepository::class)
+        ->setAutowired(true);
+
+    // --- Módulo Trámites ---
+    $contenedor->register(NotificadorCorreo::class, NotificadorSymfonyMailer::class)
+        ->setFactory([NotificadorSymfonyMailer::class, 'desde'])
+        ->setArguments([new Reference(Env::class)]);
+
+    $contenedor->register(TipoTramiteRepository::class, TipoTramiteRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(TramiteRepository::class, TramiteRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CalculadoraDiasHabiles::class, CalculadoraDiasHabiles::class)
+        ->setAutowired(true);
+
+    $contenedor->register(GeneradorRadicado::class, GeneradorRadicado::class)
+        ->setAutowired(true);
+
+    $contenedor->register(RadicacionService::class, RadicacionService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(GestionTramiteService::class, GestionTramiteService::class)
         ->setAutowired(true);
 
     // --- Módulo Documentos ---

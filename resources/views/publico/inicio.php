@@ -62,7 +62,12 @@ $accesos = [
                     <path d="M9 3.5h6v5.5H20.5v6H15v5.5H9V15H3.5V9H9V3.5Z"/>
                 </svg>
                 <div class="absolute -bottom-5 right-6 tarjeta flex items-center gap-3 shadow-lg">
-                    <span class="insignia insignia-exito">✓</span>
+                    <span class="insignia insignia-exito p-1.5">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4.5 12.5 10 18 19.5 6.5"/>
+                        </svg>
+                    </span>
                     <span>
                         <strong class="block text-sm texto-titular">Calidad y seguridad</strong>
                         <span class="block text-sm texto-suave">Comprometidos con estándares de calidad</span>

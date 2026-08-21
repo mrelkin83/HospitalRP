@@ -7,7 +7,13 @@ use App\Core\Support\Fechas;
 ?>
 <div class="mx-auto max-w-6xl px-4 py-16">
     <div class="mx-auto max-w-xl text-center">
-        <span class="insignia insignia-exito text-base">✓ Solicitud radicada</span>
+        <span class="insignia insignia-exito text-base">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 12.5 10 18 19.5 6.5"/>
+            </svg>
+            Solicitud radicada
+        </span>
         <h1 class="mt-4">Tu número de radicado</h1>
         <p class="mt-6 tarjeta text-2xl font-bold texto-titular tracking-wide"><?= $e($radicado) ?></p>
         <p class="mt-4 texto-suave">

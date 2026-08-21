@@ -185,11 +185,32 @@
         border-radius: 2px;
     }
 
+    /* Superficies del navegador: la selección, el cursor de texto y los
+       controles nativos también son parte del diseño (craft floor de
+       impeccable), no defaults del sistema. */
+    ::selection {
+        background-color: var(--color-primario-200);
+        color: var(--color-primario-900);
+    }
+
+    :root {
+        accent-color: var(--accion);
+    }
+
+    input, textarea {
+        caret-color: var(--accion);
+    }
+
+    /* Movimiento reducido SIN matar la retroalimentación: los cambios de
+       estado (hover, foco, aparición) siguen ocurriendo, solo que casi
+       instantáneos. Un kill total de 0.01ms rompería indicadores de carga
+       futuros (auditoría impeccable). */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
-            animation-duration: 0.01ms !important;
+            animation-delay: -1ms !important;
+            animation-duration: 1ms !important;
             animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
+            transition-duration: 50ms !important;
             scroll-behavior: auto !important;
         }
     }

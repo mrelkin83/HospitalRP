@@ -11,6 +11,7 @@ use App\Core\Auth\Sesion;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Storage\ArchivoInvalidoException;
 use App\Core\Support\Vistas;
+use App\Modules\Sistema\Service\AsistenteIa;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,7 @@ final readonly class MediosController
     public function __construct(
         private Sesion $sesion,
         private Vistas $vistas,
+        private AsistenteIa $asistenteIa,
         private AlmacenArchivos $almacen,
         private AuditoriaService $auditoria,
     ) {
@@ -91,6 +93,7 @@ final readonly class MediosController
             'mensaje' => $mensaje,
             'errores' => $errores,
             'tokenCsrf' => $this->sesion->tokenCsrf(),
+            'iaActiva' => $this->asistenteIa->activa(),
         ]);
     }
 

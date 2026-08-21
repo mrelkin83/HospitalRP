@@ -83,6 +83,18 @@ $error = static function (string $campo) use ($errores, $e): string {
             <textarea class="campo" id="contenido" name="contenido" rows="14" data-editor="contenido"
                       <?= isset($errores['contenido']) ? 'aria-invalid="true" aria-describedby="error-contenido"' : '' ?>><?= $e($valorContenido) ?></textarea>
             <?= $error('contenido') ?>
+            <?php if ($iaActiva) { ?>
+                <p class="mt-2">
+                    <button type="button" class="boton boton-secundario" data-ia="borrador_noticia"
+                            data-ia-titulo="#titulo" data-ia-texto="#contenido" data-ia-destino="#contenido">
+                        Redactar borrador con IA
+                    </button>
+                </p>
+                <p class="ayuda-campo">
+                    Escribe tus apuntes en el contenido y pídele el borrador: lo
+                    reemplaza por una redacción que puedes editar antes de guardar.
+                </p>
+            <?php } ?>
         </div>
 
         <fieldset class="tarjeta">
@@ -152,6 +164,15 @@ $error = static function (string $campo) use ($errores, $e): string {
                     <label class="etiqueta" for="meta_descripcion">Descripción para buscadores</label>
                     <textarea class="campo" id="meta_descripcion" name="meta_descripcion" rows="2" maxlength="320"><?= $e($valorMetaDescripcion) ?></textarea>
                 </div>
+                <?php if ($iaActiva) { ?>
+                    <p>
+                        <button type="button" class="boton boton-secundario" data-ia="metadatos_seo"
+                                data-ia-titulo="#titulo" data-ia-texto="#contenido"
+                                data-ia-destino-titulo="#meta_titulo" data-ia-destino-descripcion="#meta_descripcion">
+                            Sugerir metadatos con IA
+                        </button>
+                    </p>
+                <?php } ?>
             </div>
         </details>
 

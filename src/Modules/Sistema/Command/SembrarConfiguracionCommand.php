@@ -89,6 +89,11 @@ final class SembrarConfiguracionCommand extends Command
         'redes.youtube' => ['https://www.youtube.com/channel/UCdbJFQt1lBHhGjOpSC62SEQ', 'texto', 'redes', 'YouTube (URL)', null],
         'redes.x' => ['https://x.com/ESEHospitalRos1', 'texto', 'redes', 'X / Twitter (URL)', null],
         'redes.linkedin' => ['', 'texto', 'redes', 'LinkedIn (URL)', null],
+        // IA del panel (Fase 8): apagada por defecto; las claves de API van
+        // en el .env del servidor, jamás en esta tabla.
+        'ia.activada' => ['0', 'booleano', 'ia', 'Asistente de IA activado', 'Se configura en Panel → IA'],
+        'ia.proveedor' => ['anthropic', 'texto', 'ia', 'Proveedor de IA', null],
+        'ia.modelo' => ['claude-sonnet-5', 'texto', 'ia', 'Modelo de IA', null],
     ];
 
     public function __construct(

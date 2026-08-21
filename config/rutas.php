@@ -16,6 +16,7 @@ use App\Http\Admin\AvisosController;
 use App\Http\Admin\CampanasController;
 use App\Http\Admin\CategoriasController;
 use App\Http\Admin\FaqController;
+use App\Http\Admin\IaController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
@@ -634,6 +635,27 @@ $rutas->add('admin.datasets.crear', new Route('/admin/datasets', $permisoDatos('
 $rutas->add('admin.datasets.guardar', new Route('/admin/datasets/{id}', $permisoDatos('guardar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.datasets.recursos.crear', new Route('/admin/datasets/{id}/recursos', $permisoDatos('agregarRecurso'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.datasets.recursos.eliminar', new Route('/admin/datasets/recursos/{id}/eliminar', $permisoDatos('eliminarRecurso'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: asistente de IA ---
+// Configurarlo exige permiso de sistema; pedir sugerencias solo exige estar
+// autenticado: aplicarlas sigue limitado por los permisos de cada formulario.
+
+$rutas->add('admin.ia', new Route('/admin/ia', [
+    '_controlador' => [IaController::class, 'configuracion'],
+    '_acceso' => 'privado',
+    '_permiso' => 'sistema.ia',
+], methods: ['GET']));
+
+$rutas->add('admin.ia.guardar', new Route('/admin/ia', [
+    '_controlador' => [IaController::class, 'guardarConfiguracion'],
+    '_acceso' => 'privado',
+    '_permiso' => 'sistema.ia',
+], methods: ['POST']));
+
+$rutas->add('admin.ia.sugerir', new Route('/admin/ia/sugerir', [
+    '_controlador' => [IaController::class, 'sugerir'],
+    '_acceso' => 'privado',
+], methods: ['POST']));
 
 // --- Panel: dependencias ---
 

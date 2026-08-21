@@ -34,6 +34,14 @@
         <?php if (isset($errores['texto_alt'])) { ?>
             <p class="error-campo" id="error-texto_alt"><?= $e($errores['texto_alt']) ?></p>
         <?php } ?>
+        <?php if ($iaActiva) { ?>
+            <p class="mt-2">
+                <button type="button" class="boton boton-secundario" data-ia="texto_alternativo"
+                        data-ia-imagen="#imagen" data-ia-destino="#texto_alt">
+                    Describir con IA
+                </button>
+            </p>
+        <?php } ?>
     </div>
     <div>
         <button type="submit" class="boton boton-primario">Subir</button>

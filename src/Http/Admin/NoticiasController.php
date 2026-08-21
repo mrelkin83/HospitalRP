@@ -10,6 +10,7 @@ use App\Core\Auth\Sesion;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Storage\ArchivoInvalidoException;
 use App\Core\Support\Vistas;
+use App\Modules\Sistema\Service\AsistenteIa;
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 use App\Modules\Contenido\Entity\Noticia;
 use App\Modules\Contenido\Exception\TransicionEstadoInvalidaException;
@@ -36,6 +37,7 @@ final readonly class NoticiasController
     public function __construct(
         private Sesion $sesion,
         private Vistas $vistas,
+        private AsistenteIa $asistenteIa,
         private NoticiaService $servicio,
         private NoticiaRepository $noticias,
         private CategoriaRepository $categorias,
@@ -218,6 +220,7 @@ final readonly class NoticiasController
             'tokenCsrf' => $this->sesion->tokenCsrf(),
             'puedePublicar' => $this->sesion->usuarioId() !== null
                 && $this->autorizacion->puede($this->sesion->usuarioId(), 'contenido.publicar'),
+            'iaActiva' => $this->asistenteIa->activa(),
         ]);
     }
 

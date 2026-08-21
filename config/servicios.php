@@ -39,6 +39,7 @@ use App\Http\Admin\BandejaTramitesController;
 use App\Http\Admin\TiposTramiteController;
 use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
+use App\Http\Admin\IaController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PoliticasController;
 use App\Http\Admin\PanelController;
@@ -46,12 +47,16 @@ use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Adapters\Correo\NotificadorSymfonyMailer;
+use App\Adapters\Ia\FabricaProveedorIa;
 use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
 use App\Modules\Busqueda\Service\BuscadorService;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Sistema\Repository\DependenciaRepository;
+use App\Modules\Sistema\Repository\IaUsoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Modules\Sistema\Repository\RedireccionRepository;
+use App\Modules\Sistema\Service\AsistenteIa;
+use App\Ports\FabricaAiProvider;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Service\CalculadoraDiasHabiles;
@@ -214,6 +219,17 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    // --- IA del panel (Fase 8) ---
+    $contenedor->register(FabricaAiProvider::class, FabricaProveedorIa::class)
+        ->setFactory([FabricaProveedorIa::class, 'desde'])
+        ->setArguments([new Reference(Env::class)]);
+
+    $contenedor->register(IaUsoRepository::class, IaUsoRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(AsistenteIa::class, AsistenteIa::class)
+        ->setAutowired(true);
+
     // --- Módulo Búsqueda ---
     $contenedor->register(IndiceBusquedaRepository::class, IndiceBusquedaRepository::class)
         ->setAutowired(true);
@@ -348,6 +364,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(PanelController::class, PanelController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(IaController::class, IaController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

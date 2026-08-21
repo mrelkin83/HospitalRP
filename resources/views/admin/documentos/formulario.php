@@ -75,6 +75,19 @@ $error = static function (string $campo) use ($errores, $e): string {
                       <?= isset($errores['resumen']) ? 'aria-invalid="true" aria-describedby="error-resumen"' : '' ?>><?= $e($valorResumen) ?></textarea>
             <p class="ayuda-campo">De qué trata, para quién aplica y qué cambia. Es lo que el ciudadano lee sin abrir el PDF.</p>
             <?= $error('resumen') ?>
+            <?php if ($iaActiva) { ?>
+                <p class="mt-2">
+                    <button type="button" class="boton boton-secundario" data-ia="resumen_documento"
+                            data-ia-titulo="#titulo" data-ia-texto="#resumen" data-ia-destino="#resumen">
+                        Resumir con IA
+                    </button>
+                </p>
+                <p class="ayuda-campo">
+                    Pega en el campo texto del documento (aunque sea largo o
+                    desordenado) y pídele el resumen: lo reemplaza por tres
+                    frases que puedes editar.
+                </p>
+            <?php } ?>
         </div>
 
         <?php if ($documento === null) { ?>
@@ -139,6 +152,14 @@ $error = static function (string $campo) use ($errores, $e): string {
             <label class="etiqueta" for="etiquetas">Etiquetas (separadas por coma)</label>
             <input class="campo" type="text" id="etiquetas" name="etiquetas"
                    value="<?= $e($valorEtiquetas) ?>" placeholder="contratación, talento humano">
+            <?php if ($iaActiva) { ?>
+                <p class="mt-2">
+                    <button type="button" class="boton boton-secundario" data-ia="sugerencia_etiquetas"
+                            data-ia-titulo="#titulo" data-ia-texto="#resumen" data-ia-destino="#etiquetas">
+                        Sugerir etiquetas con IA
+                    </button>
+                </p>
+            <?php } ?>
         </div>
 
         <details class="tarjeta" <?= $valorSerie !== '' ? 'open' : '' ?>>

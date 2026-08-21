@@ -9,6 +9,7 @@ use App\Core\Auth\Sesion;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Storage\ArchivoInvalidoException;
 use App\Core\Support\Vistas;
+use App\Modules\Sistema\Service\AsistenteIa;
 use App\Modules\Contenido\Repository\CategoriaRepository;
 use App\Modules\Documentos\Entity\Documento;
 use App\Modules\Documentos\Entity\EstadoDocumento;
@@ -31,6 +32,7 @@ final readonly class DocumentosController
     public function __construct(
         private Sesion $sesion,
         private Vistas $vistas,
+        private AsistenteIa $asistenteIa,
         private DocumentoService $servicio,
         private DocumentoRepository $documentos,
         private DependenciaRepository $dependencias,
@@ -230,6 +232,7 @@ final readonly class DocumentosController
             'categorias' => $this->categorias->activasPorTipo('documento'),
             'versiones' => $documento !== null ? $this->documentos->versionesDe($documento->id) : [],
             'tokenCsrf' => $this->sesion->tokenCsrf(),
+            'iaActiva' => $this->asistenteIa->activa(),
         ]);
     }
 

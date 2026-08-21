@@ -13,8 +13,10 @@ $conEditor ??= false;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
+    <meta name="csrf" content="<?= $e($tokenCsrf) ?>">
     <title><?= $e($titulo) ?> — Panel · E.S.E. Hospital Rosario Pumarejo de López</title>
     <link rel="stylesheet" href="/build/app.css">
+    <script src="/js/ia.js" defer></script>
     <?php if ($conEditor) { ?>
         <link rel="stylesheet" href="/vendor/ckeditor5/ckeditor5.css">
         <script src="/vendor/ckeditor5/ckeditor5.umd.js" defer></script>
@@ -60,6 +62,7 @@ $conEditor ??= false;
                 <li><a href="/admin/profesionales" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Directorio médico</a></li>
                 <li><a href="/admin/medios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Medios</a></li>
                 <li><a href="/admin/menus" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Menús</a></li>
+                <li><a href="/admin/ia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">IA</a></li>
                 <?php /* Trámites, documentos y transparencia se añaden fase por fase. */ ?>
             </ul>
         </nav>

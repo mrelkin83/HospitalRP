@@ -908,6 +908,31 @@ CREATE TABLE busquedas_log (
   KEY idx_busquedas_sin_resultado (resultados, creado_en)
 ) ENGINE=InnoDB;
 
+-- =====================================================================
+-- 10. IA EN EL PANEL (Fase 8, opcional y desactivable)
+-- Registro de uso y consumo. Proveedor y modelo viven en `configuracion`
+-- (ia.activada, ia.proveedor, ia.modelo); las claves de API en .env:
+-- son credenciales de infraestructura, nunca contenido editable.
+-- =====================================================================
+
+CREATE TABLE ia_usos (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  funcion         ENUM('resumen_documento','sugerencia_etiquetas','texto_alternativo','metadatos_seo','borrador_noticia') NOT NULL,
+  proveedor       VARCHAR(40)  NOT NULL,
+  modelo          VARCHAR(80)  NOT NULL,
+  tokens_entrada  INT UNSIGNED NOT NULL DEFAULT 0,
+  tokens_salida   INT UNSIGNED NOT NULL DEFAULT 0,
+  duracion_ms     INT UNSIGNED NOT NULL DEFAULT 0,
+  exito           TINYINT(1)   NOT NULL DEFAULT 1,
+  error           VARCHAR(255) NULL,
+  usuario_id      BIGINT UNSIGNED NULL,
+  creado_en       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_iausos_fecha (creado_en),
+  KEY idx_iausos_funcion (funcion, creado_en),
+  CONSTRAINT fk_iausos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =====================================================================

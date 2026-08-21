@@ -1,0 +1,29 @@
+{
+    "name": "E.S.E. Hospital Rosario Pumarejo de López",
+    "short_name": "HRPL",
+    "description": "Citas, urgencias, trámites, PQRSDF y servicios del hospital público de Valledupar.",
+    "lang": "es",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#041646",
+    "theme_color": "#041646",
+    "icons": [
+        {
+            "src": "/iconos/icono-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/iconos/icono-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "/iconos/icono-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

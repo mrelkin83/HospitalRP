@@ -40,6 +40,9 @@ $enlaceNav = static fn (array $item): string => sprintf(
     <meta property="og:url" content="<?= $e($urlCanonica) ?>">
     <meta property="og:locale" content="es_CO">
     <meta name="theme-color" content="#041646">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/iconos/icono-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="/iconos/icono-192.png">
     <?php if ($esPortada) {
         // Schema.org del hospital con los datos administrables del panel.
         $esquema = [
@@ -75,6 +78,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="contraste">Alto contraste</button>
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-menos" aria-label="Reducir tamaño de letra">A−</button>
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-mas" aria-label="Aumentar tamaño de letra">A+</button>
+                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="movimiento">Reducir movimiento</button>
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="tema">Tema oscuro</button>
             </div>
             <nav aria-label="Enlaces institucionales" class="hidden md:flex items-center gap-3">

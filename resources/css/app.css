@@ -214,6 +214,18 @@
             scroll-behavior: auto !important;
         }
     }
+
+    /* Mismo efecto activado a mano desde la barra de accesibilidad
+       (Res. 1519): no todo el mundo sabe configurarlo en su sistema. */
+    [data-movimiento="reducido"] *,
+    [data-movimiento="reducido"] *::before,
+    [data-movimiento="reducido"] *::after {
+        animation-delay: -1ms !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 50ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* =====================================================================

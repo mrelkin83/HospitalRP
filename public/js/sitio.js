@@ -27,6 +27,7 @@
         if (prefs.tema) { raiz.dataset.tema = prefs.tema; } else { delete raiz.dataset.tema; }
         if (prefs.contraste) { raiz.dataset.contraste = 'alto'; } else { delete raiz.dataset.contraste; }
         if (prefs.fuente) { raiz.dataset.fuente = prefs.fuente; } else { delete raiz.dataset.fuente; }
+        if (prefs.movimiento) { raiz.dataset.movimiento = 'reducido'; } else { delete raiz.dataset.movimiento; }
     }
 
     var prefs = leer();
@@ -51,6 +52,10 @@
             prefs.fuente = ESCALA[Math.max(i - 1, 0)];
             if (!prefs.fuente) { delete prefs.fuente; }
         },
+        movimiento: function () {
+            prefs.movimiento = !prefs.movimiento;
+            if (!prefs.movimiento) { delete prefs.movimiento; }
+        },
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -66,4 +71,12 @@
             });
         });
     });
+
+    // PWA: el service worker da cascarón offline e instalación en Android.
+    // Solo bajo HTTPS (o localhost); si falla, el sitio funciona igual.
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () { /* sin PWA */ });
+        });
+    }
 })();

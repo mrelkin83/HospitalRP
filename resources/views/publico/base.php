@@ -78,12 +78,22 @@ $enlaceNav = static fn (array $item): string => sprintf(
              único fondo donde alcanza contraste AA (12,7:1). --- */ ?>
     <div class="bg-primario-900 text-white">
         <div class="mx-auto max-w-7xl px-4 py-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <div class="flex items-center gap-1" role="group" aria-label="Opciones de accesibilidad">
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="contraste">Alto contraste</button>
+            <?php /* Las etiquetas largas se abrevian en móvil con un <span>
+                     oculto para lectores: ahí el nombre completo sigue
+                     anunciándose y en pantalla caben las cinco opciones en una
+                     línea en vez de tres. */ ?>
+            <div class="flex shrink-0 items-center gap-1" role="group" aria-label="Opciones de accesibilidad">
+                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="contraste">
+                    <span class="sr-only sm:not-sr-only">Alto contraste</span><span aria-hidden="true" class="sm:hidden">◐</span>
+                </button>
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-menos" aria-label="Reducir tamaño de letra">A−</button>
                 <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-mas" aria-label="Aumentar tamaño de letra">A+</button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="movimiento">Reducir movimiento</button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="tema">Tema oscuro</button>
+                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="movimiento">
+                    <span class="sr-only sm:not-sr-only">Reducir movimiento</span><span aria-hidden="true" class="sm:hidden">⏸</span>
+                </button>
+                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="tema">
+                    <span class="sr-only sm:not-sr-only">Tema oscuro</span><span aria-hidden="true" class="sm:hidden">☾</span>
+                </button>
             </div>
             <nav aria-label="Enlaces institucionales" class="hidden md:flex items-center gap-3">
                 <?php foreach ($menuSuperior as $item) { ?>
@@ -124,10 +134,24 @@ $enlaceNav = static fn (array $item): string => sprintf(
                     </span>
                 </a>
 
-                <a class="boton boton-primario shrink-0 order-2 lg:order-none lg:ms-0" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
+                <a class="boton boton-primario shrink-0 order-2 lg:ms-auto" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
 
-                <nav aria-label="Navegación principal" class="order-3 w-full lg:order-none lg:w-auto lg:ms-auto">
-                    <ul class="flex gap-1 overflow-x-auto">
+                <?php /* `min-w-0` no es cosmético: sin él este <nav> es un ítem
+                         flex que no puede encoger por debajo de su contenido, el
+                         desbordamiento del <ul> nunca entra en juego y los 11
+                         ítems del menú empujaban la página 339 px a la derecha.
+
+                         El menú ocupa SU PROPIA FILA a lo ancho, también en
+                         escritorio: con once raíces, apretarlo junto al
+                         logotipo lo partía en tres líneas con un ítem suelto.
+                         A fila completa entra en una.
+
+                         Y en móvil se desplaza en una sola fila en vez de
+                         envolver: envolviendo once ítems la cabecera crecía a
+                         332 px —más de un tercio de la pantalla— y tapaba el
+                         contenido por el que la persona entró. */ ?>
+                <nav aria-label="Navegación principal" class="order-3 w-full min-w-0">
+                    <ul class="flex flex-nowrap gap-x-1 overflow-x-auto lg:flex-wrap lg:gap-y-0.5 lg:overflow-x-visible">
                         <?php foreach ($menuPrincipal as $item) { ?>
                             <li><?= $enlaceNav($item) ?></li>
                         <?php } ?>

@@ -82,6 +82,72 @@ final readonly class MenuRepository
     }
 
     /**
+     * Todos los menús con sus ítems visibles, hijos incluidos. Lo consume el
+     * mapa del sitio: se genera desde los menús vigentes para que añadir un
+     * ítem en el panel lo incluya sin tocar código.
+     *
+     * @return list<array{nombre: string, items: list<array{etiqueta: string, url: string, nivel: int}>}>
+     */
+    public function arbolPublico(): array
+    {
+        /** @var list<array<string, mixed>> $filas */
+        $filas = $this->conexion->fetchAllAssociative(
+            'SELECT m.id AS menu_id, m.nombre AS menu, i.id, i.padre_id, i.etiqueta, i.url
+               FROM menus m
+               JOIN menu_items i ON i.menu_id = m.id
+              WHERE i.visible = 1
+              ORDER BY m.id, i.orden, i.id',
+        );
+
+        $porMenu = [];
+        $hijosDe = [];
+
+        foreach ($filas as $fila) {
+            $menuId = (int) $fila['menu_id'];
+            $porMenu[$menuId] = (string) $fila['menu'];
+            $hijosDe[$menuId][(int) ($fila['padre_id'] ?? 0)][] = [
+                'id' => (int) $fila['id'],
+                'etiqueta' => (string) $fila['etiqueta'],
+                'url' => (string) $fila['url'],
+            ];
+        }
+
+        $resultado = [];
+
+        foreach ($porMenu as $menuId => $nombre) {
+            $resultado[] = [
+                'nombre' => $nombre,
+                'items' => $this->aplanar($hijosDe[$menuId], 0, 0),
+            ];
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * @param array<int, list<array{id: int, etiqueta: string, url: string}>> $hijosDe
+     *
+     * @return list<array{etiqueta: string, url: string, nivel: int}>
+     */
+    private function aplanar(array $hijosDe, int $padreId, int $nivel): array
+    {
+        // Tope de profundidad: corta un padre_id cíclico en vez de agotar la
+        // pila. Tres niveles es lo más hondo que llega un menú del sitio.
+        if ($nivel > 3) {
+            return [];
+        }
+
+        $plano = [];
+
+        foreach ($hijosDe[$padreId] ?? [] as $item) {
+            $plano[] = ['etiqueta' => $item['etiqueta'], 'url' => $item['url'], 'nivel' => $nivel];
+            $plano = array_merge($plano, $this->aplanar($hijosDe, $item['id'], $nivel + 1));
+        }
+
+        return $plano;
+    }
+
+    /**
      * @return ?array{id: int, menu_id: int, etiqueta: string, protegido: bool}
      */
     public function itemPorId(int $id): ?array

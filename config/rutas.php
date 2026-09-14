@@ -41,6 +41,7 @@ use App\Http\Web\FaqPublicoController;
 use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\InicioController;
+use App\Http\Web\MapaSitioController;
 use App\Http\Web\MuestraDisenoController;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
@@ -755,6 +756,15 @@ $rutas->add('admin.menus.item.eliminar', new Route(
     ],
     requirements: ['id' => '\d+'],
     methods: ['POST'],
+));
+
+// --- Mapa del sitio (Fase 9) ---
+// Ruta fija y no página: se arma desde los menús vigentes, así que añadir un
+// ítem en el panel lo refleja sin redactar nada.
+$rutas->add('mapa-sitio', new Route(
+    path: '/mapa-del-sitio',
+    defaults: ['_controlador' => [MapaSitioController::class, 'mostrar']],
+    methods: ['GET'],
 ));
 
 // --- Páginas institucionales por ruta dinámica ---

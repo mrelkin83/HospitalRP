@@ -17,7 +17,8 @@ viven en su desglose (`docs/03` a `docs/12`); esto es el mapa.
 | 6 · Cumplimiento (políticas versionadas, cookies, habeas data) | ✅ Terminada | `docs/09` | **Términos PROVISIONALES** a validar por jurídica (editables en panel) |
 | 7 · Búsqueda, SEO, PWA, accesibilidad | ✅ Terminada | `docs/11` | Lighthouse móvil 100/100/100 en portada; redirecciones Joomla E2E |
 | 8 · IA en el panel (opcional) | ✅ Terminada | `docs/12` | 2 proveedores; sembrada APAGADA; claves van en `.env` |
-| 9 · Migración y lanzamiento | ⏳ **Pendiente** | — | Ver sección 5 |
+| 9 · Cierre de brechas del sitio vigente | 🔧 **En curso** | `docs/15` | Bloque A (P0) terminado el 2026-09-14; B, C y D pendientes |
+| 10 · Migración y lanzamiento | ⏳ **Pendiente** | — | Ver sección 5 |
 
 **Suite al corte: 165 tests, 542 aserciones, en verde.**
 Último commit: `a4faf68`. Sin remoto git todavía (ver 2.7).
@@ -45,9 +46,9 @@ Ordenados por importancia:
    registra evidencia en servidor (como `autorizaciones_datos`) o se
    documenta que la cookie basta; hoy no hay scripts de terceros que exijan
    consentimiento granular.
-6. **Mapa del sitio (`/mapa-del-sitio`).** El menú del pie lo enlaza pero no
-   existe ni como ruta ni como página: hoy da 404. Generarlo desde los menús
-   más las rutas fijas (media página de controlador).
+6. ~~**Mapa del sitio (`/mapa-del-sitio`).**~~ ✅ Resuelto el 2026-09-14
+   (Fase 9, bloque A2): `MapaSitioController` lo genera desde los menús
+   vigentes más las rutas fijas.
 7. **Remoto git + CI.** El repo es solo local. Publicar (GitHub) y montar CI
    (suite + `composer audit`); habilitaría también `/security-review` y los
    binarios de semgrep/codeql que las revisiones por fase hacen a mano.

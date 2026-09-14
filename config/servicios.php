@@ -81,6 +81,7 @@ use App\Http\Web\SeoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
+use App\Http\Web\MapaSitioController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
 use App\Modules\Contenido\Repository\CampanaRepository;
@@ -311,6 +312,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(PaginasController::class, PaginasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(MapaSitioController::class, MapaSitioController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

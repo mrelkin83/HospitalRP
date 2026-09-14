@@ -18,6 +18,7 @@ use App\Modules\Busqueda\Command\IndexarCommand;
 use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
+use App\Modules\Contenido\Command\SembrarPaginasCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Cumplimiento\Command\SembrarCumplimientoCommand;
 use App\Modules\Directorio\Command\SembrarDirectorioCommand;
@@ -44,6 +45,7 @@ $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — co
 $aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
 $aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarMenusCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarPaginasCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarDirectorioCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarTransparenciaCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarFestivosCommand($conexion));

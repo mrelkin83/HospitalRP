@@ -195,7 +195,15 @@ tests/{Unit,Feature,E2E}/
 
 ### Entra en v1
 
-Portal público completo · Menús obligatorios de la Resolución 1519 (Transparencia, Atención y Servicios a la Ciudadanía, Participa, Noticias) · Gestión documental con metadatos, versiones, vigencia y TRD · Buscador unificado · Motor de trámites configurable · PQRSDF · Solicitud de cita · Solicitud de historia clínica · Solicitud de certificados · Habeas data · Convocatorias · Directorio, especialidades, servicios, sedes · Avisos y modo emergencia · FAQ · Datos abiertos · Políticas, cookies y autorizaciones con evidencia · Flujo de aprobación, programación y versionado · Panel administrativo completo · Auditoría · Accesibilidad AA · PWA · SEO técnico · Redirecciones 301 desde Joomla · IA en el panel
+Portal público completo · Menús obligatorios de la Resolución 1519 (Transparencia, Atención y Servicios a la Ciudadanía, Participa, Noticias) · Gestión documental con metadatos, versiones, vigencia y TRD · Buscador unificado · Motor de trámites configurable · PQRSDF · Solicitud de cita · Solicitud de historia clínica · Solicitud de certificados · Habeas data · Convocatorias · Directorio, especialidades, servicios, sedes · Avisos y modo emergencia · FAQ · Datos abiertos · Políticas, cookies y autorizaciones con evidencia · Flujo de aprobación, programación y versionado · Panel administrativo completo · Auditoría · Accesibilidad AA · PWA · SEO técnico · Redirecciones 301 desde Joomla · IA en el panel · Encuestas de satisfacción · Chat en vivo
+
+> **Decisión 2026-09-14 — chat en vivo y encuestas.** La auditoría del sitio
+> vigente (`docs/14`) encontró ambos publicados hoy en el Joomla. El hospital
+> aprobó construirlos en lugar de retirarlos, así que salen de «Fuera de v1».
+> Se construyen bajo la regla §2.6 sin excepción: el chat **no** atiende
+> consultas clínicas y las encuestas **no** recogen diagnósticos ni
+> identifican al paciente. El chat va detrás de un `Port`, apagado por
+> defecto. Desglose en `docs/15-fase-9-desglose.md`, bloque D.
 
 ### Preparado pero no implementado
 
@@ -205,7 +213,7 @@ Interfaces definidas en `Ports/` con implementación nula. Nada más.
 
 ### Fuera de v1 — no construir
 
-Cuenta de usuario ciudadano · Agendamiento real de citas · Resultados de laboratorio · Chat en vivo · Chatbot de cara al ciudadano · WhatsApp · Portal del colaborador, proveedor o contratista · Encuestas automáticas · Tablero de cumplimiento normativo
+Cuenta de usuario ciudadano · Agendamiento real de citas · Resultados de laboratorio · Chatbot de cara al ciudadano · WhatsApp · Portal del colaborador, proveedor o contratista · Intranet de usuarios («Acceder al sistema» del Joomla, retirado por decisión del 2026-09-14) · Tablero de cumplimiento normativo
 
 ### Nunca — no construir
 

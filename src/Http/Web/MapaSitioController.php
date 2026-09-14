@@ -41,9 +41,13 @@ final readonly class MapaSitioController
         'Información pública' => [
             '/transparencia' => 'Transparencia y acceso a la información pública',
             '/transparencia/datos-abiertos' => 'Datos abiertos',
+            '/servidores-publicos' => 'Directorio de servidores públicos',
             '/documentos' => 'Documentos',
             '/participa' => 'Participa',
+            '/convocatorias' => 'Convocatorias',
             '/noticias' => 'Noticias',
+            '/eventos' => 'Calendario de eventos',
+            '/encuestas' => 'Encuestas de satisfacción',
             '/buscar' => 'Buscador',
         ],
         'Políticas y condiciones' => [

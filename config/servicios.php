@@ -56,6 +56,7 @@ use App\Modules\Sistema\Repository\IaUsoRepository;
 use App\Modules\Convocatorias\Repository\ConvocatoriaRepository;
 use App\Modules\Encuestas\Repository\EncuestaRepository;
 use App\Modules\Eventos\Repository\EventoRepository;
+use App\Modules\Directorio\Repository\ServidorPublicoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Modules\Sistema\Repository\RedireccionRepository;
 use App\Modules\Sistema\Service\AsistenteIa;
@@ -88,6 +89,7 @@ use App\Http\Web\ConvocatoriasPublicoController;
 use App\Http\Web\EncuestasPublicoController;
 use App\Http\Web\EventosPublicoController;
 use App\Http\Web\MapaSitioController;
+use App\Http\Web\ServidoresPublicosController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
 use App\Modules\Contenido\Repository\CampanaRepository;
@@ -176,6 +178,9 @@ return static function (Env $env): ContainerBuilder {
 
     // --- Módulo Sistema ---
     $contenedor->register(MenuRepository::class, MenuRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ServidorPublicoRepository::class, ServidorPublicoRepository::class)
         ->setAutowired(true);
 
     $contenedor->register(ConvocatoriaRepository::class, ConvocatoriaRepository::class)
@@ -331,6 +336,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MapaSitioController::class, MapaSitioController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ServidoresPublicosController::class, ServidoresPublicosController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

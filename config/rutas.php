@@ -52,6 +52,7 @@ use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\SeoController;
 use App\Http\Web\ServiciosPublicoController;
+use App\Http\Web\ServidoresPublicosController;
 use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\UrgenciasContactoController;
@@ -815,6 +816,12 @@ $rutas->add('encuestas.responder', new Route(
     defaults: ['_controlador' => [EncuestasPublicoController::class, 'responder']],
     requirements: ['slug' => '[a-z0-9\-]+'],
     methods: ['POST'],
+));
+
+$rutas->add('servidores-publicos', new Route(
+    path: '/servidores-publicos',
+    defaults: ['_controlador' => [ServidoresPublicosController::class, 'listado']],
+    methods: ['GET'],
 ));
 
 // --- Mapa del sitio (Fase 9) ---

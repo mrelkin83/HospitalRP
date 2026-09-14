@@ -81,6 +81,7 @@ final class SembrarMenusCommand extends Command
             ]],
             ['Transparencia', '/transparencia', 1, [
                 ['Información de la entidad', '/transparencia/informacion-de-la-entidad', 0],
+                ['Directorio de servidores públicos', '/servidores-publicos', 0],
                 ['Normativa', '/transparencia/normatividad', 0],
                 ['Contratación', '/transparencia/contratacion', 0],
                 ['Planeación, presupuesto e informes', '/transparencia/planeacion-presupuesto-informes', 0],

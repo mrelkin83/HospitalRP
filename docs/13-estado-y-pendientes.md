@@ -17,7 +17,7 @@ viven en su desglose (`docs/03` a `docs/12`); esto es el mapa.
 | 6 · Cumplimiento (políticas versionadas, cookies, habeas data) | ✅ Terminada | `docs/09` | **Términos PROVISIONALES** a validar por jurídica (editables en panel) |
 | 7 · Búsqueda, SEO, PWA, accesibilidad | ✅ Terminada | `docs/11` | Lighthouse móvil 100/100/100 en portada; redirecciones Joomla E2E |
 | 8 · IA en el panel (opcional) | ✅ Terminada | `docs/12` | 2 proveedores; sembrada APAGADA; claves van en `.env` |
-| 9 · Cierre de brechas del sitio vigente | 🔧 **En curso** | `docs/15` | Bloque A (P0) terminado el 2026-09-14; B, C y D pendientes |
+| 9 · Cierre de brechas del sitio vigente | ✅ Terminada | `docs/15` | Bloques A–D completos el 2026-09-14; falta el panel de 4 módulos nuevos |
 | 10 · Migración y lanzamiento | ⏳ **Pendiente** | — | Ver sección 5 |
 
 **Suite al corte: 165 tests, 542 aserciones, en verde.**
@@ -33,10 +33,10 @@ Ordenados por importancia:
    *Riesgo: cuentas creadas con contraseña temporal que nunca rota.*
 2. **MFA para roles administrativos.** Columnas `mfa_secreto`/`mfa_habilitado`
    en el esquema, sin implementación. CLAUDE.md §6 lo exige para el panel.
-3. **Módulo de convocatorias.** En el alcance v1 (empleo, contratación).
-   Tablas `convocatorias` y `convocatoria_documentos` están en `esquema.sql`
-   pero **sin migrar** y sin módulo/panel/página pública. El tipo
-   `convocatoria` del índice de búsqueda quedó desactivado a propósito.
+3. ~~**Módulo de convocatorias.**~~ ✅ Resuelto el 2026-09-14 (Fase 9, bloque
+   B4): tablas migradas, repositorio, página pública `/convocatorias` y tipo
+   `convocatoria` reactivado en el índice de búsqueda. **Falta la pantalla del
+   panel**, igual que para eventos, encuestas y servidores públicos.
 4. **Módulo de respaldos.** Tabla `respaldos` en el esquema, sin migrar y sin
    código. La Fase 9 exige respaldos programados y restauración probada:
    comando `respaldos:crear` (mysqldump + uploads), retención y registro.

@@ -3,6 +3,8 @@
  * Ingreso al panel. Página completa, sin navegación.
  * Espera: $tokenCsrf (string), $error (?string).
  */
+
+use App\Core\Support\Recursos;
 ?>
 <!doctype html>
 <html lang="es">
@@ -11,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>Ingreso al panel — E.S.E. Hospital Rosario Pumarejo de López</title>
-    <link rel="stylesheet" href="/build/app.css">
+    <link rel="stylesheet" href="<?= $e(Recursos::url('/build/app.css')) ?>">
 </head>
 <body class="fondo-superficie">
     <main class="min-h-svh flex items-center justify-center px-4 py-8">

@@ -5,6 +5,9 @@
  * $contenido (HTML ya compuesto y escapado por la vista de página).
  * Opcional: $conEditor (bool) — carga CKEditor 5 autoalojado.
  */
+
+use App\Core\Support\Recursos;
+
 $conEditor ??= false;
 ?>
 <!doctype html>
@@ -15,7 +18,7 @@ $conEditor ??= false;
     <meta name="robots" content="noindex">
     <meta name="csrf" content="<?= $e($tokenCsrf) ?>">
     <title><?= $e($titulo) ?> — Panel · E.S.E. Hospital Rosario Pumarejo de López</title>
-    <link rel="stylesheet" href="/build/app.css">
+    <link rel="stylesheet" href="<?= $e(Recursos::url('/build/app.css')) ?>">
     <script src="/js/ia.js" defer></script>
     <?php if ($conEditor) { ?>
         <link rel="stylesheet" href="/vendor/ckeditor5/ckeditor5.css">

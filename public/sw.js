@@ -1,14 +1,24 @@
 // Service worker del sitio público (Fase 7).
 //
 // Estrategia deliberadamente conservadora para un sitio institucional:
-//  - Estáticos (css, js, iconos, fuentes): caché primero, son versionados.
+//  - Estáticos (css, js, iconos, fuentes): caché primero. Las URL llevan
+//    huella (`?v=…`, ver App\Core\Support\Recursos), así que un archivo
+//    nuevo es una URL nueva y nunca se sirve una copia vieja.
+//
+//    Esto NO era cierto hasta el 2026-09-14: la hoja de estilos se pedía
+//    siempre como `/build/app.css` y caché-primero la congelaba. Al
+//    cambiar la paleta del sitio, quien ya había visitado la página
+//    seguía viendo el diseño anterior. Si algún día se quita la huella de
+//    las URL, hay que quitar también el caché-primero de aquí.
 //  - Navegaciones: red primero; si no hay conexión, la copia en caché de esa
 //    página o el cascarón /desconectado.html.
 //  - JAMÁS se cachea el panel (/admin) ni respuestas no-GET: allí viven
 //    sesiones y datos personales.
 'use strict';
 
-var VERSION = 'hrpl-v1';
+// Subir la versión purga TODO lo cacheado en el `activate`. Se sube al
+// desplegar cambios que el visitante deba ver sí o sí.
+var VERSION = 'hrpl-v2';
 var CASCARON = [
     '/desconectado.html',
     '/build/app.css',

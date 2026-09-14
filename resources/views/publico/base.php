@@ -9,6 +9,8 @@
  * Encabezado y pie según Res. 1519: menús obligatorios, NIT, dirección,
  * canales de atención, políticas y notificaciones judiciales.
  */
+use App\Core\Support\Recursos;
+
 $nombreEntidad = $config->texto('entidad.nombre', 'E.S.E. Hospital Rosario Pumarejo de López');
 $tituloCompleto = $esPortada ? $nombreEntidad : $titulo . ' — ' . $nombreEntidad;
 $enlaceNav = static fn (array $item): string => sprintf(
@@ -63,10 +65,10 @@ $enlaceNav = static fn (array $item): string => sprintf(
     ?>
         <script type="application/ld+json"><?= json_encode($esquema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) ?></script>
     <?php } ?>
-    <link rel="stylesheet" href="/build/app.css">
-    <script src="/js/sitio.js"></script>
-    <script src="/js/filtro.js" defer></script>
-    <script src="/js/consentimiento.js" defer></script>
+    <link rel="stylesheet" href="<?= $e(Recursos::url('/build/app.css')) ?>">
+    <script src="<?= $e(Recursos::url('/js/sitio.js')) ?>"></script>
+    <script src="<?= $e(Recursos::url('/js/filtro.js')) ?>" defer></script>
+    <script src="<?= $e(Recursos::url('/js/consentimiento.js')) ?>" defer></script>
 </head>
 <body>
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>

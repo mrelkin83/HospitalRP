@@ -83,9 +83,36 @@ Todos los bloques ejecutados. **211 tests, 659 aserciones, en verde.**
 | D3 · Chat | ✅ | `Ports\ProveedorChat`, nace apagado |
 | D4 · Intranet retirada | ✅ | `/acceder-al-sistema` redirige a la portada |
 
+### Panel de administración
+
+Los cuatro módulos nuevos se administran desde el panel, con permisos propios
+y no con `*`: quien publica una convocatoria no tiene por qué poder leer
+resultados de encuestas ni tocar salarios.
+
+| Pantalla | Permiso de lectura | Permiso de escritura |
+|---|---|---|
+| `/admin/convocatorias` | `convocatorias.ver` | `convocatorias.editar` |
+| `/admin/eventos` | `eventos.ver` | `eventos.editar` |
+| `/admin/encuestas` | `encuestas.ver` | `encuestas.editar` |
+| `/admin/servidores-publicos` | `directorio.ver` | `directorio.editar` |
+
+El andamiaje común (plantilla, CSRF y auditoría) se extrajo a
+`Http\Admin\Soporte\PantallaAdmin`. Los controladores de las fases 1 a 8 lo
+llevan copiado uno por uno; repetirlo cuatro veces más eran cuatro
+oportunidades de olvidar el CSRF en un formulario del panel.
+
+La pantalla de resultados de encuestas muestra **solo conteos agregados** de
+las preguntas cerradas. El texto libre sí se lee, porque son las sugerencias
+que hay que atender y no hay forma de agregarlo; por eso el formulario público
+avisa antes de escribir.
+
 ### Verificado
 
 - Los **66 destinos internos** del menú responden 200 o redirección. Ninguno 404.
+- **Ciclo completo probado contra el servidor**: el panel sin sesión redirige
+  al login, con sesión y permiso abre, se crea un evento desde el formulario y
+  aparece en `/eventos`; un evento que termina antes de empezar se rechaza.
+- Un POST sin token CSRF a `/admin/eventos` responde 403 y **no crea la fila**.
 - `down()` de las tres migraciones nuevas probado con ciclo completo de bajada
   y subida.
 - **Defecto de entorno corregido:** las pruebas corrían en UTC y la aplicación
@@ -101,10 +128,6 @@ Todos los bloques ejecutados. **211 tests, 659 aserciones, en verde.**
 - **Texto provisional en cinco páginas** (banco de leche, madre canguro, banco
   de sangre, etnocultural, deberes y derechos): afirman solo lo verificable y
   encaminan a un canal real, en lugar de dejar el ítem de menú en 404.
-- **Panel de administración** de convocatorias, eventos, encuestas y
-  servidores públicos: los repositorios exponen el CRUD completo y las rutas
-  públicas funcionan, pero **las pantallas del panel para estos cuatro módulos
-  no se construyeron**. Hoy los registros se cargan por SQL.
 - **Imágenes del contenido migrado:** el extractor las quitó a propósito; se
   vuelven a subir desde el módulo de medios.
 - Cotejar el Anexo 2 sembrado con la versión **vigente** de la Res. 1519.

@@ -60,6 +60,10 @@ $conEditor ??= false;
                 <li><a href="/admin/especialidades" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Especialidades</a></li>
                 <li><a href="/admin/servicios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Servicios</a></li>
                 <li><a href="/admin/profesionales" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Directorio médico</a></li>
+                <li><a href="/admin/servidores-publicos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Servidores públicos</a></li>
+                <li><a href="/admin/convocatorias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Convocatorias</a></li>
+                <li><a href="/admin/eventos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Eventos</a></li>
+                <li><a href="/admin/encuestas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Encuestas</a></li>
                 <li><a href="/admin/medios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Medios</a></li>
                 <li><a href="/admin/menus" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Menús</a></li>
                 <li><a href="/admin/ia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">IA</a></li>

@@ -32,6 +32,11 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\ConvocatoriasAdminController;
+use App\Http\Admin\EncuestasAdminController;
+use App\Http\Admin\EventosAdminController;
+use App\Http\Admin\ServidoresPublicosAdminController;
+use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
@@ -336,6 +341,25 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MapaSitioController::class, MapaSitioController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(PantallaAdmin::class, PantallaAdmin::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ConvocatoriasAdminController::class, ConvocatoriasAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EventosAdminController::class, EventosAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EncuestasAdminController::class, EncuestasAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ServidoresPublicosAdminController::class, ServidoresPublicosAdminController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

@@ -21,6 +21,10 @@ use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
+use App\Http\Admin\ConvocatoriasAdminController;
+use App\Http\Admin\EncuestasAdminController;
+use App\Http\Admin\EventosAdminController;
+use App\Http\Admin\ServidoresPublicosAdminController;
 use App\Http\Admin\DatasetsController;
 use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
@@ -823,6 +827,39 @@ $rutas->add('servidores-publicos', new Route(
     defaults: ['_controlador' => [ServidoresPublicosController::class, 'listado']],
     methods: ['GET'],
 ));
+
+// --- Panel: convocatorias, eventos, encuestas y servidores públicos (Fase 9) ---
+// Permisos propios y no `*`: el funcionario que publica una convocatoria no
+// tiene por qué poder leer resultados de encuestas ni tocar salarios.
+
+$panel = static fn (string $controlador, string $metodo, string $permiso): array => [
+    '_controlador' => [$controlador, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => $permiso,
+];
+
+$rutas->add('admin.convocatorias', new Route('/admin/convocatorias', $panel(ConvocatoriasAdminController::class, 'listado', 'convocatorias.ver'), methods: ['GET']));
+$rutas->add('admin.convocatorias.crear', new Route('/admin/convocatorias', $panel(ConvocatoriasAdminController::class, 'guardar', 'convocatorias.editar'), methods: ['POST']));
+$rutas->add('admin.convocatorias.guardar', new Route('/admin/convocatorias/{id}', $panel(ConvocatoriasAdminController::class, 'guardar', 'convocatorias.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.convocatorias.eliminar', new Route('/admin/convocatorias/{id}/eliminar', $panel(ConvocatoriasAdminController::class, 'eliminar', 'convocatorias.editar'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.eventos', new Route('/admin/eventos', $panel(EventosAdminController::class, 'listado', 'eventos.ver'), methods: ['GET']));
+$rutas->add('admin.eventos.crear', new Route('/admin/eventos', $panel(EventosAdminController::class, 'guardar', 'eventos.editar'), methods: ['POST']));
+$rutas->add('admin.eventos.guardar', new Route('/admin/eventos/{id}', $panel(EventosAdminController::class, 'guardar', 'eventos.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.eventos.eliminar', new Route('/admin/eventos/{id}/eliminar', $panel(EventosAdminController::class, 'eliminar', 'eventos.editar'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.encuestas', new Route('/admin/encuestas', $panel(EncuestasAdminController::class, 'listado', 'encuestas.ver'), methods: ['GET']));
+$rutas->add('admin.encuestas.crear', new Route('/admin/encuestas', $panel(EncuestasAdminController::class, 'guardar', 'encuestas.editar'), methods: ['POST']));
+// Antes que `/admin/encuestas/{id}`: si no, «preguntas» se leería como id.
+$rutas->add('admin.encuestas.pregunta.eliminar', new Route('/admin/encuestas/preguntas/{id}/eliminar', $panel(EncuestasAdminController::class, 'eliminarPregunta', 'encuestas.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.encuestas.pregunta.crear', new Route('/admin/encuestas/{id}/preguntas', $panel(EncuestasAdminController::class, 'crearPregunta', 'encuestas.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.encuestas.detalle', new Route('/admin/encuestas/{id}', $panel(EncuestasAdminController::class, 'detalle', 'encuestas.ver'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.encuestas.guardar', new Route('/admin/encuestas/{id}', $panel(EncuestasAdminController::class, 'guardar', 'encuestas.editar'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.servidores', new Route('/admin/servidores-publicos', $panel(ServidoresPublicosAdminController::class, 'listado', 'directorio.ver'), methods: ['GET']));
+$rutas->add('admin.servidores.crear', new Route('/admin/servidores-publicos', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), methods: ['POST']));
+$rutas->add('admin.servidores.guardar', new Route('/admin/servidores-publicos/{id}', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.servidores.eliminar', new Route('/admin/servidores-publicos/{id}/eliminar', $panel(ServidoresPublicosAdminController::class, 'eliminar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Mapa del sitio (Fase 9) ---
 // Ruta fija y no página: se arma desde los menús vigentes, así que añadir un

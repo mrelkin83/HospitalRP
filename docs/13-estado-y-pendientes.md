@@ -17,7 +17,7 @@ viven en su desglose (`docs/03` a `docs/12`); esto es el mapa.
 | 6 · Cumplimiento (políticas versionadas, cookies, habeas data) | ✅ Terminada | `docs/09` | **Términos PROVISIONALES** a validar por jurídica (editables en panel) |
 | 7 · Búsqueda, SEO, PWA, accesibilidad | ✅ Terminada | `docs/11` | Lighthouse móvil 100/100/100 en portada; redirecciones Joomla E2E |
 | 8 · IA en el panel (opcional) | ✅ Terminada | `docs/12` | 2 proveedores; sembrada APAGADA; claves van en `.env` |
-| 9 · Cierre de brechas del sitio vigente | ✅ Terminada | `docs/15` | Bloques A–D completos el 2026-09-14; falta el panel de 4 módulos nuevos |
+| 9 · Cierre de brechas del sitio vigente | ✅ Terminada | `docs/15` | Bloques A–D completos el 2026-09-14, panel incluido |
 | 10 · Migración y lanzamiento | ⏳ **Pendiente** | — | Ver sección 5 |
 
 **Suite al corte: 165 tests, 542 aserciones, en verde.**
@@ -35,8 +35,8 @@ Ordenados por importancia:
    en el esquema, sin implementación. CLAUDE.md §6 lo exige para el panel.
 3. ~~**Módulo de convocatorias.**~~ ✅ Resuelto el 2026-09-14 (Fase 9, bloque
    B4): tablas migradas, repositorio, página pública `/convocatorias` y tipo
-   `convocatoria` reactivado en el índice de búsqueda. **Falta la pantalla del
-   panel**, igual que para eventos, encuestas y servidores públicos.
+   `convocatoria` reactivado en el índice de búsqueda, y pantalla del panel en
+   `/admin/convocatorias`.
 4. **Módulo de respaldos.** Tabla `respaldos` en el esquema, sin migrar y sin
    código. La Fase 9 exige respaldos programados y restauración probada:
    comando `respaldos:crear` (mysqldump + uploads), retención y registro.
@@ -109,9 +109,11 @@ Ordenados por importancia:
 1. `.env` de producción: BD, `APP_URL=https://hrplopez.gov.co`,
    `APP_ENTORNO=produccion`, SMTP real, claves IA si aplica.
 2. `composer install --no-dev` y `composer migrate`.
-3. Semillas en orden: `configuracion`, `menus`, `directorio`,
+3. Semillas en orden: `configuracion`, `paginas`, `menus`, `directorio`,
    `transparencia`, `festivos`, `tramites`, `cumplimiento`,
    `redirecciones` (todas idempotentes, nunca pisan lo editado).
+   `paginas` va **antes** que `menus`: el menú enlaza esas páginas y un ítem
+   apuntando a una página inexistente responde 404 (docs/14 §5.1).
 4. `usuarios:crear-admin` con correo institucional (y cambiar contraseña —
    ver pendiente 2.1).
 5. `busqueda:indexar` tras cargar contenido.

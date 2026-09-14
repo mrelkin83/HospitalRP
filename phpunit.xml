@@ -29,6 +29,12 @@
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>
+        <!-- Las pruebas arrancan con vendor/autoload.php, así que NO pasan por
+             config/bootstrap.php y no heredaban su date_default_timezone_set.
+             Corrían en UTC mientras la aplicación y MySQL corren en hora de
+             Colombia: cualquier fecha calculada en PHP y comparada contra
+             NOW() salía cinco horas corrida. Detectado en la Fase 9. -->
+        <ini name="date.timezone" value="America/Bogota"/>
         <env name="APP_ENTORNO" value="pruebas"/>
         <env name="APP_DEBUG" value="true"/>
         <env name="APP_URL" value="http://localhost"/>

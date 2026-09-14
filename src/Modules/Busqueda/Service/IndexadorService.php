@@ -168,9 +168,13 @@ final readonly class IndexadorService
                 FROM faq f
                 WHERE f.publicada = 1",
 
-            // El módulo de convocatorias llega en una fase posterior; cuando
-            // exista su página pública, este tipo se activa aquí.
-            TipoIndice::Convocatoria => null,
+            // Activado en la Fase 9 (bloque B4), cuando el módulo por fin
+            // tuvo tablas migradas y página pública.
+            TipoIndice::Convocatoria => "SELECT c.id, c.titulo, LEFT(c.descripcion, 500) AS resumen,
+                       c.descripcion AS contenido,
+                       CONCAT('/convocatorias/', c.slug) AS url
+                FROM convocatorias c
+                WHERE c.publicada = 1 AND c.eliminado_en IS NULL",
 
             TipoIndice::TipoTramite => "SELECT t.id, t.nombre AS titulo, t.descripcion AS resumen,
                        CONCAT_WS(' ', t.instrucciones, t.fundamento_legal) AS contenido,

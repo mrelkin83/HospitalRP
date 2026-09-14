@@ -37,6 +37,13 @@ final class SembrarPaginasCommand extends Command
     private const string BORRADOR = 'borrador';
 
     /**
+     * Contenido migrado del Joomla, generado fuera de banda (ver el docblock
+     * de ese archivo). Va aparte de PAGINAS porque son 47 páginas de texto
+     * del hospital: embutirlas en una constante haría ilegible esta clase.
+     */
+    private const string ARCHIVO_MIGRADO = __DIR__ . '/../../../../database/seeders/contenido-joomla.php';
+
+    /**
      * ruta => [titulo, resumen, contenido HTML, estado, protegida]
      *
      * @var array<string, array{string, string, string, string, int}>
@@ -170,18 +177,146 @@ final class SembrarPaginasCommand extends Command
             1,
         ],
 
-        // Contenido que solo tiene el hospital: se crean en borrador para que
-        // aparezcan en el panel, nunca vacías de cara al ciudadano.
-        '/el-hospital/historia' => ['Historia', 'Historia de la E.S.E. Hospital Rosario Pumarejo de López.', '', self::BORRADOR, 0],
-        '/el-hospital/mision-y-vision' => ['Misión y visión', 'Misión y visión institucional.', '', self::BORRADOR, 0],
-        '/el-hospital/objetivos-y-funciones' => ['Objetivos y funciones', 'Objetivos y funciones de la entidad.', '', self::BORRADOR, 0],
-        '/el-hospital/principios-corporativos' => ['Principios corporativos', 'Principios y valores corporativos.', '', self::BORRADOR, 0],
-        '/el-hospital/infraestructura' => ['Infraestructura', 'Infraestructura física y dotación.', '', self::BORRADOR, 0],
-        '/el-hospital/organigrama' => ['Organigrama', 'Estructura orgánica de la entidad.', '', self::BORRADOR, 0],
-        '/el-hospital/agremiaciones-y-asociaciones' => ['Agremiaciones y asociaciones', 'Agremiaciones, asociaciones y grupos de interés.', '', self::BORRADOR, 0],
-        '/el-hospital/localizacion' => ['Localización y horarios', 'Cómo llegar a la sede y horarios de atención.', '', self::BORRADOR, 0],
-        '/el-hospital/politicas-institucionales' => ['Políticas institucionales', 'Políticas, lineamientos y manuales de la entidad.', '', self::BORRADOR, 0],
-        '/el-hospital/certificado-de-accesibilidad' => ['Certificado de accesibilidad', 'Certificado de accesibilidad web de la entidad.', '', self::BORRADOR, 0],
+        // Índices de sección: son navegación, no afirmaciones institucionales,
+        // así que se publican aunque el hospital no haya redactado nada.
+        '/programas' => [
+            'Programas',
+            'Programas asistenciales y de promoción de la E.S.E.',
+            '<p>Programas asistenciales, de promoción y de humanización de la E.S.E. Hospital '
+                . 'Rosario Pumarejo de López.</p>'
+                . '<ul>'
+                . '<li><a href="/programas/iamii">IAMII — Institución Amiga de la Mujer y la Infancia</a></li>'
+                . '<li><a href="/programas/iamii/banco-de-leche">Banco de leche humana</a></li>'
+                . '<li><a href="/programas/iamii/madre-canguro">Programa Madre Canguro</a></li>'
+                . '<li><a href="/programas/humanizacion">Programa de humanización</a></li>'
+                . '<li><a href="/programas/docencia">Docencia, servicio e investigación</a></li>'
+                . '<li><a href="/programas/etnocultural">Espacio etnocultural</a></li>'
+                . '<li><a href="/programas/banco-de-sangre">Banco de sangre</a></li>'
+                . '</ul>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/talento-humano' => [
+            'Talento humano',
+            'Manual de funciones, asignaciones salariales, capacitación y bienestar.',
+            '<p>Información de gestión del talento humano de la entidad.</p>'
+                . '<ul>'
+                . '<li><a href="/convocatorias">Convocatorias y ofertas de empleo</a></li>'
+                . '<li><a href="/talento-humano/manual-de-funciones">Manual de funciones</a></li>'
+                . '<li><a href="/talento-humano/asignaciones-salariales">Asignaciones salariales</a></li>'
+                . '<li><a href="/talento-humano/evaluacion-del-desempeno">Evaluación del desempeño</a></li>'
+                . '<li><a href="/talento-humano/plan-de-capacitacion">Plan institucional de capacitación</a></li>'
+                . '<li><a href="/talento-humano/bienestar-social">Bienestar social</a></li>'
+                . '<li><a href="/talento-humano/reglamento-interno">Reglamento interno de trabajo</a></li>'
+                . '<li><a href="/talento-humano/induccion">Inducción y reinducción</a></li>'
+                . '<li><a href="/talento-humano/formatos">Formatos de talento humano</a></li>'
+                . '</ul>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/gestion' => [
+            'Gestión institucional',
+            'MECI, MIPG, control disciplinario y conflicto de intereses.',
+            '<p>Instrumentos de control interno y gestión de la entidad.</p>'
+                . '<ul>'
+                . '<li><a href="/gestion/meci">MECI — Modelo Estándar de Control Interno</a></li>'
+                . '<li><a href="/gestion/mipg">MIPG — Modelo Integrado de Planeación y Gestión</a></li>'
+                . '<li><a href="/gestion/control-disciplinario">Control disciplinario interno</a></li>'
+                . '<li><a href="/gestion/conflicto-de-intereses">Conflicto de intereses</a></li>'
+                . '<li><a href="/gestion/conciliaciones">Conciliaciones</a></li>'
+                . '<li><a href="/gestion/programas-y-proyectos">Programas y proyectos de inversión</a></li>'
+                . '</ul>',
+            self::PUBLICADA,
+            0,
+        ],
+        // Las cinco páginas que el Joomla enlaza desde su menú pero publica
+        // sin texto aprovechable. Se afirma solo lo verificable —que el
+        // programa existe, porque está en el menú del propio hospital— y se
+        // encamina al ciudadano a un canal real. Publicarlas así es mejor que
+        // dejar el ítem de menú en 404, y el panel las completa sin código.
+        '/programas/iamii/banco-de-leche' => [
+            'Banco de leche humana',
+            'Banco de leche humana de la E.S.E. Hospital Rosario Pumarejo de López.',
+            '<p>El Banco de Leche Humana hace parte de la estrategia '
+                . '<a href="/programas/iamii">IAMII</a> de la E.S.E. Hospital Rosario Pumarejo '
+                . 'de López.</p>'
+                . '<p>Si quieres donar leche materna o necesitas orientación sobre lactancia, '
+                . 'comunícate con el hospital por los <a href="/contacto">canales de atención</a>.</p>'
+                . '<p>Estamos ampliando la información de esta página.</p>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/programas/iamii/madre-canguro' => [
+            'Programa Madre Canguro',
+            'Programa Madre Canguro de la E.S.E. Hospital Rosario Pumarejo de López.',
+            '<p>El Programa Madre Canguro acompaña a las familias de recién nacidos '
+                . 'prematuros o de bajo peso, y hace parte de la estrategia '
+                . '<a href="/programas/iamii">IAMII</a>.</p>'
+                . '<p>Para conocer horarios y requisitos de ingreso al programa, consulta los '
+                . '<a href="/contacto">canales de atención</a> del hospital.</p>'
+                . '<p>Estamos ampliando la información de esta página.</p>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/programas/banco-de-sangre' => [
+            'Banco de sangre',
+            'Banco de sangre de la E.S.E. Hospital Rosario Pumarejo de López.',
+            '<p>El Banco de Sangre de la E.S.E. Hospital Rosario Pumarejo de López recibe '
+                . 'donantes voluntarios.</p>'
+                . '<p>Para conocer horarios, requisitos y jornadas de donación, consulta el '
+                . '<a href="/eventos">calendario de eventos</a> o los '
+                . '<a href="/contacto">canales de atención</a>.</p>'
+                . '<p>Estamos ampliando la información de esta página.</p>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/programas/etnocultural' => [
+            'Espacio etnocultural',
+            'Espacio etnocultural de la E.S.E. Hospital Rosario Pumarejo de López.',
+            '<p>El espacio etnocultural reconoce la diversidad de las comunidades que atiende '
+                . 'la E.S.E. Hospital Rosario Pumarejo de López en el departamento del Cesar.</p>'
+                . '<p>Si perteneces a una comunidad étnica y necesitas orientación sobre la '
+                . 'atención en salud, escríbenos por los <a href="/contacto">canales de '
+                . 'atención</a> o radica una <a href="/atencion-ciudadania/pqrsdf">PQRSDF</a>.</p>'
+                . '<p>Estamos ampliando la información de esta página.</p>',
+            self::PUBLICADA,
+            0,
+        ],
+        '/atencion-ciudadania/deberes-y-derechos' => [
+            'Deberes y derechos de los usuarios',
+            'Deberes y derechos de los usuarios de la E.S.E.',
+            '<p>Los deberes y derechos de los usuarios del Sistema General de Seguridad Social '
+                . 'en Salud están definidos en la <strong>Ley 1751 de 2015</strong> (ley '
+                . 'estatutaria de salud) y en la <strong>Resolución 13437 de 1991</strong> del '
+                . 'entonces Ministerio de Salud, que adopta el decálogo de los derechos de los '
+                . 'pacientes.</p>'
+                . '<p>Si consideras que alguno de tus derechos no se respetó, puedes '
+                . '<a href="/atencion-ciudadania/pqrsdf">radicar una PQRSDF</a>. También puedes '
+                . 'acudir a la <a href="/participa">asociación de usuarios</a>.</p>'
+                . '<p>Estamos publicando la versión institucional completa de este documento.</p>',
+            self::PUBLICADA,
+            0,
+        ],
+
+        '/programas/iamii/pasos' => [
+            'Los diez pasos IAMII',
+            'Los diez pasos de la estrategia Institución Amiga de la Mujer y la Infancia.',
+            '<p>La estrategia IAMII se despliega en diez pasos.</p>'
+                . '<ul>'
+                . '<li><a href="/programas/iamii/pasos/paso-1">Paso 1</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-2">Paso 2</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-3">Paso 3</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-4">Paso 4</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-5">Paso 5</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-6">Paso 6</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-7">Paso 7</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-8">Paso 8</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-9">Paso 9</a></li>'
+                . '<li><a href="/programas/iamii/pasos/paso-10">Paso 10</a></li>'
+                . '</ul>',
+            self::PUBLICADA,
+            0,
+        ],
     ];
 
     public function __construct(
@@ -206,8 +341,33 @@ final class SembrarPaginasCommand extends Command
         $creadas = 0;
         $publicadas = 0;
 
-        foreach (self::PAGINAS as $ruta => [$titulo, $resumen, $contenido, $estado, $protegida]) {
-            if (false !== $this->conexion->fetchOne('SELECT id FROM paginas WHERE ruta = ?', [$ruta])) {
+        $rellenadas = 0;
+
+        foreach ($this->paginasASembrar() as $ruta => [$titulo, $resumen, $contenido, $estado, $protegida]) {
+            $existente = $this->conexion->fetchAssociative(
+                'SELECT id, contenido, estado_aprobacion FROM paginas WHERE ruta = ?',
+                [$ruta],
+            );
+
+            if ($existente !== false) {
+                // Una corrida anterior pudo dejar la página en borrador vacío
+                // porque aún no existía el contenido migrado. Rellenarla NO es
+                // pisar trabajo ajeno: solo se toca si sigue sin texto y en
+                // borrador. Lo que el hospital haya escrito queda intacto.
+                if (
+                    $contenido !== ''
+                    && !$simulacion
+                    && $existente['estado_aprobacion'] === self::BORRADOR
+                    && ($existente['contenido'] === null || trim((string) $existente['contenido']) === '')
+                ) {
+                    $this->conexion->update('paginas', [
+                        'contenido' => $contenido,
+                        'estado_aprobacion' => $estado,
+                        'aprobado_en' => $estado === self::PUBLICADA ? date('Y-m-d H:i:s') : null,
+                    ], ['id' => (int) $existente['id']]);
+                    $rellenadas++;
+                }
+
                 continue;
             }
 
@@ -238,23 +398,71 @@ final class SembrarPaginasCommand extends Command
             }
         }
 
-        if ($creadas > 0 && !$simulacion) {
+        if (($creadas > 0 || $rellenadas > 0) && !$simulacion) {
             $this->auditoria->registrar(new RegistroAuditoria(
                 accion: AccionAuditoria::Creacion,
                 entidad: 'paginas',
-                descripcion: sprintf('Semillas de páginas institucionales: %d creadas (%d publicadas)', $creadas, $publicadas),
+                descripcion: sprintf(
+                    'Semillas de páginas institucionales: %d creadas (%d publicadas), %d borradores vacíos rellenados',
+                    $creadas,
+                    $publicadas,
+                    $rellenadas,
+                ),
                 usuarioNombre: 'consola',
             ));
         }
 
         $io->success(sprintf(
-            '%d páginas creadas (%d publicadas), %d ya existían.',
+            '%d páginas creadas (%d publicadas), %d borradores vacíos rellenados, %d ya existían con contenido.',
             $creadas,
             $publicadas,
-            count(self::PAGINAS) - $creadas,
+            $rellenadas,
+            count($this->paginasASembrar()) - $creadas - $rellenadas,
         ));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Las páginas escritas a mano más el contenido migrado del Joomla.
+     *
+     * El contenido migrado manda sobre la versión escrita a mano de la misma
+     * ruta: es el texto real del hospital, no un resumen del asistente. Una
+     * página migrada sin texto aprovechable cae a borrador, por la misma
+     * razón que el resto: al aire solo sale lo que tiene contenido.
+     *
+     * @return array<string, array{string, string, string, string, int}>
+     */
+    private function paginasASembrar(): array
+    {
+        $paginas = self::PAGINAS;
+
+        if (!is_file(self::ARCHIVO_MIGRADO)) {
+            return $paginas;
+        }
+
+        /** @var array<string, array{string, string}> $migradas */
+        $migradas = require self::ARCHIVO_MIGRADO;
+
+        foreach ($migradas as $ruta => [$titulo, $html]) {
+            // Si el Joomla no trajo texto, NO se pisa lo escrito a mano: si
+            // no, una página con reseña propia caería a borrador y su ítem de
+            // menú respondería 404, que es justo el defecto que esta fase
+            // vino a cerrar (docs/14 §5.1).
+            if ($html === '' && ($paginas[$ruta][2] ?? '') !== '') {
+                continue;
+            }
+
+            $paginas[$ruta] = [
+                $titulo,
+                $paginas[$ruta][1] ?? $titulo . ' de la E.S.E. Hospital Rosario Pumarejo de López.',
+                $html,
+                $html === '' ? self::BORRADOR : self::PUBLICADA,
+                $paginas[$ruta][4] ?? 0,
+            ];
+        }
+
+        return $paginas;
     }
 
     /** El slug es el último segmento de la ruta; `/el-hospital` → `el-hospital`. */

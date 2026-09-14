@@ -33,9 +33,7 @@ final class MapaSitioTest extends TestCase
     {
         self::$conexion->executeStatement('DELETE FROM menu_items');
         self::$conexion->executeStatement('DELETE FROM menus');
-        self::$conexion->executeStatement(
-            "DELETE FROM paginas WHERE ruta LIKE '/el-hospital%' OR ruta IN ('/participa', '/notificaciones-judiciales')",
-        );
+        self::$conexion->executeStatement('DELETE FROM paginas');
     }
 
     public function testElArbolPublicoAnidaLosHijosBajoSuPadre(): void
@@ -81,29 +79,58 @@ final class MapaSitioTest extends TestCase
         }
     }
 
-    /** Una ficha institucional sin texto no puede salir al aire. */
-    public function testLasPaginasSinContenidoQuedanEnBorrador(): void
+    /**
+     * Una ficha institucional sin texto no puede salir al aire. Se comprueba
+     * sobre la regla, no sobre una ruta concreta: el contenido migrado del
+     * Joomla publica muchas de ellas, y cuáles siguen vacías depende de lo
+     * que el hospital tenga publicado hoy.
+     */
+    public function testNingunaPaginaPublicadaQuedaSinContenido(): void
     {
         $this->sembrarPaginas();
 
-        $estado = self::$conexion->fetchOne(
-            'SELECT estado_aprobacion FROM paginas WHERE ruta = ?',
-            ['/el-hospital/historia'],
+        $vacias = self::$conexion->fetchFirstColumn(
+            "SELECT ruta FROM paginas
+              WHERE estado_aprobacion = 'publicado'
+                AND (contenido IS NULL OR TRIM(contenido) = '')",
         );
 
-        self::assertSame('borrador', $estado);
+        self::assertSame([], $vacias, 'Hay páginas publicadas sin contenido');
+    }
+
+    public function testLasPaginasSinTextoQuedanEnBorrador(): void
+    {
+        $this->sembrarPaginas();
+
+        $borradores = self::$conexion->fetchFirstColumn(
+            "SELECT ruta FROM paginas WHERE estado_aprobacion = 'borrador'",
+        );
+
+        // Debe existir al menos una: el Joomla tiene páginas sin texto
+        // aprovechable, y esas no pueden publicarse solas.
+        self::assertNotSame([], $borradores);
     }
 
     public function testSembrarDosVecesNoDuplicaNingunaPagina(): void
     {
         $this->sembrarPaginas();
+        $primerTotal = $this->totalSembradas();
+
         $this->sembrarPaginas();
 
-        $total = self::$conexion->fetchOne(
-            "SELECT COUNT(*) FROM paginas WHERE ruta LIKE '/el-hospital%' OR ruta IN ('/participa', '/notificaciones-judiciales')",
-        );
+        self::assertSame($primerTotal, $this->totalSembradas());
+    }
 
-        self::assertSame(14, (int) $total);
+    private function totalSembradas(): int
+    {
+        return (int) self::$conexion->fetchOne(
+            "SELECT COUNT(*) FROM paginas
+              WHERE ruta LIKE '/el-hospital%'
+                 OR ruta LIKE '/programas%'
+                 OR ruta LIKE '/talento-humano%'
+                 OR ruta LIKE '/gestion%'
+                 OR ruta IN ('/participa', '/notificaciones-judiciales')",
+        );
     }
 
     private function sembrarPaginas(): void

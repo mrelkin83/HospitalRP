@@ -40,6 +40,9 @@ use App\Http\Web\DirectorioPublicoController;
 use App\Http\Web\FaqPublicoController;
 use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
+use App\Http\Web\ConvocatoriasPublicoController;
+use App\Http\Web\EncuestasPublicoController;
+use App\Http\Web\EventosPublicoController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MapaSitioController;
 use App\Http\Web\MuestraDisenoController;
@@ -755,6 +758,62 @@ $rutas->add('admin.menus.item.eliminar', new Route(
         '_permiso' => 'sistema.menus',
     ],
     requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+// --- Convocatorias, eventos y encuestas (Fase 9, bloques B4, B6 y D2) ---
+
+$rutas->add('convocatorias', new Route(
+    path: '/convocatorias',
+    defaults: ['_controlador' => [ConvocatoriasPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+$rutas->add('convocatorias.detalle', new Route(
+    path: '/convocatorias/{slug}',
+    defaults: ['_controlador' => [ConvocatoriasPublicoController::class, 'detalle']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('eventos', new Route(
+    path: '/eventos',
+    defaults: ['_controlador' => [EventosPublicoController::class, 'agenda']],
+    methods: ['GET'],
+));
+
+$rutas->add('eventos.detalle', new Route(
+    path: '/eventos/{slug}',
+    defaults: ['_controlador' => [EventosPublicoController::class, 'detalle']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('encuestas', new Route(
+    path: '/encuestas',
+    defaults: ['_controlador' => [EncuestasPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+// Antes que `/encuestas/{slug}`: si no, «gracias» se leería como un slug.
+$rutas->add('encuestas.gracias', new Route(
+    path: '/encuestas/{slug}/gracias',
+    defaults: ['_controlador' => [EncuestasPublicoController::class, 'gracias']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('encuestas.formulario', new Route(
+    path: '/encuestas/{slug}',
+    defaults: ['_controlador' => [EncuestasPublicoController::class, 'formulario']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+$rutas->add('encuestas.responder', new Route(
+    path: '/encuestas/{slug}',
+    defaults: ['_controlador' => [EncuestasPublicoController::class, 'responder']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
     methods: ['POST'],
 ));
 

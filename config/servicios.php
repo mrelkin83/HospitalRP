@@ -53,6 +53,9 @@ use App\Modules\Busqueda\Service\BuscadorService;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Sistema\Repository\DependenciaRepository;
 use App\Modules\Sistema\Repository\IaUsoRepository;
+use App\Modules\Convocatorias\Repository\ConvocatoriaRepository;
+use App\Modules\Encuestas\Repository\EncuestaRepository;
+use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use App\Modules\Sistema\Repository\RedireccionRepository;
 use App\Modules\Sistema\Service\AsistenteIa;
@@ -81,6 +84,9 @@ use App\Http\Web\SeoController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\TramitesPublicoController;
 use App\Http\Web\TransparenciaPublicoController;
+use App\Http\Web\ConvocatoriasPublicoController;
+use App\Http\Web\EncuestasPublicoController;
+use App\Http\Web\EventosPublicoController;
 use App\Http\Web\MapaSitioController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
@@ -170,6 +176,15 @@ return static function (Env $env): ContainerBuilder {
 
     // --- Módulo Sistema ---
     $contenedor->register(MenuRepository::class, MenuRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ConvocatoriaRepository::class, ConvocatoriaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(EventoRepository::class, EventoRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(EncuestaRepository::class, EncuestaRepository::class)
         ->setAutowired(true);
 
     $contenedor->register(DependenciaRepository::class, DependenciaRepository::class)
@@ -316,6 +331,18 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MapaSitioController::class, MapaSitioController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ConvocatoriasPublicoController::class, ConvocatoriasPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EventosPublicoController::class, EventosPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EncuestasPublicoController::class, EncuestasPublicoController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

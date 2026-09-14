@@ -2,14 +2,20 @@
    Sistema de diseño — E.S.E. Hospital Rosario Pumarejo de López
    Fase 0, paso 9. Tailwind CSS v4: la configuración vive aquí, no en JS.
 
-   ÚNICO archivo de tokens (decisión B del plan de arranque): la paleta se
-   derivó de frontend.png (decisión F) y es provisional hasta que llegue el
-   manual de identidad. Sustituirla = editar este archivo, no las pantallas.
+   ÚNICO archivo de tokens (decisión B del plan de arranque). Sustituir la
+   paleta = editar este archivo, no las pantallas.
+
+   Referencia de diseño vigente desde el 2026-09-14: el prototipo
+   `hospital-prototype`. Sustituye a frontend.png, que queda histórico.
+   El prototipo venía en React; aquí se adaptó el LENGUAJE VISUAL (paleta,
+   paneles de vidrio, retícula bento) al stack del proyecto —HTML semántico
+   + Tailwind + Alpine—, porque CLAUDE.md §3 prohíbe React.
 
    Todo par texto/fondo usado por los tokens semánticos está verificado
    ≥ 4.5:1 (WCAG 2.1 AA) por tests/Unit/Diseno/ContrasteTest.php.
-   El verde de marca (#2F9A72, 3.5:1 sobre blanco) es SOLO decorativo:
-   nunca se usa para texto sobre claro.
+   Dos colores de marca son SOLO decorativos sobre fondo claro y nunca se
+   usan para texto ahí: el verde (#2F9A72, 3.5:1) y el cian (#00F2FE,
+   1.39:1). El cian sí es texto válido sobre el azul 900 (12,7:1).
    ===================================================================== */
 
 @import "tailwindcss";
@@ -27,19 +33,29 @@
        0 ms y no filtra visitas a un CDN de fuentes (CLAUDE.md §6). */
     --font-sans: 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-    /* --- Marca (de frontend.png) --- */
-    --color-primario-50: #EAF0FE;
-    --color-primario-100: #D4E0FD;
-    --color-primario-200: #A9C1FB;
-    --color-primario-300: #7C9CFF;
-    --color-primario-400: #4A6BF5;
-    --color-primario-500: #0035ED;
-    --color-primario-600: #0030C9;
-    --color-primario-700: #002AA8;
-    --color-primario-800: #0A1F6E;
-    --color-primario-900: #041646;
+    /* --- Marca (del prototipo hospital-prototype, 2026-09-14) ---
+       Azul corporativo del prototipo, extendido a una escala 50–900.
+       Los tres anclajes son suyos: 500 = #2B6CB0 (secondary),
+       700 = #1A365D (primary), 900 = #0A192F (dark). El resto se
+       interpoló y TODO par en uso está verificado en ContrasteTest. */
+    --color-primario-50: #EBF2FA;
+    --color-primario-100: #D6E4F5;
+    --color-primario-200: #AFC9E8;
+    --color-primario-300: #7FA9D8;
+    --color-primario-400: #4E87C6;
+    --color-primario-500: #2B6CB0;
+    --color-primario-600: #225A96;
+    --color-primario-700: #1A365D;
+    --color-primario-800: #12294A;
+    --color-primario-900: #0A192F;
 
-    --color-tinta: #041646;
+    --color-tinta: #0A192F;
+
+    /* Cian de marca. SOLO sobre fondo oscuro: da 1,39:1 sobre blanco
+       —ilegible— pero 12,7:1 sobre el azul 900. Por eso vive en la barra
+       superior, el pie y las tarjetas oscuras, nunca como texto claro.
+       Sobre fondo claro es decorativo: resplandores, bordes, degradados. */
+    --color-marca-cian: #00F2FE;
 
     /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
     --color-marca-verde: #2F9A72;
@@ -94,11 +110,11 @@
     --texto: #E7ECF5;
     --texto-suave: #A9B4C6;
     --titular: #E7ECF5;
-    --enlace: #8FA8FF;
-    --accion: #2547E8;
-    --accion-intensa: #4A6BF5;
+    --enlace: #8FC3F5;
+    --accion: #225A96;
+    --accion-intensa: #2B6CB0;
     --texto-sobre-accion: #FFFFFF;
-    --anillo: #8FA8FF;
+    --anillo: #8FC3F5;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -109,11 +125,11 @@
         --texto: #E7ECF5;
         --texto-suave: #A9B4C6;
         --titular: #E7ECF5;
-        --enlace: #8FA8FF;
-        --accion: #2547E8;
-        --accion-intensa: #4A6BF5;
+        --enlace: #8FC3F5;
+        --accion: #225A96;
+        --accion-intensa: #2B6CB0;
         --texto-sobre-accion: #FFFFFF;
-        --anillo: #8FA8FF;
+        --anillo: #8FC3F5;
     }
 }
 
@@ -123,7 +139,7 @@
     --texto-suave: #1F2937;
     --titular: #000000;
     --borde: #374151;
-    --enlace: #002AA8;
+    --enlace: #12294A;
 }
 
 [data-tema="oscuro"][data-contraste="alto"] {
@@ -131,7 +147,7 @@
     --texto-suave: #E7ECF5;
     --titular: #FFFFFF;
     --borde: #9AA4B5;
-    --enlace: #A9C1FB;
+    --enlace: #AFC9E8;
 }
 
 [data-contraste="alto"] a {
@@ -256,6 +272,95 @@
    Componentes base. Pocos y de verdad: crecen cuando una fase los pida.
    ===================================================================== */
 @layer components {
+
+    /* --- Lenguaje visual del prototipo (2026-09-14) ---
+       Van en @layer components, junto a .tarjeta y .boton, y no como
+       @utility: son componentes con variantes por ancestro (tema oscuro,
+       alto contraste), no utilidades sueltas. Verificado en el CSS
+       compilado que las variantes conservan su selector. */
+
+    /* Panel de vidrio. El `backdrop-filter` es un adorno, no la sustancia:
+       el fondo semiopaco ya da el contraste, así que en un navegador que no
+       lo soporte —o que lo desactive por ahorro de batería— el panel sigue
+       legible. */
+    .panel-vidrio {
+        background-color: color-mix(in srgb, var(--fondo) 82%, transparent);
+        border: 1px solid color-mix(in srgb, var(--borde) 70%, transparent);
+        box-shadow: 0 8px 32px 0 rgb(10 25 47 / 0.08);
+    }
+
+    @supports (backdrop-filter: blur(1px)) {
+        .panel-vidrio {
+            backdrop-filter: blur(12px);
+        }
+    }
+
+    /* En oscuro sube la opacidad: el desenfoque sobre fondos oscuros aplana
+       demasiado el borde y el panel deja de leerse como panel. */
+    [data-tema="oscuro"] .panel-vidrio {
+        background-color: color-mix(in srgb, var(--superficie) 90%, transparent);
+        box-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.35);
+    }
+
+    /* En alto contraste el vidrio desaparece: la translucidez es justo lo
+       que estorba a quien pidió alto contraste. */
+    [data-contraste="alto"] .panel-vidrio {
+        background-color: var(--fondo);
+        border-color: var(--borde);
+        backdrop-filter: none;
+    }
+
+    /* Titular en degradado. Con respaldo en color sólido: si el navegador no
+       soporta `background-clip: text`, el texto se ve, nunca invisible. */
+    .texto-degradado {
+        color: var(--color-primario-700);
+    }
+
+    @supports (background-clip: text) or (-webkit-background-clip: text) {
+        .texto-degradado {
+            background-image: linear-gradient(90deg, var(--color-primario-700), var(--color-primario-500));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+    }
+
+    /* En oscuro el degradado se invierte hacia los azules CLAROS. Con los
+       oscuros daba 1,54:1 sobre el fondo del tema: un titular invisible.
+       Detectado en una captura del tema oscuro, no en el código. */
+    [data-tema="oscuro"] .texto-degradado {
+        color: var(--color-primario-200);
+    }
+
+    @supports (background-clip: text) or (-webkit-background-clip: text) {
+        [data-tema="oscuro"] .texto-degradado {
+            background-image: linear-gradient(90deg, var(--color-primario-200), var(--color-primario-300));
+            color: transparent;
+        }
+    }
+
+    /* En alto contraste el degradado también se retira: su mitad clara baja
+       el contraste por debajo del mínimo. */
+    [data-contraste="alto"] .texto-degradado {
+        background-image: none;
+        -webkit-text-fill-color: currentColor;
+        color: var(--titular);
+    }
+
+    /* Resplandor cian. Es sombra, nunca texto ni borde con significado. */
+    .resplandor {
+        box-shadow: 0 0 18px color-mix(in srgb, var(--color-marca-cian) 45%, transparent);
+    }
+
+    /* Mancha de color difuminada del fondo del héroe. Decorativa y
+       aria-hidden; se oculta en pantallas pequeñas porque un desenfoque
+       grande cuesta caro en un gama baja y ahí no aporta nada. */
+    .mancha {
+        position: absolute;
+        border-radius: 9999px;
+        filter: blur(64px);
+        pointer-events: none;
+    }
     /* Salto al contenido: primer elemento enfocable de toda página. */
     .salto-contenido {
         position: absolute;

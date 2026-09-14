@@ -28,9 +28,9 @@ final class ContrasteTest extends TestCase
         // --- Tema claro ---
         yield 'texto sobre fondo' => ['#1F2937', '#FFFFFF'];
         yield 'texto suave sobre fondo' => ['#4B5563', '#FFFFFF'];
-        yield 'titular sobre fondo' => ['#041646', '#FFFFFF'];
-        yield 'enlace sobre fondo' => ['#0030C9', '#FFFFFF'];
-        yield 'texto del botón primario' => ['#FFFFFF', '#0035ED'];
+        yield 'titular sobre fondo' => ['#0A192F', '#FFFFFF'];
+        yield 'enlace sobre fondo' => ['#225A96', '#FFFFFF'];
+        yield 'texto del botón primario' => ['#FFFFFF', '#2B6CB0'];
         yield 'texto de error sobre fondo' => ['#B3251E', '#FFFFFF'];
         yield 'alerta de éxito' => ['#14532D', '#E7F5EE'];
         yield 'alerta de aviso' => ['#6B3308', '#FDF3E3'];
@@ -40,15 +40,29 @@ final class ContrasteTest extends TestCase
         // --- Tema oscuro ---
         yield 'oscuro: texto sobre fondo' => ['#E7ECF5', '#0B1220'];
         yield 'oscuro: texto suave sobre fondo' => ['#A9B4C6', '#0B1220'];
-        yield 'oscuro: enlace sobre fondo' => ['#8FA8FF', '#0B1220'];
-        yield 'oscuro: texto del botón primario' => ['#FFFFFF', '#2547E8'];
+        yield 'oscuro: enlace sobre fondo' => ['#8FC3F5', '#0B1220'];
+        yield 'oscuro: texto del botón primario' => ['#FFFFFF', '#225A96'];
         yield 'oscuro: texto sobre superficie' => ['#E7ECF5', '#131C2E'];
 
         // --- Alto contraste ---
         yield 'alto contraste: texto' => ['#000000', '#FFFFFF'];
-        yield 'alto contraste: enlace' => ['#002AA8', '#FFFFFF'];
+        yield 'alto contraste: enlace' => ['#12294A', '#FFFFFF'];
         yield 'alto contraste oscuro: texto' => ['#FFFFFF', '#0B1220'];
-        yield 'alto contraste oscuro: enlace' => ['#A9C1FB', '#0B1220'];
+        yield 'alto contraste oscuro: enlace' => ['#AFC9E8', '#0B1220'];
+
+        // --- Lenguaje del prototipo: superficies oscuras de marca ---
+        // El cian es ilegible sobre claro (1.39:1) pero cumple de sobra
+        // sobre el azul 900, que es el único sitio donde se usa.
+        yield 'cian de marca sobre azul 900' => ['#00F2FE', '#0A192F'];
+        yield 'texto del pie sobre azul 900' => ['#D6E4F5', '#0A192F'];
+        yield 'texto tenue del pie sobre azul 900' => ['#AFC9E8', '#0A192F'];
+        yield 'blanco sobre azul 700 (héroe y botones)' => ['#FFFFFF', '#1A365D'];
+        yield 'titular del degradado sobre fondo' => ['#1A365D', '#FFFFFF'];
+        // El degradado del héroe se invierte en oscuro: con los azules
+        // oscuros daba 1,54:1 sobre el fondo del tema y el titular no se
+        // leía. Ambos extremos del gradiente deben cumplir por separado.
+        yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#0B1220'];
+        yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#0B1220'];
     }
 
     #[DataProvider('paresDeTextoYFondo')]

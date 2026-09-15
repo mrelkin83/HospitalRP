@@ -5,13 +5,6 @@
 $callCenter = $config->texto('contacto.call_center');
 $pbx = $config->texto('contacto.pbx');
 ?>
-<?php
-/**
- * /contacto — Espera: $config (ConfigDinamica), $sedes (list<Sede>).
- */
-$callCenter = $config->texto('contacto.call_center');
-$pbx = $config->texto('contacto.pbx');
-?>
 <div class="mx-auto max-w-6xl px-4 py-10">
     <!-- Cabecera Premium con Cristal y Gradiente -->
     <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primario-900 via-primario-800 to-primario-950 p-10 text-white mb-10 shadow-2xl border border-white/10">

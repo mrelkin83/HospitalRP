@@ -84,8 +84,8 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
             </form>
         </div>
 
-        <div class="hidden lg:block relative animar-fade-in-up" style="animation-delay: 0.3s;">
-            <div class="relative mx-auto w-full max-w-xl h-[480px] flex items-center justify-center">
+        <div class="relative animar-fade-in-up mt-10 lg:mt-0" style="animation-delay: 0.3s;">
+            <div class="relative mx-auto w-full max-w-xl min-h-[380px] sm:min-h-[440px] md:h-[480px] flex items-center justify-center">
                 <!-- Capa 1: Fondo holográfico de marca -->
                 <div class="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-primario-900 via-primario-700 to-primario-800 shadow-3xl overflow-hidden border border-white/10" aria-hidden="true">
                     <!-- Cuadrícula médica/digital de fondo -->
@@ -96,24 +96,24 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                 </div>
 
                 <!-- Capa 2: Tarjeta Principal del Portal (Simulación de Dashboard de Paciente) -->
-                <div class="panel-vidrio absolute w-[85%] h-[75%] top-[10%] left-[5%] rounded-3xl p-6 shadow-2xl border-white/20 flex flex-col justify-between backdrop-blur-xl">
-                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div class="panel-vidrio absolute w-[90%] sm:w-[85%] h-[80%] sm:h-[75%] top-[10%] left-[5%] sm:left-[7.5%] rounded-3xl p-5 sm:p-6 shadow-2xl border-white/20 flex flex-col justify-between backdrop-blur-xl">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
                         <div class="flex items-center gap-3">
-                            <span class="h-3 w-3 rounded-full bg-[color:var(--color-marca-cian)] animate-pulse"></span>
-                            <span class="text-xs font-bold uppercase tracking-widest text-primario-200">Ecosistema Digital de Salud</span>
+                            <span class="h-3 w-3 rounded-full bg-[color:var(--color-marca-cyan)] animate-pulse"></span>
+                            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-primario-200">Ecosistema Digital de Salud</span>
                         </div>
-                        <span class="text-[10px] bg-white/10 px-2 py-1 rounded-md text-white/80 font-mono">PORTAL V2.6</span>
+                        <span class="text-[9px] sm:text-[10px] bg-white/10 px-2 py-1 rounded-md text-white/80 font-mono">PORTAL V2.6</span>
                     </div>
 
                     <!-- Gráfico simulado con CSS -->
-                    <div class="my-4 flex-1 flex flex-col justify-center">
-                        <span class="text-3xl font-extrabold text-white leading-tight">Rosario Digital</span>
-                        <span class="text-sm text-primario-200 mt-1 block">Tu portal clínico unificado e interactivo.</span>
+                    <div class="my-3 sm:my-4 flex-1 flex flex-col justify-center">
+                        <span class="text-2xl sm:text-3xl font-extrabold text-white leading-tight">Rosario Digital</span>
+                        <span class="text-xs sm:text-sm text-primario-200 mt-1 block">Tu portal clínico unificado e interactivo.</span>
                         
                         <!-- Barras de estadísticas premium -->
-                        <div class="mt-6 space-y-3">
+                        <div class="mt-4 sm:mt-6 space-y-3">
                             <div>
-                                <div class="flex justify-between text-xs text-primario-100 mb-1 font-medium">
+                                <div class="flex justify-between text-[11px] sm:text-xs text-primario-100 mb-1 font-medium">
                                     <span>Satisfacción del Paciente</span>
                                     <span>98.4%</span>
                                 </div>
@@ -122,7 +122,7 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                                 </div>
                             </div>
                             <div>
-                                <div class="flex justify-between text-xs text-primario-100 mb-1 font-medium">
+                                <div class="flex justify-between text-[11px] sm:text-xs text-primario-100 mb-1 font-medium">
                                     <span>Disponibilidad Médica</span>
                                     <span>95%</span>
                                 </div>
@@ -133,8 +133,8 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-3 text-xs text-primario-100 bg-white/5 p-3 rounded-xl border border-white/5">
-                        <svg class="h-5 w-5 text-[color:var(--color-marca-cian)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-primario-100 bg-white/5 p-2 sm:p-3 rounded-xl border border-white/5">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-[color:var(--color-marca-cian)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         </svg>
                         <span>Protección de datos conforme a la Ley 1581</span>
@@ -142,21 +142,21 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                 </div>
 
                 <!-- Capa 3: Tarjeta Flotante Pequeña (Widget de Atención Activa) -->
-                <div class="absolute -bottom-4 -right-4 bg-white dark:bg-primario-900 border border-primario-100 dark:border-primario-800 rounded-2xl p-4 shadow-3xl flex items-center gap-3 animar-escala-hover cursor-pointer z-20">
-                    <span class="relative flex h-3 w-3 shrink-0">
+                <div class="absolute -bottom-2 sm:-bottom-4 -right-2 sm:-right-4 bg-white dark:bg-primario-900 border border-primario-100 dark:border-primario-800 rounded-2xl p-3 sm:p-4 shadow-3xl flex items-center gap-2 sm:gap-3 animar-escala-hover cursor-pointer z-20">
+                    <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-exito-500 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-exito-500"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-exito-500"></span>
                     </span>
                     <div>
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-exito-600 dark:text-exito-400">Atención en Sede</span>
-                        <span class="block text-sm font-extrabold text-primario-900 dark:text-white">Normal (Sin Esperas)</span>
+                        <span class="block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-exito-600 dark:text-exito-400">Atención en Sede</span>
+                        <span class="block text-xs sm:text-sm font-extrabold text-primario-900 dark:text-white">Normal (Sin Esperas)</span>
                     </div>
                 </div>
 
                 <!-- Capa 4: Mini-widget de Citas Médicas -->
-                <div class="absolute -top-6 -right-6 bg-white dark:bg-primario-900 border border-primario-100 dark:border-primario-800 rounded-2xl p-4 shadow-3xl flex items-center gap-3 animar-escala-hover cursor-pointer z-20">
-                    <span class="p-2 bg-primario-50 dark:bg-primario-800 rounded-xl text-primario-600 dark:text-primario-200">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="absolute -top-4 sm:-top-6 -right-2 sm:-right-6 bg-white dark:bg-primario-900 border border-primario-100 dark:border-primario-800 rounded-2xl p-3 sm:p-4 shadow-3xl flex items-center gap-2 sm:gap-3 animar-escala-hover cursor-pointer z-20">
+                    <span class="p-1.5 sm:p-2 bg-primario-50 dark:bg-primario-800 rounded-xl text-primario-600 dark:text-primario-200">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
                             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -164,8 +164,8 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                         </svg>
                     </span>
                     <div>
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-primario-500">Próxima Cita</span>
-                        <span class="block text-sm font-extrabold text-primario-900 dark:text-white">Agendar en 2 Min</span>
+                        <span class="block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-primario-500">Próxima Cita</span>
+                        <span class="block text-xs sm:text-sm font-extrabold text-primario-900 dark:text-white">Agendar en 2 Min</span>
                     </div>
                 </div>
             </div>

@@ -11,19 +11,6 @@ use App\Core\Support\Fechas;
 $categorias ??= [];
 $categoriaActiva ??= null;
 ?>
-<?php
-/**
- * Listado público de noticias, entero o filtrado por categoría.
- * Espera: $noticias (list<Noticia>), $imagenes (array<int, Archivo>),
- *         $pagina (int), $totalPaginas (int),
- *         $categorias (list<{id,nombre,slug}>), $categoriaActiva (?array).
- */
-
-use App\Core\Support\Fechas;
-
-$categorias ??= [];
-$categoriaActiva ??= null;
-?>
 <div class="mx-auto max-w-6xl px-4 py-10">
     <!-- Cabecera de Noticias Premium -->
     <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primario-900 via-primario-800 to-primario-950 p-10 text-white mb-10 shadow-2xl border border-white/10">

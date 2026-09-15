@@ -6,14 +6,6 @@
 $telefono = $config->texto('contacto.emergencias');
 $soloTelefono = preg_replace('/\D+/', '', $telefono);
 ?>
-<?php
-/**
- * /urgencias — la página que se abre con afán: teléfono primero.
- * Espera: $config (ConfigDinamica), $sedes (list<Sede> con urgencias).
- */
-$telefono = $config->texto('contacto.emergencias');
-$soloTelefono = preg_replace('/\D+/', '', $telefono);
-?>
 <div class="mx-auto max-w-6xl px-4 py-10">
     <!-- Cabecera Crítica de Urgencias con Pulso de Neón -->
     <div class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-error-950 via-error-900 to-red-950 p-10 text-white mb-10 shadow-2xl border border-error-500/20">

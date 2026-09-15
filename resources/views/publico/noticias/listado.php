@@ -1,14 +1,33 @@
 <?php
 /**
- * Listado público de noticias.
+ * Listado público de noticias, entero o filtrado por categoría.
  * Espera: $noticias (list<Noticia>), $imagenes (array<int, Archivo>),
- *         $pagina (int), $totalPaginas (int).
+ *         $pagina (int), $totalPaginas (int),
+ *         $categorias (list<{id,nombre,slug}>), $categoriaActiva (?array).
  */
 
 use App\Core\Support\Fechas;
+
+$categorias ??= [];
+$categoriaActiva ??= null;
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
-    <h1>Noticias</h1>
+    <h1><?= $e($categoriaActiva === null ? 'Noticias' : $categoriaActiva['nombre']) ?></h1>
+
+    <?php /* Los filtros solo aparecen si hay más de una categoría con algo
+             publicado: un filtro de una sola opción no filtra nada. */ ?>
+    <?php if (count($categorias) > 1) { ?>
+        <nav class="mt-4 flex flex-wrap gap-2" aria-label="Filtrar noticias por categoría">
+            <a href="/noticias" class="etiqueta<?= $categoriaActiva === null ? ' etiqueta-activa' : '' ?>"
+               <?= $categoriaActiva === null ? 'aria-current="page"' : '' ?>>Todas</a>
+            <?php foreach ($categorias as $categoria) { ?>
+                <?php $activa = $categoriaActiva !== null && $categoriaActiva['slug'] === $categoria['slug']; ?>
+                <a href="/noticias/categoria/<?= $e($categoria['slug']) ?>"
+                   class="etiqueta<?= $activa ? ' etiqueta-activa' : '' ?>"
+                   <?= $activa ? 'aria-current="page"' : '' ?>><?= $e($categoria['nombre']) ?></a>
+            <?php } ?>
+        </nav>
+    <?php } ?>
 
     <?php if ($noticias === []) { ?>
         <p class="mt-6 texto-suave">Aún no hay noticias publicadas.</p>

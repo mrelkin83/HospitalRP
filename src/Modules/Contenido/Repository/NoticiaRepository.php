@@ -61,24 +61,86 @@ final readonly class NoticiaRepository
     }
 
     /**
+     * Listado público, opcionalmente acotado a una categoría.
+     *
+     * El filtro existe por los boletines de prensa: en el Joomla eran una
+     * sección propia (`/prensahrpl/boletines-prensa`) y aquí son noticias de
+     * una categoría. Sin este filtro, el ítem de menú «Boletines de prensa»
+     * llevaría al listado completo y mentiría.
+     *
      * @return array{noticias: list<Noticia>, total: int}
      */
-    public function publicasPaginadas(int $pagina, int $porPagina): array
+    public function publicasPaginadas(int $pagina, int $porPagina, ?int $categoriaId = null): array
     {
+        $condicion = self::VISIBLE_PUBLICO;
+        $parametros = [];
+
+        if ($categoriaId !== null) {
+            $condicion .= ' AND categoria_id = ?';
+            $parametros[] = $categoriaId;
+        }
+
         $total = (int) $this->conexion->fetchOne(
-            'SELECT COUNT(*) FROM noticias WHERE ' . self::VISIBLE_PUBLICO,
+            'SELECT COUNT(*) FROM noticias WHERE ' . $condicion,
+            $parametros,
         );
 
-        $filas = $this->conexion->fetchAllAssociative(sprintf(
-            'SELECT * FROM noticias WHERE %s
-              ORDER BY COALESCE(publicar_en, creado_en) DESC
-              LIMIT %d OFFSET %d',
-            self::VISIBLE_PUBLICO,
-            max(1, $porPagina),
-            max(0, ($pagina - 1) * $porPagina),
-        ));
+        // El LIMIT va interpolado porque MySQL no admite marcadores ahí; los
+        // dos valores son enteros ya acotados, nunca texto del visitante.
+        $filas = $this->conexion->fetchAllAssociative(
+            sprintf(
+                'SELECT * FROM noticias WHERE %s
+                  ORDER BY COALESCE(publicar_en, creado_en) DESC
+                  LIMIT %d OFFSET %d',
+                $condicion,
+                max(1, $porPagina),
+                max(0, ($pagina - 1) * $porPagina),
+            ),
+            $parametros,
+        );
 
         return ['noticias' => array_map(Noticia::desdeFila(...), $filas), 'total' => $total];
+    }
+
+    /**
+     * Categorías de noticia que TIENEN algo publicado. Ofrecer un filtro
+     * vacío es mandar al ciudadano a un callejón sin salida.
+     *
+     * @return list<array{id: int, nombre: string, slug: string}>
+     */
+    public function categoriasConNoticias(): array
+    {
+        /** @var list<array<string, mixed>> $filas */
+        $filas = $this->conexion->fetchAllAssociative(
+            'SELECT c.id, c.nombre, c.slug
+               FROM categorias c
+               JOIN noticias n ON n.categoria_id = c.id AND ' . self::VISIBLE_PUBLICO . '
+              WHERE c.tipo = ?
+              GROUP BY c.id, c.nombre, c.slug
+              ORDER BY c.orden, c.nombre',
+            ['noticia'],
+        );
+
+        return array_map(static fn (array $f): array => [
+            'id' => (int) $f['id'],
+            'nombre' => (string) $f['nombre'],
+            'slug' => (string) $f['slug'],
+        ], $filas);
+    }
+
+    /** @return ?array{id: int, nombre: string, slug: string} */
+    public function categoriaPorSlug(string $slug): ?array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            'SELECT id, nombre, slug FROM categorias WHERE slug = ? AND tipo = ?',
+            [$slug, 'noticia'],
+        );
+
+        return $fila === false ? null : [
+            'id' => (int) $fila['id'],
+            'nombre' => (string) $fila['nombre'],
+            'slug' => (string) $fila['slug'],
+        ];
     }
 
     /**

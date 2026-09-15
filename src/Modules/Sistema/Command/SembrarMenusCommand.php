@@ -99,7 +99,12 @@ final class SembrarMenusCommand extends Command
                 ['Radicar PQRSDF', '/atencion-ciudadania/pqrsdf', 0],
             ]],
             ['Prensa', '/noticias', 1, [
-                ['Noticias y boletines', '/noticias', 1],
+                ['Noticias', '/noticias', 1],
+                // En el Joomla los boletines eran sección propia
+                // (`/prensahrpl/boletines-prensa`). Aquí son una categoría de
+                // noticia con su propio listado filtrado, para que el ítem
+                // lleve a los boletines y no al listado completo.
+                ['Boletines de prensa', '/noticias/categoria/boletines-de-prensa', 0],
                 ['Calendario de eventos', '/eventos', 0],
             ]],
         ]],
@@ -168,18 +173,23 @@ final class SembrarMenusCommand extends Command
             $menuId = $this->asegurarMenu((string) $slug, $nombre, $ubicacion, $protegido, $creados);
             $delPlano = [];
 
+            $etiquetasDelPlano = [];
+
             foreach ($items as $orden => [$etiqueta, $url, $itemProtegido, $hijos]) {
                 $padreId = $this->asegurarItem($menuId, null, $etiqueta, $url, $orden, $itemProtegido, $creados);
                 $delPlano[] = $padreId;
+                $etiquetasDelPlano[] = [$padreId, $etiqueta];
 
                 foreach ($hijos as $ordenHijo => [$etiquetaHija, $urlHija, $protegidoHijo]) {
-                    $delPlano[] = $this->asegurarItem($menuId, $padreId, $etiquetaHija, $urlHija, $ordenHijo, $protegidoHijo, $creados);
+                    $hijoId = $this->asegurarItem($menuId, $padreId, $etiquetaHija, $urlHija, $ordenHijo, $protegidoHijo, $creados);
+                    $delPlano[] = $hijoId;
+                    $etiquetasDelPlano[] = [$hijoId, $etiquetaHija];
                 }
             }
 
             if ($input->getOption('reconciliar')) {
                 $retirados = array_merge($retirados, $this->retirarSobrantes($menuId, $delPlano));
-                $renombrados += $this->sincronizarEtiquetas($menuId, $items);
+                $renombrados += $this->sincronizarEtiquetas($etiquetasDelPlano);
             }
         }
 
@@ -215,30 +225,25 @@ final class SembrarMenusCommand extends Command
      * Pone las etiquetas al día con el plano.
      *
      * Solo bajo `--reconciliar`: en la corrida normal el sembrador respeta lo
-     * que el hospital haya renombrado desde el panel, que es lo correcto. Pero
-     * al reconciliar se pide explícitamente dejar la base como el plano, y sin
-     * esto un cambio de texto —«Sedes» en plural cuando hay una sola sede— no
-     * llegaba nunca, porque la identidad del ítem es su URL.
+     * que el hospital haya renombrado desde el panel, que es lo correcto.
      *
-     * @param list<array{string, string, int, list<array{string, string, int}>}> $items
+     * Se sincroniza por ID y no por URL. Indexar por URL parecía suficiente y
+     * no lo era: una misma ruta aparece bajo padres distintos con etiquetas
+     * distintas —`/noticias` es «Prensa» como raíz y «Noticias y boletines»
+     * como hija; `/eventos` es «Calendario de participación» bajo Participa y
+     * «Calendario de eventos» bajo Prensa—. Con la clave por URL una pisaba a
+     * la otra y el menú acababa diciendo «Prensa → Prensa».
+     *
+     * @param list<array{int, string}> $etiquetasDelPlano id => etiqueta esperada
      */
-    private function sincronizarEtiquetas(int $menuId, array $items): int
+    private function sincronizarEtiquetas(array $etiquetasDelPlano): int
     {
         $cambiados = 0;
-        $esperadas = [];
 
-        foreach ($items as [$etiqueta, $url, , $hijos]) {
-            $esperadas[$url] = $etiqueta;
-
-            foreach ($hijos as [$etiquetaHija, $urlHija]) {
-                $esperadas[$urlHija] ??= $etiquetaHija;
-            }
-        }
-
-        foreach ($esperadas as $url => $etiqueta) {
+        foreach ($etiquetasDelPlano as [$id, $etiqueta]) {
             $cambiados += $this->conexion->executeStatement(
-                'UPDATE menu_items SET etiqueta = ? WHERE menu_id = ? AND url = ? AND etiqueta <> ?',
-                [$etiqueta, $menuId, $url, $etiqueta],
+                'UPDATE menu_items SET etiqueta = ? WHERE id = ? AND etiqueta <> ?',
+                [$etiqueta, $id, $etiqueta],
             );
         }
 

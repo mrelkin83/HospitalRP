@@ -27,10 +27,39 @@ final readonly class NoticiasPublicoController
     ) {
     }
 
+    /**
+     * Listado, entero o acotado a una categoría.
+     *
+     * La misma acción sirve a `/noticias` y a `/noticias/categoria/{slug}`
+     * porque es la misma página con un filtro: duplicarla solo llevaría a que
+     * una de las dos se quedara atrás.
+     */
     public function listado(Request $peticion): Response
     {
+        $slugCategoria = (string) $peticion->attributes->get('categoria', '');
+        $categoria = $slugCategoria === '' ? null : $this->noticias->categoriaPorSlug($slugCategoria);
+
+        // Una categoría inventada en la URL es un 404 honesto, no el listado
+        // completo disfrazado: el visitante pidió algo que no existe.
+        if ($slugCategoria !== '' && $categoria === null) {
+            return $this->layout->responder(
+                titulo: 'Categoría no encontrada',
+                descripcion: null,
+                contenido: $this->vistas->render('publico/mensaje', [
+                    'encabezado' => 'Categoría no encontrada',
+                    'mensaje' => 'Esa categoría de noticias no existe. Consulta el listado completo de noticias.',
+                ]),
+                noindex: true,
+                estado: Response::HTTP_NOT_FOUND,
+            );
+        }
+
         $pagina = max(1, $peticion->query->getInt('pagina', 1));
-        ['noticias' => $noticias, 'total' => $total] = $this->noticias->publicasPaginadas($pagina, self::POR_PAGINA);
+        ['noticias' => $noticias, 'total' => $total] = $this->noticias->publicasPaginadas(
+            $pagina,
+            self::POR_PAGINA,
+            $categoria === null ? null : $categoria['id'],
+        );
 
         $imagenes = $this->almacen->porIds(array_values(array_filter(array_map(
             static fn ($n): ?int => $n->imagenId,
@@ -38,13 +67,17 @@ final readonly class NoticiasPublicoController
         ))));
 
         return $this->layout->responder(
-            titulo: 'Noticias',
-            descripcion: 'Noticias y novedades de la E.S.E. Hospital Rosario Pumarejo de López.',
+            titulo: $categoria === null ? 'Noticias' : $categoria['nombre'],
+            descripcion: $categoria === null
+                ? 'Noticias y novedades de la E.S.E. Hospital Rosario Pumarejo de López.'
+                : sprintf('%s de la E.S.E. Hospital Rosario Pumarejo de López.', $categoria['nombre']),
             contenido: $this->vistas->render('publico/noticias/listado', [
                 'noticias' => $noticias,
                 'imagenes' => $imagenes,
                 'pagina' => $pagina,
                 'totalPaginas' => max(1, (int) ceil($total / self::POR_PAGINA)),
+                'categorias' => $this->noticias->categoriasConNoticias(),
+                'categoriaActiva' => $categoria,
             ]),
         );
     }

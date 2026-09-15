@@ -48,6 +48,22 @@ Alpine).
 - Las 14 rutas públicas principales responden 200 con la paleta nueva.
 - CSS compilado: 34,9 KB sin comprimir.
 
+## Prensa: lo que faltaba del Joomla
+
+La sección PRENSA del Joomla tenía tres entradas. Estado tras la Fase 9:
+
+| Del Joomla | Estado |
+|---|---|
+| Boletines de prensa | ✅ Categoría de noticia con listado propio en `/noticias/categoria/boletines-de-prensa` |
+| Revista Conexión Salud | ❌ Sin equivalente |
+| Galería | ❌ Sin ruta pública (el módulo Medios existe en el panel) |
+
+Los boletines son noticias —una publicación con fecha—, así que se resolvieron
+como categoría y no como módulo aparte: el hospital los administra desde
+Noticias eligiendo la categoría, sin plantilla nueva. El listado público
+ganó filtrado por categoría, que el módulo no tenía aunque la tabla guardaba
+`categoria_id` desde la Fase 1.
+
 ## Alcance y lo que queda
 
 Se aplicó al **cascarón y la portada**. El resto de vistas hereda los tokens

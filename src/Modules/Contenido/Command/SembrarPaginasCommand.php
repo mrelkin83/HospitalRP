@@ -343,6 +343,8 @@ final class SembrarPaginasCommand extends Command
 
         $rellenadas = 0;
 
+        $categorias = $this->sembrarCategorias();
+
         foreach ($this->paginasASembrar() as $ruta => [$titulo, $resumen, $contenido, $estado, $protegida]) {
             $existente = $this->conexion->fetchAssociative(
                 'SELECT id, contenido, estado_aprobacion FROM paginas WHERE ruta = ?',
@@ -412,6 +414,10 @@ final class SembrarPaginasCommand extends Command
             ));
         }
 
+        if ($categorias > 0) {
+            $io->writeln(sprintf('<info>%d categorías de noticia creadas.</info>', $categorias));
+        }
+
         $io->success(sprintf(
             '%d páginas creadas (%d publicadas), %d borradores vacíos rellenados, %d ya existían con contenido.',
             $creadas,
@@ -463,6 +469,49 @@ final class SembrarPaginasCommand extends Command
         }
 
         return $paginas;
+    }
+
+    /**
+     * Categorías de noticia que en el Joomla eran secciones propias del menú
+     * de Prensa. Aquí son categorías porque son lo mismo —una publicación con
+     * fecha— y así el hospital las administra desde el módulo de noticias en
+     * lugar de pedir una plantilla nueva por cada una.
+     *
+     * @var array<string, string> slug => nombre
+     */
+    private const array CATEGORIAS_NOTICIA = [
+        'boletines-de-prensa' => 'Boletines de prensa',
+        'comunicados' => 'Comunicados oficiales',
+    ];
+
+    /** @return int categorías creadas */
+    private function sembrarCategorias(): int
+    {
+        $creadas = 0;
+        $orden = 0;
+
+        foreach (self::CATEGORIAS_NOTICIA as $slug => $nombre) {
+            $existe = $this->conexion->fetchOne(
+                'SELECT id FROM categorias WHERE tipo = ? AND slug = ?',
+                ['noticia', $slug],
+            );
+
+            if ($existe !== false) {
+                $orden++;
+
+                continue;
+            }
+
+            $this->conexion->insert('categorias', [
+                'tipo' => 'noticia',
+                'nombre' => $nombre,
+                'slug' => $slug,
+                'orden' => $orden++,
+            ]);
+            $creadas++;
+        }
+
+        return $creadas;
     }
 
     /** El slug es el último segmento de la ruta; `/el-hospital` → `el-hospital`. */

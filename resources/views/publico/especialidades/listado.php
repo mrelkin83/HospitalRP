@@ -7,7 +7,12 @@
 <div class="mx-auto max-w-6xl px-4 py-10">
     <h1>Especialidades</h1>
 
-    <?php if ($sedes !== []) { ?>
+    <?php /* El filtro solo aparece con MÁS de una sede. El hospital tiene
+             sede única (docs/08), y un desplegable de «Todas las sedes» más
+             una opción no filtra nada: ofrece una elección que no existe.
+             Se decide por los datos, así que si abren una segunda sede el
+             filtro vuelve solo. */ ?>
+    <?php if (count($sedes) > 1) { ?>
         <div class="mt-6 max-w-xs">
             <label class="etiqueta" for="filtro-sede">Filtrar por sede</label>
             <select class="campo" id="filtro-sede" data-filtro="lista-especialidades">

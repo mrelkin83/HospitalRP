@@ -122,12 +122,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <?php /* Logotipo y PQRSDF comparten fila en móvil: separados,
                          la cabecera crecía hasta media pantalla. */ ?>
                 <a href="/" class="no-underline flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primario-700 to-primario-500 text-white" aria-hidden="true">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 12h4l2-6 4 12 2-6h6"/>
-                        </svg>
-                    </span>
+                    <img src="/img/logo_pequeno.jpeg" alt="Logotipo <?= $e($nombreEntidad) ?>" class="h-12 w-auto object-contain rounded-lg" width="48" height="48">
                     <span class="min-w-0">
                         <span class="block font-bold leading-tight texto-titular"><?= $e($nombreEntidad) ?></span>
                         <span class="hidden text-sm texto-suave sm:block"><?= $e($config->texto('entidad.eslogan')) ?></span>

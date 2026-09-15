@@ -10,6 +10,7 @@ use App\Core\Audit\RegistroAuditoria;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -56,7 +57,11 @@ final class SembrarMenusCommand extends Command
                 ['Portafolio de servicios', '/servicios', 0],
                 ['Especialidades', '/especialidades', 0],
                 ['Directorio médico', '/directorio', 0],
-                ['Sedes y horarios', '/sedes', 0],
+                // Singular a propósito: el hospital tiene SEDE ÚNICA
+                // (docs/08). `/sedes` responde su ficha directamente mientras
+                // solo haya una, así que el plural mentía y obligaba a un
+                // clic de más para llegar a la dirección.
+                ['Nuestra sede y horarios', '/sedes', 0],
                 ['Urgencias', '/urgencias', 0],
             ]],
             ['Programas', '/programas', 0, [
@@ -143,31 +148,60 @@ final class SembrarMenusCommand extends Command
     {
         $this
             ->setName('semillas:menus')
-            ->setDescription('Crea o completa los menús del sitio (sin duplicar ni pisar lo editado)');
+            ->setDescription('Crea o completa los menús del sitio (sin duplicar ni pisar lo editado)')
+            ->addOption(
+                'reconciliar',
+                null,
+                InputOption::VALUE_NONE,
+                'Además de completar, retira los ítems que ya no están en el plano (nunca los protegidos)',
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $creados = 0;
+        $retirados = [];
+        $renombrados = 0;
 
         foreach (self::MENUS as $slug => [$nombre, $ubicacion, $protegido, $items]) {
             $menuId = $this->asegurarMenu((string) $slug, $nombre, $ubicacion, $protegido, $creados);
+            $delPlano = [];
 
             foreach ($items as $orden => [$etiqueta, $url, $itemProtegido, $hijos]) {
                 $padreId = $this->asegurarItem($menuId, null, $etiqueta, $url, $orden, $itemProtegido, $creados);
+                $delPlano[] = $padreId;
 
                 foreach ($hijos as $ordenHijo => [$etiquetaHija, $urlHija, $protegidoHijo]) {
-                    $this->asegurarItem($menuId, $padreId, $etiquetaHija, $urlHija, $ordenHijo, $protegidoHijo, $creados);
+                    $delPlano[] = $this->asegurarItem($menuId, $padreId, $etiquetaHija, $urlHija, $ordenHijo, $protegidoHijo, $creados);
                 }
+            }
+
+            if ($input->getOption('reconciliar')) {
+                $retirados = array_merge($retirados, $this->retirarSobrantes($menuId, $delPlano));
+                $renombrados += $this->sincronizarEtiquetas($menuId, $items);
             }
         }
 
-        if ($creados > 0) {
+        if ($renombrados > 0) {
+            $io->writeln(sprintf('<info>%d etiquetas actualizadas al plano.</info>', $renombrados));
+        }
+
+        if ($retirados !== []) {
+            $io->warning(sprintf('Retirados %d ítems que ya no están en el plano:', count($retirados)));
+            $io->listing($retirados);
+        }
+
+        if ($creados > 0 || $retirados !== [] || $renombrados > 0) {
             $this->auditoria->registrar(new RegistroAuditoria(
                 accion: AccionAuditoria::Creacion,
                 entidad: 'menus',
-                descripcion: sprintf('Semillas de menús: %d registros creados', $creados),
+                descripcion: sprintf(
+                    'Semillas de menús: %d creados, %d retirados y %d renombrados por reconciliación',
+                    $creados,
+                    count($retirados),
+                    $renombrados,
+                ),
                 usuarioNombre: 'consola',
             ));
         }
@@ -175,6 +209,77 @@ final class SembrarMenusCommand extends Command
         $io->success(sprintf('%d registros de menú creados; el resto ya existía.', $creados));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Pone las etiquetas al día con el plano.
+     *
+     * Solo bajo `--reconciliar`: en la corrida normal el sembrador respeta lo
+     * que el hospital haya renombrado desde el panel, que es lo correcto. Pero
+     * al reconciliar se pide explícitamente dejar la base como el plano, y sin
+     * esto un cambio de texto —«Sedes» en plural cuando hay una sola sede— no
+     * llegaba nunca, porque la identidad del ítem es su URL.
+     *
+     * @param list<array{string, string, int, list<array{string, string, int}>}> $items
+     */
+    private function sincronizarEtiquetas(int $menuId, array $items): int
+    {
+        $cambiados = 0;
+        $esperadas = [];
+
+        foreach ($items as [$etiqueta, $url, , $hijos]) {
+            $esperadas[$url] = $etiqueta;
+
+            foreach ($hijos as [$etiquetaHija, $urlHija]) {
+                $esperadas[$urlHija] ??= $etiquetaHija;
+            }
+        }
+
+        foreach ($esperadas as $url => $etiqueta) {
+            $cambiados += $this->conexion->executeStatement(
+                'UPDATE menu_items SET etiqueta = ? WHERE menu_id = ? AND url = ? AND etiqueta <> ?',
+                [$etiqueta, $menuId, $url, $etiqueta],
+            );
+        }
+
+        return $cambiados;
+    }
+
+    /**
+     * Retira del menú los ítems que ya no aparecen en el plano.
+     *
+     * Existe porque sembrar solo AÑADE: al reestructurar el menú en la Fase 9
+     * quedaron conviviendo las raíces viejas de la Fase 0 con las nuevas —once
+     * en vez de siete—, con «Especialidades», «Directorio médico» y «Sedes»
+     * duplicados como raíz y como hijos de «Servicios». Ese exceso es además
+     * lo que desbordaba la cabecera a lo ancho.
+     *
+     * Es una opción y no el comportamiento por defecto porque borra: quien la
+     * corre debe querer hacerlo. Y NUNCA toca un ítem protegido, que son los
+     * que exige la Res. 1519.
+     *
+     * @param list<int> $delPlano
+     *
+     * @return list<string> descripción de lo retirado, para el informe
+     */
+    private function retirarSobrantes(int $menuId, array $delPlano): array
+    {
+        $sobrantes = $this->conexion->fetchAllAssociative(
+            'SELECT id, etiqueta, url FROM menu_items
+              WHERE menu_id = ? AND protegido = 0'
+            . ($delPlano === [] ? '' : ' AND id NOT IN (' . implode(',', array_map(intval(...), $delPlano)) . ')'),
+            [$menuId],
+        );
+
+        $retirados = [];
+
+        foreach ($sobrantes as $fila) {
+            // El borrado en cascada de `padre_id` se lleva también los hijos.
+            $this->conexion->delete('menu_items', ['id' => (int) $fila['id']]);
+            $retirados[] = sprintf('%s (%s)', (string) $fila['etiqueta'], (string) $fila['url']);
+        }
+
+        return $retirados;
     }
 
     /** @param-out int $creados */

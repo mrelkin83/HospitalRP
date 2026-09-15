@@ -109,11 +109,14 @@ Ordenados por importancia:
 1. `.env` de producción: BD, `APP_URL=https://hrplopez.gov.co`,
    `APP_ENTORNO=produccion`, SMTP real, claves IA si aplica.
 2. `composer install --no-dev` y `composer migrate`.
-3. Semillas en orden: `configuracion`, `paginas`, `menus`, `directorio`,
+3. Semillas en orden: `configuracion`, `paginas`, `menus --reconciliar`, `directorio`,
    `transparencia`, `festivos`, `tramites`, `cumplimiento`,
    `redirecciones` (todas idempotentes, nunca pisan lo editado).
    `paginas` va **antes** que `menus`: el menú enlaza esas páginas y un ítem
    apuntando a una página inexistente responde 404 (docs/14 §5.1).
+   `menus --reconciliar` retira los ítems que ya no están en el plano y pone
+   las etiquetas al día; sin la opción el sembrador solo añade y una
+   instalación vieja acumula raíces duplicadas. Nunca toca ítems protegidos.
 4. `usuarios:crear-admin` con correo institucional (y cambiar contraseña —
    ver pendiente 2.1).
 5. `busqueda:indexar` tras cargar contenido.

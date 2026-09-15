@@ -30,6 +30,23 @@ final class ConfigDinamica
         return ($valor === null || $valor === '') ? $porDefecto : $valor;
     }
 
+    /**
+     * Entero acotado. Los límites no son paranoia: estas claves las edita un
+     * funcionario desde el panel, y un «0» o un «500» en «campañas por
+     * pestaña» rompería la portada sin que nadie relacione una cosa con la
+     * otra. Fuera de rango se recorta al extremo más cercano.
+     */
+    public function entero(string $clave, int $porDefecto, int $minimo, int $maximo): int
+    {
+        $valor = $this->cargar()[$clave] ?? null;
+
+        if ($valor === null || $valor === '' || !is_numeric($valor)) {
+            return $porDefecto;
+        }
+
+        return max($minimo, min($maximo, (int) $valor));
+    }
+
     public function booleano(string $clave, bool $porDefecto = false): bool
     {
         $valor = $this->cargar()[$clave] ?? null;

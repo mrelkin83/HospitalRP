@@ -15,6 +15,7 @@ use App\Core\Audit\AuditoriaService;
 use App\Core\Auth\AutenticadorService;
 use App\Core\Auth\AutorizacionService;
 use App\Core\Auth\HasherPassword;
+use App\Core\Auth\PoliticaPassword;
 use App\Core\Auth\Sesion;
 use App\Core\Auth\UsuarioRepository;
 use App\Core\Config\ConfigAplicacion;
@@ -25,6 +26,7 @@ use App\Core\Database\ConfigBaseDatos;
 use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
 use App\Http\Admin\AvisosController;
+use App\Http\Admin\PopupsController;
 use App\Http\Admin\CampanasController;
 use App\Http\Admin\CategoriasController;
 use App\Http\Admin\FaqController;
@@ -33,8 +35,10 @@ use App\Http\Admin\MediosController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
 use App\Http\Admin\ConvocatoriasAdminController;
+use App\Http\Admin\IndicadoresAdminController;
 use App\Http\Admin\EncuestasAdminController;
 use App\Http\Admin\EventosAdminController;
+use App\Http\Admin\HeroesController;
 use App\Http\Admin\ServidoresPublicosAdminController;
 use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Http\Admin\DatasetsController;
@@ -48,6 +52,12 @@ use App\Http\Admin\IaController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PoliticasController;
 use App\Http\Admin\PanelController;
+use App\Http\Admin\AuditoriaAdminController;
+use App\Http\Admin\ConfiguracionController;
+use App\Http\Admin\PerfilController;
+use App\Http\Admin\RedireccionesController;
+use App\Http\Admin\RolesController;
+use App\Http\Admin\UsuariosController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
@@ -57,9 +67,17 @@ use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
 use App\Modules\Busqueda\Service\BuscadorService;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Sistema\Repository\DependenciaRepository;
+use App\Modules\Sistema\Repository\AuditoriaRepository;
+use App\Modules\Sistema\Repository\ConfiguracionRepository;
+use App\Modules\Sistema\Repository\RolRepository;
+use App\Modules\Sistema\Repository\UsuarioAdminRepository;
+use App\Modules\Sistema\Service\CatalogoPermisos;
+use App\Modules\Sistema\Service\CatalogoIconos;
 use App\Modules\Sistema\Repository\IaUsoRepository;
 use App\Modules\Convocatorias\Repository\ConvocatoriaRepository;
 use App\Modules\Encuestas\Repository\EncuestaRepository;
+use App\Modules\Indicadores\Repository\IndicadorRepository;
+use App\Modules\Contenido\Repository\HeroRepository;
 use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Directorio\Repository\ServidorPublicoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
@@ -82,6 +100,7 @@ use App\Http\Web\DocumentosPublicoController;
 use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\FaqPublicoController;
 use App\Http\Web\LayoutPublico;
+use App\Http\Web\CampanasPublicoController;
 use App\Http\Web\NoticiasPublicoController;
 use App\Http\Web\PaginasController;
 use App\Http\Web\PoliticasPublicoController;
@@ -93,11 +112,13 @@ use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\ConvocatoriasPublicoController;
 use App\Http\Web\EncuestasPublicoController;
 use App\Http\Web\EventosPublicoController;
+use App\Http\Web\EstadisticasController;
 use App\Http\Web\GaleriaController;
 use App\Http\Web\MapaSitioController;
 use App\Http\Web\ServidoresPublicosController;
 use App\Http\Web\UrgenciasContactoController;
 use App\Modules\Contenido\Repository\AvisoRepository;
+use App\Modules\Contenido\Repository\PopupRepository;
 use App\Modules\Contenido\Repository\CampanaRepository;
 use App\Modules\Contenido\Repository\CategoriaRepository;
 use App\Modules\Contenido\Repository\FaqRepository;
@@ -154,6 +175,8 @@ return static function (Env $env): ContainerBuilder {
     // --- Autenticación y sesión ---
     $contenedor->register(HasherPassword::class, HasherPassword::class);
 
+    $contenedor->register(PoliticaPassword::class, PoliticaPassword::class);
+
     $contenedor->register(UsuarioRepository::class, UsuarioRepository::class)
         ->setAutowired(true);
 
@@ -186,6 +209,22 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(MenuRepository::class, MenuRepository::class)
         ->setAutowired(true);
 
+    $contenedor->register(UsuarioAdminRepository::class, UsuarioAdminRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(RolRepository::class, RolRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ConfiguracionRepository::class, ConfiguracionRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(AuditoriaRepository::class, AuditoriaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CatalogoPermisos::class, CatalogoPermisos::class);
+
+    $contenedor->register(CatalogoIconos::class, CatalogoIconos::class);
+
     $contenedor->register(ServidorPublicoRepository::class, ServidorPublicoRepository::class)
         ->setAutowired(true);
 
@@ -195,7 +234,13 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(EventoRepository::class, EventoRepository::class)
         ->setAutowired(true);
 
+    $contenedor->register(HeroRepository::class, HeroRepository::class)
+        ->setAutowired(true);
+
     $contenedor->register(EncuestaRepository::class, EncuestaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(IndicadorRepository::class, IndicadorRepository::class)
         ->setAutowired(true);
 
     $contenedor->register(DependenciaRepository::class, DependenciaRepository::class)
@@ -297,6 +342,9 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(AvisoRepository::class, AvisoRepository::class)
         ->setAutowired(true);
 
+    $contenedor->register(PopupRepository::class, PopupRepository::class)
+        ->setAutowired(true);
+
     // --- Módulo Directorio ---
     $contenedor->register(SedeRepository::class, SedeRepository::class)
         ->setAutowired(true);
@@ -325,6 +373,10 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(CampanasPublicoController::class, CampanasPublicoController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(BuscarController::class, BuscarController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -345,6 +397,10 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(EstadisticasController::class, EstadisticasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(GaleriaController::class, GaleriaController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -352,11 +408,43 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(PantallaAdmin::class, PantallaAdmin::class)
         ->setAutowired(true);
 
+    $contenedor->register(IndicadoresAdminController::class, IndicadoresAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(UsuariosController::class, UsuariosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(RolesController::class, RolesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(ConfiguracionController::class, ConfiguracionController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(AuditoriaAdminController::class, AuditoriaAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(RedireccionesController::class, RedireccionesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(PerfilController::class, PerfilController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(ConvocatoriasAdminController::class, ConvocatoriasAdminController::class)
         ->setAutowired(true)
         ->setPublic(true);
 
     $contenedor->register(EventosAdminController::class, EventosAdminController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(HeroesController::class, HeroesController::class)
         ->setAutowired(true)
         ->setPublic(true);
 
@@ -458,6 +546,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(AvisosController::class, AvisosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(PopupsController::class, PopupsController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

@@ -14,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Semilla de los cinco tipos de trámite de v1 con sus estados y campos, y
+ * Semilla de los tipos de trámite de v1 con sus estados y campos, y
  * de una política de tratamiento de datos PROVISIONAL (la vigente la carga
  * la oficina jurídica; sin política activa no hay casilla de autorización).
  *
@@ -27,10 +27,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class SembrarTramitesCommand extends Command
 {
     /**
-     * slug => [nombre, descripcion, dias, fundamento, anonimo, campos]
-     * donde campos = [codigo => [etiqueta, tipo_campo, requerido, opciones|null, ayuda|null]]
+     * slug => [nombre, descripcion, dias, fundamento, anonimo, adjuntos, campos]
+     * donde adjuntos = [máximo de archivos, ¿es obligatorio adjuntar?]
+     * y campos = [codigo => [etiqueta, tipo_campo, requerido, opciones|null, ayuda|null]]
      *
-     * @var array<string, array{string, string, int, string, int, array<string, array{string, string, int, ?list<string>, ?string}>}>
+     * @var array<string, array{string, string, int, string, int, array{int, bool}, array<string, array{string, string, int, ?list<string>, ?string}>}>
      */
     private const array TIPOS = [
         'pqrsdf' => [
@@ -39,6 +40,7 @@ final class SembrarTramitesCommand extends Command
             15,
             'Ley 1755 de 2015, art. 14 — TÉRMINO PROVISIONAL, pendiente validación de la oficina jurídica',
             1,
+            [3, false],
             [
                 'tipo_solicitud' => ['¿Qué deseas presentar?', 'select', 1,
                     ['Petición', 'Queja', 'Reclamo', 'Sugerencia', 'Denuncia', 'Felicitación'], null],
@@ -50,6 +52,7 @@ final class SembrarTramitesCommand extends Command
             5,
             'Término interno de servicio — PROVISIONAL, pendiente validación de la oficina jurídica',
             0,
+            [3, false],
             [
                 'especialidad' => ['Especialidad o servicio que necesitas', 'texto', 1, null, 'Por ejemplo: medicina general, pediatría, laboratorio'],
                 'jornada' => ['Jornada de preferencia', 'select', 0, ['Mañana', 'Tarde', 'Cualquiera'], null],
@@ -61,6 +64,7 @@ final class SembrarTramitesCommand extends Command
             10,
             'Ley 1755 de 2015, art. 14.1 (documentos) y Ley 23 de 1981 — PROVISIONAL, pendiente validación jurídica',
             0,
+            [3, false],
             [
                 'parentesco' => ['¿Quién solicita?', 'select', 1,
                     ['Titular (yo mismo)', 'Padre o madre de menor', 'Representante legal', 'Familiar de persona fallecida'], null],
@@ -73,6 +77,7 @@ final class SembrarTramitesCommand extends Command
             10,
             'Ley 1755 de 2015, art. 14.1 — PROVISIONAL, pendiente validación de la oficina jurídica',
             0,
+            [3, false],
             [
                 'tipo_certificado' => ['Tipo de certificado', 'select', 1,
                     ['Certificado de atención', 'Constancia de hospitalización', 'Otro'], null],
@@ -84,9 +89,46 @@ final class SembrarTramitesCommand extends Command
             15,
             'Ley 1581 de 2012, arts. 14 y 15 — PROVISIONAL, pendiente validación de la oficina jurídica',
             0,
+            [3, false],
             [
                 'tipo_solicitud' => ['¿Qué necesitas?', 'select', 1,
                     ['Consultar mis datos', 'Actualizar mis datos', 'Corregir mis datos', 'Suprimir mis datos', 'Revocar mi autorización'], null],
+            ],
+        ],
+        // --- Trabajadores y contratistas de la entidad ---
+        // Van por el mismo canal público de trámites y NO por un portal con
+        // login: el portal del colaborador está fuera de v1 (CLAUDE.md §7) y
+        // la intranet se retiró por decisión del hospital el 2026-09-14.
+        // Radicar con cédula y recibir por correo cubre la necesidad sin
+        // sostener un sistema de cuentas.
+        'certificado-laboral' => [
+            'Certificado laboral',
+            'Solicita tu certificado laboral o de contrato. Lo reciben trabajadores de planta y contratistas de la entidad.',
+            10,
+            'Ley 1755 de 2015, art. 14.1 — PROVISIONAL, pendiente validación de la oficina jurídica',
+            0,
+            [3, false],
+            [
+                'vinculacion' => ['Tipo de vinculación', 'select', 1,
+                    ['Planta', 'Contrato de prestación de servicios', 'Ya no trabajo en la entidad'], null],
+                'destino' => ['¿Para qué lo necesitas?', 'texto', 0, null,
+                    'Por ejemplo: trámite bancario, visa, otra entidad. Ayuda a redactar el certificado.'],
+                'con_salario' => ['¿Debe incluir el valor del salario u honorarios?', 'select', 1,
+                    ['Sí', 'No'], null],
+            ],
+        ],
+        'radicacion-de-cuentas-de-cobro' => [
+            'Radicación de cuentas de cobro',
+            'Radica tu cuenta de cobro como contratista de la entidad. Adjunta la cuenta y los soportes del periodo.',
+            15,
+            'Término interno de servicio — PROVISIONAL, pendiente validación de la oficina jurídica',
+            0,
+            // Sin adjunto no hay cuenta que radicar: el formulario los exige.
+            [5, true],
+            [
+                'numero_contrato' => ['Número del contrato', 'texto', 1, null, 'Tal como aparece en el contrato'],
+                'periodo_cobrado' => ['Periodo que cobras', 'texto', 1, null, 'Por ejemplo: del 1 al 30 de septiembre de 2026'],
+                'valor' => ['Valor de la cuenta de cobro', 'texto', 1, null, 'En pesos, sin puntos ni comas'],
             ],
         ],
     ];
@@ -110,7 +152,7 @@ final class SembrarTramitesCommand extends Command
     {
         $this
             ->setName('semillas:tramites')
-            ->setDescription('Siembra la política provisional y los 5 tipos de trámite de v1');
+            ->setDescription('Siembra la política provisional y los tipos de trámite de v1');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -143,7 +185,7 @@ final class SembrarTramitesCommand extends Command
 
         $orden = 0;
 
-        foreach (self::TIPOS as $slug => [$nombre, $descripcion, $dias, $fundamento, $anonimo, $campos]) {
+        foreach (self::TIPOS as $slug => [$nombre, $descripcion, $dias, $fundamento, $anonimo, [$maxAdjuntos, $adjuntoObligatorio], $campos]) {
             if (false !== $this->conexion->fetchOne('SELECT id FROM tipos_tramite WHERE slug = ?', [$slug])) {
                 $orden++;
                 continue;
@@ -158,6 +200,8 @@ final class SembrarTramitesCommand extends Command
                 'tipo_dias' => 'habiles',
                 'fundamento_legal' => $fundamento,
                 'permite_anonimo' => $anonimo,
+                'requiere_adjunto' => $adjuntoObligatorio ? 1 : 0,
+                'max_adjuntos' => $maxAdjuntos,
                 'orden' => $orden++,
             ]);
             $tipoId = (int) $this->conexion->lastInsertId();

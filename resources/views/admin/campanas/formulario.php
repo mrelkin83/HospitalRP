@@ -5,12 +5,14 @@
  *         $historial, $tokenCsrf, $puedePublicar.
  */
 
+use App\Modules\Contenido\Entity\Audiencia;
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 
 $valorTitulo = $enviado?->titulo ?? $campana?->titulo ?? '';
 $valorResumen = $enviado?->resumen ?? $campana?->resumen ?? '';
 $valorContenido = $enviado?->contenido ?? $campana?->contenido ?? '';
 $valorPoblacion = $enviado?->poblacionObjetivo ?? $campana?->poblacionObjetivo ?? '';
+$valorAudiencia = ($enviado?->audiencia ?? $campana?->audiencia ?? Audiencia::Comunidad)->value;
 $valorInicio = $enviado?->inicio ?? $campana?->inicio ?? '';
 $valorFin = $enviado?->fin ?? $campana?->fin ?? '';
 
@@ -39,8 +41,24 @@ $error = static function (string $campo) use ($errores, $e): string {
 <?php } ?>
 
 <?php if ($errores !== []) { ?>
+    <?php /* El aviso NOMBRA lo que falta. Antes decía «revisa los campos
+             marcados» y el funcionario los daba todos por llenos: el error
+             solía estar en el texto alternativo de la imagen, dentro de un
+             `fieldset` al que había que bajar. Un aviso que no dice qué pasa
+             obliga a adivinar. */ ?>
     <div class="alerta alerta-error mt-4" role="alert">
-        Revisa los campos marcados: falta información o hay un dato inválido.
+        <p class="font-semibold">No se pudo guardar. Falta esto:</p>
+        <ul class="mt-2 list-disc ps-5 flex flex-col gap-1">
+            <?php foreach ($errores as $campo => $detalle) { ?>
+                <li><a class="font-semibold" href="#<?= $e((string) $campo) ?>"><?= $e($detalle) ?></a></li>
+            <?php } ?>
+        </ul>
+        <?php if (isset($errores['imagen_alt']) || isset($errores['imagen'])) { ?>
+            <p class="mt-2 text-sm">
+                Vuelve a elegir la imagen: por seguridad, el navegador no conserva
+                el archivo cuando el formulario regresa con un error.
+            </p>
+        <?php } ?>
     </div>
 <?php } ?>
 
@@ -67,6 +85,23 @@ $error = static function (string $campo) use ($errores, $e): string {
             <textarea class="campo" id="contenido" name="contenido" rows="12" data-editor="contenido"
                       <?= isset($errores['contenido']) ? 'aria-invalid="true" aria-describedby="error-contenido"' : '' ?>><?= $e($valorContenido) ?></textarea>
             <?= $error('contenido') ?>
+        </div>
+
+        <div>
+            <label class="etiqueta" for="audiencia">¿A quién le habla?</label>
+            <select class="campo" id="audiencia" name="audiencia">
+                <?php foreach (Audiencia::cases() as $opcion) { ?>
+                    <option value="<?= $e($opcion->value) ?>" <?= $valorAudiencia === $opcion->value ? 'selected' : '' ?>>
+                        <?= $e($opcion->etiqueta()) ?>
+                    </option>
+                <?php } ?>
+            </select>
+            <p class="ayuda-campo">
+                Decide en qué pestaña de la portada sale y en qué listado público vive:
+                «<?= $e(Audiencia::Comunidad->pestana()) ?>» va a <code>/campanas</code> y
+                «<?= $e(Audiencia::Personal->pestana()) ?>» a <code>/trabajadores-y-contratistas</code>.
+                Las dos son páginas públicas.
+            </p>
         </div>
 
         <div class="grid gap-5 sm:grid-cols-3">
@@ -97,7 +132,9 @@ $error = static function (string $campo) use ($errores, $e): string {
                 <?= $error('imagen') ?>
             </div>
             <div class="mt-3">
-                <label class="etiqueta" for="imagen_alt">Descripción de la imagen (texto alternativo)</label>
+                <label class="etiqueta" for="imagen_alt">Descripción de la imagen (texto alternativo)
+                    <span class="texto-suave font-normal">— obligatorio si subes una imagen</span>
+                </label>
                 <input class="campo" type="text" id="imagen_alt" name="imagen_alt" maxlength="255"
                        <?= isset($errores['imagen_alt']) ? 'aria-invalid="true" aria-describedby="error-imagen_alt"' : '' ?>>
                 <?= $error('imagen_alt') ?>

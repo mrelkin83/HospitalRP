@@ -18,7 +18,7 @@
 
 // Subir la versión purga TODO lo cacheado en el `activate`. Se sube al
 // desplegar cambios que el visitante deba ver sí o sí.
-var VERSION = 'hrpl-v2';
+var VERSION = 'hrpl-v8';
 var CASCARON = [
     '/desconectado.html',
     '/build/app.css',

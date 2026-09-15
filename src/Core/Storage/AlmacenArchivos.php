@@ -187,6 +187,78 @@ final readonly class AlmacenArchivos
         return $resultado;
     }
 
+    /**
+     * Dónde se está usando un archivo, por sección y con su número.
+     *
+     * Existe porque las claves foráneas mienten por omisión: ocho de las once
+     * que apuntan aquí son `ON DELETE SET NULL`, así que borrar una imagen no
+     * falla —deja en blanco la portada de una campaña publicada y nadie se
+     * entera— y tres son `RESTRICT`, que revientan con un error de base de
+     * datos en la cara del funcionario. Se pregunta antes de borrar.
+     *
+     * @return array<string, int> sección legible => cuántos contenidos la usan
+     */
+    public function usos(int $id): array
+    {
+        $referencias = [
+            'noticias' => ['noticias', 'imagen_id'],
+            'campañas' => ['campanas', 'imagen_id'],
+            'páginas' => ['paginas', 'imagen_id'],
+            'sedes' => ['sedes', 'imagen_id'],
+            'servicios' => ['servicios', 'imagen_id'],
+            'especialidades' => ['especialidades', 'imagen_id'],
+            'directorio médico' => ['profesionales', 'foto_id'],
+            'documentos' => ['documentos', 'archivo_id'],
+            'versiones de documento' => ['documento_versiones', 'archivo_id'],
+            'datos abiertos' => ['dataset_recursos', 'archivo_id'],
+            'adjuntos de trámites' => ['tramite_adjuntos', 'archivo_id'],
+        ];
+
+        $usos = [];
+
+        foreach ($referencias as $seccion => [$tabla, $columna]) {
+            $total = (int) $this->conexion->fetchOne(
+                sprintf('SELECT COUNT(*) FROM %s WHERE %s = ?', $tabla, $columna),
+                [$id],
+            );
+
+            if ($total > 0) {
+                $usos[$seccion] = $total;
+            }
+        }
+
+        return $usos;
+    }
+
+    /**
+     * Borra el archivo de la biblioteca y del disco.
+     *
+     * Devuelve `false` si está en uso: retirar una imagen que sostiene una
+     * campaña publicada no es tarea de un botón sin aviso. Quien la quiera
+     * fuera, primero la quita del contenido.
+     */
+    public function eliminar(int $id): bool
+    {
+        $archivo = $this->porId($id);
+
+        if ($archivo === null || $this->usos($id) !== []) {
+            return false;
+        }
+
+        // Primero la fila y después el disco: si se cae entre medias, queda un
+        // archivo huérfano —que no rompe nada— y no una fila que apunta a un
+        // archivo que ya no existe, que sí rompe la página.
+        $this->conexion->delete('archivos', ['id' => $id]);
+
+        $ruta = $this->rutaAbsoluta($archivo);
+
+        if (is_file($ruta)) {
+            @unlink($ruta);
+        }
+
+        return true;
+    }
+
     public function rutaAbsoluta(Archivo $archivo): string
     {
         return $this->directorioBase . '/' . $archivo->ruta;

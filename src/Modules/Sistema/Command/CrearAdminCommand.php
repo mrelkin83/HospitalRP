@@ -8,6 +8,7 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\HasherPassword;
+use App\Core\Auth\PoliticaPassword;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,6 +29,7 @@ final class CrearAdminCommand extends Command
         private readonly Connection $conexion,
         private readonly HasherPassword $hasher,
         private readonly AuditoriaService $auditoria,
+        private readonly PoliticaPassword $politica,
     ) {
         parent::__construct();
     }
@@ -81,8 +83,21 @@ final class CrearAdminCommand extends Command
         $passwordGenerada = false;
 
         if (!is_string($password) || $password === '') {
-            $password = $this->generarPassword();
+            $password = $this->politica->generar();
             $passwordGenerada = true;
+        } else {
+            // Una clave dictada en la consola pasa por la misma política que
+            // el panel. Si no, el arranque del sitio sería el único punto por
+            // donde entraría una contraseña débil, y es justo el de la cuenta
+            // con más permisos.
+            $problemas = $this->politica->problemas($password, $correo, $nombre);
+
+            if ($problemas !== []) {
+                $io->error('La contraseña no cumple la política del panel:');
+                $io->listing($problemas);
+
+                return Command::INVALID;
+            }
         }
 
         $usuarioId = $this->conexion->transactional(function () use ($nombre, $correo, $password): int {
@@ -144,17 +159,5 @@ final class CrearAdminCommand extends Command
 
         return (int) $this->conexion->lastInsertId();
     }
-
-    private function generarPassword(): string
-    {
-        // Sin caracteres ambiguos (0/O, 1/l/I): esta clave se dicta por teléfono.
-        $alfabeto = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-        $password = '';
-
-        for ($i = 0; $i < 16; $i++) {
-            $password .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
-        }
-
-        return $password;
-    }
 }
+

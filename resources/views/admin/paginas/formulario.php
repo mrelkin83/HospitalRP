@@ -47,8 +47,24 @@ $error = static function (string $campo) use ($errores, $e): string {
 <?php } ?>
 
 <?php if ($errores !== []) { ?>
+    <?php /* El aviso NOMBRA lo que falta. Antes decía «revisa los campos
+             marcados» y el funcionario los daba todos por llenos: el error
+             solía estar en el texto alternativo de la imagen, dentro de un
+             `fieldset` al que había que bajar. Un aviso que no dice qué pasa
+             obliga a adivinar. */ ?>
     <div class="alerta alerta-error mt-4" role="alert">
-        Revisa los campos marcados: falta información o hay un dato inválido.
+        <p class="font-semibold">No se pudo guardar. Falta esto:</p>
+        <ul class="mt-2 list-disc ps-5 flex flex-col gap-1">
+            <?php foreach ($errores as $campo => $detalle) { ?>
+                <li><a class="font-semibold" href="#<?= $e((string) $campo) ?>"><?= $e($detalle) ?></a></li>
+            <?php } ?>
+        </ul>
+        <?php if (isset($errores['imagen_alt']) || isset($errores['imagen'])) { ?>
+            <p class="mt-2 text-sm">
+                Vuelve a elegir la imagen: por seguridad, el navegador no conserva
+                el archivo cuando el formulario regresa con un error.
+            </p>
+        <?php } ?>
     </div>
 <?php } ?>
 
@@ -97,7 +113,9 @@ $error = static function (string $campo) use ($errores, $e): string {
                 <?= $error('imagen') ?>
             </div>
             <div class="mt-3">
-                <label class="etiqueta" for="imagen_alt">Descripción de la imagen (texto alternativo)</label>
+                <label class="etiqueta" for="imagen_alt">Descripción de la imagen (texto alternativo)
+                    <span class="texto-suave font-normal">— obligatorio si subes una imagen</span>
+                </label>
                 <input class="campo" type="text" id="imagen_alt" name="imagen_alt" maxlength="255"
                        <?= isset($errores['imagen_alt']) ? 'aria-invalid="true" aria-describedby="error-imagen_alt"' : '' ?>>
                 <?= $error('imagen_alt') ?>

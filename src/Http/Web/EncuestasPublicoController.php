@@ -6,6 +6,7 @@ namespace App\Http\Web;
 
 use App\Core\Support\Vistas;
 use App\Modules\Encuestas\Repository\EncuestaRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -78,8 +79,15 @@ final readonly class EncuestasPublicoController
 
         // Trampa para robots: un campo que ningún humano ve ni llena. Si
         // llega con texto, se responde «gracias» sin guardar nada.
+        // La portada responde por `fetch` y espera JSON; el formulario de
+        // /encuestas sigue navegando. Un solo endpoint y una sola validación:
+        // dos caminos de guardado acabarían divergiendo.
+        $enJson = str_contains((string) $peticion->headers->get('Accept', ''), 'application/json');
+
         if (trim((string) $peticion->request->get('sitio_web', '')) !== '') {
-            return $this->mensajeGracias('Gracias por participar.');
+            return $enJson
+                ? new JsonResponse(['ok' => true, 'resultados' => [], 'total' => 0])
+                : $this->mensajeGracias('Gracias por participar.');
         }
 
         $id = (int) $encuesta['id'];
@@ -113,6 +121,10 @@ final readonly class EncuestasPublicoController
             }
         }
 
+        if ($errores !== [] && $enJson) {
+            return new JsonResponse(['ok' => false, 'errores' => $errores], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         if ($errores !== []) {
             return $this->layout->responder(
                 titulo: (string) $encuesta['titulo'],
@@ -127,9 +139,50 @@ final readonly class EncuestasPublicoController
             );
         }
 
-        $this->encuestas->guardarRespuesta($id, $this->huella($peticion), $valores);
+        $guardada = $this->encuestas->guardarRespuesta($id, $this->huella($peticion), $valores);
 
-        return new RedirectResponse('/encuestas/' . $encuesta['slug'] . '/gracias', Response::HTTP_SEE_OTHER);
+        if ($enJson) {
+            // Se devuelven los resultados ya recalculados: el ciudadano ve su
+            // voto reflejado sin recargar, que es justo lo que pidió ver.
+            return new JsonResponse([
+                'ok' => true,
+                'repetida' => !$guardada,
+                'total' => $this->encuestas->totalRespuestas($id),
+                'resultados' => $this->encuestas->resultadosDe($id),
+            ]);
+        }
+
+        // Sin JavaScript se navega a los resultados y no a un «gracias» seco:
+        // la recompensa de responder es ver cómo votaron los demás.
+        return new RedirectResponse('/encuestas/' . $encuesta['slug'] . '/resultados', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Resultados agregados. No exige haber respondido: mirar cómo va una
+     * consulta pública es parte de la consulta pública, no un premio por
+     * participar. Funciona también con la encuesta ya cerrada.
+     */
+    public function resultados(Request $peticion): Response
+    {
+        $encuesta = $this->encuestas->publicaPorSlug((string) $peticion->attributes->get('slug'));
+
+        if ($encuesta === null) {
+            return $this->cerrada();
+        }
+
+        $id = (int) $encuesta['id'];
+
+        return $this->layout->responder(
+            titulo: 'Resultados: ' . $encuesta['titulo'],
+            descripcion: 'Resultados de la encuesta «' . $encuesta['titulo'] . '» de la '
+                . 'E.S.E. Hospital Rosario Pumarejo de López.',
+            contenido: $this->vistas->render('publico/encuestas/resultados', [
+                'encuesta' => $encuesta,
+                'resultados' => $this->encuestas->resultadosDe($id),
+                'total' => $this->encuestas->totalRespuestas($id),
+                'abierta' => $encuesta['estado'] === 'abierta',
+            ]),
+        );
     }
 
     public function gracias(Request $peticion): Response

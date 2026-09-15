@@ -214,6 +214,39 @@ final class SembrarPaginasCommand extends Command
             self::PUBLICADA,
             0,
         ],
+        // Puerta de entrada para quien trabaja en la entidad. No es un portal
+        // con login: el portal del colaborador está fuera de v1 (CLAUDE.md §7)
+        // y la intranet del Joomla se retiró por decisión del hospital del
+        // 2026-09-14. Cada solicitud se radica por el canal público de
+        // trámites, con número de radicado y término de respuesta, que da más
+        // garantía al trabajador que un buzón interno sin trazabilidad.
+        '/trabajadores-y-contratistas' => [
+            'Trabajadores y contratistas',
+            'Certificados laborales, radicación de cuentas de cobro y demás trámites del personal de la entidad.',
+            '<p>Si trabajas en la E.S.E. Hospital Rosario Pumarejo de López, o tienes un '
+                . 'contrato con la entidad, estas son tus solicitudes más frecuentes. '
+                . 'No necesitas usuario ni contraseña: radicas con tu documento y recibes '
+                . 'un número de radicado para hacerle seguimiento.</p>'
+                . '<ul>'
+                . '<li><a href="/atencion-ciudadania/tramites/certificado-laboral">Certificado laboral</a> '
+                . '— para trabajadores de planta, contratistas y quienes ya no trabajan en la entidad.</li>'
+                . '<li><a href="/atencion-ciudadania/tramites/radicacion-de-cuentas-de-cobro">Radicación de cuentas de cobro</a> '
+                . '— adjunta la cuenta y los soportes del periodo.</li>'
+                . '<li><a href="/atencion-ciudadania/tramites">Otros trámites y solicitudes</a> '
+                . '— el listado completo de trámites de la entidad.</li>'
+                . '</ul>'
+                . '<h2>Formatos y documentos</h2>'
+                . '<ul>'
+                . '<li><a href="/talento-humano/formatos">Formatos de talento humano</a></li>'
+                . '<li><a href="/talento-humano">Manual de funciones, capacitación y bienestar</a></li>'
+                . '<li><a href="/convocatorias">Convocatorias y ofertas de empleo</a></li>'
+                . '</ul>'
+                . '<h2>Consultar una solicitud ya radicada</h2>'
+                . '<p>Con el número de radicado puedes ver el estado de tu solicitud en '
+                . '<a href="/atencion-ciudadania/pqrsdf/consultar">consulta de radicados</a>.</p>',
+            self::PUBLICADA,
+            0,
+        ],
         '/gestion' => [
             'Gestión institucional',
             'MECI, MIPG, control disciplinario y conflicto de intereses.',

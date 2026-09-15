@@ -32,4 +32,14 @@ enum AccionAuditoria: string
     case CierreSesion = 'cierre_sesion';
     case IntentoFallido = 'intento_fallido';
     case BloqueoCuenta = 'bloqueo_cuenta';
+
+    // Administración del sistema (Fase 10): cuentas, permisos y ajustes.
+    // Son las acciones que un ente de control pide primero cuando revisa
+    // quién pudo tocar qué, así que llevan caso propio y no un «actualizar»
+    // genérico sobre la tabla usuarios.
+    case CambioPassword = 'cambio_password';
+    case RestablecerPassword = 'restablecer_password';
+    case DesbloqueoCuenta = 'desbloqueo_cuenta';
+    case CambioPermisos = 'cambio_permisos';
+    case CambioConfiguracion = 'cambio_configuracion';
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Editor de menús.
- * Espera: $menus (list<menu + items>), $mensaje (?string), $tokenCsrf (string).
+ * Espera: $iconos (array<string,string> clave => etiqueta), $menus (list<menu + items>), $mensaje (?string), $tokenCsrf (string).
  */
 ?>
 <h1 class="text-2xl">Menús del sitio</h1>
@@ -22,8 +22,18 @@
 
             <ul class="mt-4 flex flex-col gap-3">
                 <?php foreach ($menu['items'] as $item) { ?>
-                    <li class="border-b borde-suave pb-3">
-                        <form class="grid gap-2 sm:grid-cols-[2fr_2fr_auto_auto_auto_auto] sm:items-center"
+                    <?php /* Los hijos van sangrados y marcados: en plano no había
+                             forma de saber que «Historia» cuelga de «El Hospital»,
+                             y son 48 de los 79 enlaces. */ ?>
+                    <li class="border-b borde-suave pb-3 <?= ($item['es_hijo'] ?? false) ? 'ms-6 border-s ps-4' : '' ?>">
+                        <?php if ($item['es_hijo'] ?? false) { ?>
+                            <p class="text-xs texto-suave mb-1">Submenú</p>
+                        <?php } elseif ($item['tiene_hijos'] ?? false) { ?>
+                            <p class="text-xs texto-suave mb-1">Desplegable</p>
+                        <?php } ?>
+                        <form class="grid gap-2 sm:items-center <?= $menu['ubicacion'] === 'accesos'
+                                  ? 'sm:grid-cols-[2fr_2fr_2fr_auto_auto_auto_auto_auto]'
+                                  : 'sm:grid-cols-[2fr_2fr_auto_auto_auto_auto_auto]' ?>"
                               method="post" action="/admin/menus/items/<?= $item['id'] ?>">
                             <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
                             <div>
@@ -40,6 +50,40 @@
                                 <label class="sr-only" for="or-<?= $item['id'] ?>">Orden</label>
                                 <input class="campo w-20" id="or-<?= $item['id'] ?>" type="number" name="orden"
                                        value="<?= $item['orden'] ?>">
+                            </div>
+                            <?php /* Frase e icono solo tienen sentido en los accesos
+                                     rápidos de la portada; en los demás menús se
+                                     dejan vacíos y no pintan nada. */ ?>
+                            <?php if ($menu['ubicacion'] === 'accesos') { ?>
+                                <div>
+                                    <label class="sr-only" for="de-<?= $item['id'] ?>">Frase bajo el título</label>
+                                    <input class="campo" id="de-<?= $item['id'] ?>" type="text" name="descripcion"
+                                           value="<?= $e($item['descripcion'] ?? '') ?>" maxlength="255"
+                                           placeholder="Frase bajo el título">
+                                </div>
+                                <div>
+                                    <label class="sr-only" for="ic-<?= $item['id'] ?>">Icono</label>
+                                    <select class="campo" id="ic-<?= $item['id'] ?>" name="icono">
+                                        <?php foreach ($iconos as $clave => $etiquetaIcono) { ?>
+                                            <option value="<?= $e((string) $clave) ?>" <?= ($item['icono'] ?? '') === $clave ? 'selected' : '' ?>>
+                                                <?= $e($etiquetaIcono) ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            <?php } ?>
+
+                            <div>
+                                <label class="sr-only" for="pa-<?= $item['id'] ?>">Depende de</label>
+                                <select class="campo" id="pa-<?= $item['id'] ?>" name="padre_id">
+                                    <option value="0">— Enlace principal —</option>
+                                    <?php foreach ($menu['raices'] as $raiz) { ?>
+                                        <?php if ($raiz['id'] === $item['id']) { continue; } ?>
+                                        <option value="<?= $raiz['id'] ?>" <?= ($item['padre_id'] ?? null) === $raiz['id'] ? 'selected' : '' ?>>
+                                            Dentro de «<?= $e($raiz['etiqueta']) ?>»
+                                        </option>
+                                    <?php } ?>
+                                </select>
                             </div>
                             <label class="flex items-center gap-1 text-sm">
                                 <input type="checkbox" name="visible" value="1" <?= $item['visible'] ? 'checked' : '' ?>>

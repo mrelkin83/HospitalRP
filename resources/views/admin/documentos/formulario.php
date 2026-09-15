@@ -53,7 +53,16 @@ $error = static function (string $campo) use ($errores, $e): string {
 <?php if (isset($errores['publicacion'])) { ?>
     <div class="alerta alerta-error mt-4" role="alert"><?= $e($errores['publicacion']) ?></div>
 <?php } elseif ($errores !== []) { ?>
-    <div class="alerta alerta-error mt-4" role="alert">Revisa los campos marcados.</div>
+    <?php /* Nombra lo que falta: «revisa los campos marcados» obliga a
+             adivinar cuál es. */ ?>
+    <div class="alerta alerta-error mt-4" role="alert">
+        <p class="font-semibold">No se pudo guardar. Falta esto:</p>
+        <ul class="mt-2 list-disc ps-5 flex flex-col gap-1">
+            <?php foreach ($errores as $campo => $detalle) { ?>
+                <li><a class="font-semibold" href="#<?= $e((string) $campo) ?>"><?= $e($detalle) ?></a></li>
+            <?php } ?>
+        </ul>
+    </div>
 <?php } ?>
 
 <div class="mt-6 grid gap-8 lg:grid-cols-3">

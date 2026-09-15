@@ -58,6 +58,105 @@ final readonly class EncuestaRepository
     }
 
     /** @return ?array<string, mixed> */
+    /**
+     * Encuesta visible al público para CONSULTAR resultados: abierta o ya
+     * cerrada, nunca un borrador ni una eliminada.
+     *
+     * Existe aparte de `abiertaPorSlug()` porque los resultados sobreviven al
+     * cierre: una encuesta cerrada sigue siendo información pública, y
+     * esconderla el día que termina sería publicar solo lo cómodo.
+     *
+     * @return ?array<string, mixed>
+     */
+    public function publicaPorSlug(string $slug): ?array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            "SELECT * FROM encuestas
+              WHERE slug = ? AND estado IN ('abierta', 'cerrada') AND eliminado_en IS NULL",
+            [$slug],
+        );
+
+        return $fila === false ? null : $fila;
+    }
+
+    /**
+     * Resultados agregados, listos para dibujar barras.
+     *
+     * Las preguntas de texto libre devuelven solo cuántas respuestas hubo: el
+     * texto que escribe un ciudadano puede traer su nombre, su diagnóstico o
+     * el de un familiar, y publicarlo aquí convertiría una encuesta anónima en
+     * una filtración. Ese texto se lee en el panel, por quien tiene permiso.
+     *
+     * @return list<array{enunciado: string, tipo: string, respuestas: int, opciones: list<array{texto: string, votos: int, porcentaje: int}>}>
+     */
+    public function resultadosDe(int $encuestaId): array
+    {
+        $resultados = [];
+
+        foreach ($this->preguntasDe($encuestaId) as $pregunta) {
+            $conteo = $pregunta['tipo'] === 'texto' ? [] : $this->conteoDe($pregunta['id']);
+
+            // El total se saca de los votos de ESTA pregunta y no del total de
+            // la encuesta: una pregunta opcional que muchos saltaron daría
+            // porcentajes que no suman nada reconocible.
+            $totalPregunta = $pregunta['tipo'] === 'texto'
+                ? $this->respuestasConTexto($pregunta['id'])
+                : array_sum($conteo);
+
+            $opciones = [];
+
+            // La escala 1-5 no guarda sus opciones en el cuestionario, son
+            // implícitas. Se nombran aquí para que la pregunta tenga barras
+            // desde el primer día y no aparezca de la nada al primer voto.
+            $posibles = $pregunta['opciones'];
+
+            if ($posibles === [] && $pregunta['tipo'] === 'escala') {
+                $posibles = ['1', '2', '3', '4', '5'];
+            }
+
+            // Se recorren las opciones del cuestionario y no solo las votadas:
+            // una opción con cero votos es un dato, y omitirla haría creer que
+            // nunca se ofreció.
+            foreach ($posibles as $texto) {
+                $votos = $conteo[$texto] ?? 0;
+                $opciones[] = [
+                    'texto' => $texto,
+                    'votos' => $votos,
+                    'porcentaje' => $totalPregunta > 0 ? (int) round($votos / $totalPregunta * 100) : 0,
+                ];
+            }
+
+            // Cualquier otro tipo sin opciones declaradas: se listan los
+            // valores que llegaron.
+            if ($opciones === [] && $conteo !== []) {
+                foreach ($conteo as $texto => $votos) {
+                    $opciones[] = [
+                        'texto' => (string) $texto,
+                        'votos' => $votos,
+                        'porcentaje' => $totalPregunta > 0 ? (int) round($votos / $totalPregunta * 100) : 0,
+                    ];
+                }
+            }
+
+            $resultados[] = [
+                'enunciado' => $pregunta['enunciado'],
+                'tipo' => $pregunta['tipo'],
+                'respuestas' => $totalPregunta,
+                'opciones' => $opciones,
+            ];
+        }
+
+        return $resultados;
+    }
+
+    private function respuestasConTexto(int $preguntaId): int
+    {
+        return (int) $this->conexion->fetchOne(
+            'SELECT COUNT(*) FROM encuesta_valores WHERE pregunta_id = ?',
+            [$preguntaId],
+        );
+    }
+
     public function porId(int $id): ?array
     {
         $fila = $this->conexion->fetchAssociative(

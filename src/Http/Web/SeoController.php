@@ -26,10 +26,17 @@ final readonly class SeoController
         '/servicios',
         '/directorio',
         '/documentos',
+        // Listados de campañas por audiencia: no son filas de `paginas`, los
+        // arma el controlador desde `campanas`, así que no entran solos.
+        '/campanas',
+        '/trabajadores-y-contratistas',
         '/urgencias',
         '/contacto',
         '/transparencia',
         '/transparencia/datos-abiertos',
+        // No es una fila de `paginas`, así que no entra sola al sitemap: la
+        // arma el controlador con las cifras de `indicadores`.
+        '/estadisticas',
         '/atencion-ciudadania',
         '/atencion-ciudadania/tramites',
         '/atencion-ciudadania/preguntas-frecuentes',

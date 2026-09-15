@@ -6,6 +6,8 @@
 
 use App\Modules\Contenido\Entity\EstadoAprobacion;
 
+$puedeEditar ??= true;
+
 $insignia = static fn (EstadoAprobacion $estado): string => match ($estado) {
     EstadoAprobacion::Publicado => 'insignia-exito',
     EstadoAprobacion::Aprobado, EstadoAprobacion::EnRevision => 'insignia-aviso',
@@ -43,6 +45,18 @@ $insignia = static fn (EstadoAprobacion $estado): string => match ($estado) {
                 <span class="insignia <?= $insignia($noticia->estado) ?>"><?= $e($noticia->estado->etiqueta()) ?></span>
                 <?php if ($noticia->destacada) { ?>
                     <span class="insignia insignia-aviso">Destacada</span>
+                <?php } ?>
+
+                <?php if ($puedeEditar) { ?>
+                    <span class="flex items-center gap-2">
+                        <a class="boton boton-secundario text-sm py-1 px-3" href="/admin/noticias/<?= $noticia->id ?>">Editar</a>
+                        <?php /* Borrado lógico: la fila queda con `eliminado_en` y se
+                                 puede restaurar desde su versión. */ ?>
+                        <form method="post" action="/admin/noticias/<?= $noticia->id ?>/eliminar">
+                            <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                            <button type="submit" class="boton boton-peligro text-sm py-1 px-3">Papelera</button>
+                        </form>
+                    </span>
                 <?php } ?>
             </li>
         <?php } ?>

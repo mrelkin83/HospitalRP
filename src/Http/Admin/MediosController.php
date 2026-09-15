@@ -34,7 +34,13 @@ final readonly class MediosController
 
     public function listado(Request $peticion): Response
     {
-        return $this->pagina($this->render($peticion->query->has('subida') ? 'La imagen quedó en la biblioteca.' : null, []));
+        $mensaje = match (true) {
+            $peticion->query->has('subida') => 'La imagen quedó en la biblioteca.',
+            $peticion->query->has('borrada') => 'La imagen se retiró de la biblioteca.',
+            default => null,
+        };
+
+        return $this->pagina($this->render($mensaje, []));
     }
 
     public function subir(Request $peticion): Response
@@ -84,12 +90,78 @@ final readonly class MediosController
     }
 
     /**
+     * Retira una imagen de la biblioteca.
+     *
+     * Solo si no la está usando nadie: la comprobación vive en el almacén,
+     * porque las claves foráneas por sí solas o la dejarían en blanco sin
+     * avisar (`SET NULL`) o reventarían con un error de base de datos
+     * (`RESTRICT`). Ninguna de las dos cosas es una respuesta para quien pulsa
+     * un botón.
+     */
+    public function eliminar(Request $peticion): Response
+    {
+        $this->sesion->iniciar();
+
+        if (!$this->sesion->validarCsrf($peticion->request->getString('_token'))) {
+            return $this->pagina($this->render(null, [
+                'imagen' => 'Tu sesión expiró. Vuelve a intentarlo.',
+            ]), Response::HTTP_FORBIDDEN);
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $archivo = $this->almacen->porId($id);
+
+        if ($archivo === null) {
+            return new RedirectResponse('/admin/medios', Response::HTTP_SEE_OTHER);
+        }
+
+        $usos = $this->almacen->usos($id);
+
+        if ($usos !== []) {
+            $detalle = [];
+
+            foreach ($usos as $seccion => $cuantos) {
+                $detalle[] = $cuantos . ' en ' . $seccion;
+            }
+
+            return $this->pagina($this->render(null, [
+                'imagen' => sprintf(
+                    'No se puede borrar «%s»: está en uso (%s). Quítala primero de ese contenido.',
+                    $archivo->nombreOriginal,
+                    implode(', ', $detalle),
+                ),
+            ]), Response::HTTP_CONFLICT);
+        }
+
+        $this->almacen->eliminar($id);
+
+        $this->auditoria->registrar(new RegistroAuditoria(
+            accion: AccionAuditoria::Eliminacion,
+            entidad: 'archivos',
+            entidadId: $id,
+            descripcion: sprintf('Borró de la biblioteca «%s»', $archivo->nombreOriginal),
+            usuarioId: $this->sesion->usuarioId(),
+            usuarioNombre: $this->sesion->usuarioNombre(),
+            ip: $peticion->getClientIp(),
+            userAgent: $peticion->headers->get('User-Agent'),
+        ));
+
+        return new RedirectResponse('/admin/medios?borrada=1', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
      * @param array<string, string> $errores
      */
     private function render(?string $mensaje, array $errores): string
     {
         return $this->vistas->render('admin/medios/listado', [
             'archivos' => $this->almacen->imagenesRecientes(),
+            // Cada imagen sabe si alguien la está usando: el botón de borrar se
+            // apaga en vez de fallar después.
+            'usos' => array_map(
+                fn (\App\Core\Storage\Archivo $archivo): array => $this->almacen->usos($archivo->id),
+                $this->almacen->imagenesRecientes(),
+            ),
             'mensaje' => $mensaje,
             'errores' => $errores,
             'tokenCsrf' => $this->sesion->tokenCsrf(),

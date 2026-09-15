@@ -43,6 +43,12 @@ final readonly class CampanasController
         return $this->pagina('Campañas', $this->vistas->render('admin/campanas/listado', [
             'campanas' => $this->campanas->listarParaPanel(),
             'mensaje' => $this->mensajeDeEstado($peticion),
+            // El listado también borra: hasta ahora la papelera vivía escondida
+            // dentro del formulario de edición, así que para retirar una pieza
+            // había que abrirla primero y buscar abajo del todo.
+            'tokenCsrf' => $this->sesion->tokenCsrf(),
+            'puedeEditar' => $this->sesion->usuarioId() !== null
+                && $this->autorizacion->puede($this->sesion->usuarioId(), 'contenido.editar'),
         ]));
     }
 

@@ -73,4 +73,94 @@ final readonly class RedireccionRepository
 
         return $cambios > 0;
     }
+
+    // --- Administración desde el panel ---
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function todas(string $busqueda = ''): array
+    {
+        $where = '';
+        $parametros = [];
+
+        if ($busqueda !== '') {
+            $where = 'WHERE origen LIKE ? OR destino LIKE ?';
+            $parametros = ['%' . $busqueda . '%', '%' . $busqueda . '%'];
+        }
+
+        /** @var list<array<string, mixed>> $filas */
+        $filas = $this->conexion->fetchAllAssociative(
+            "SELECT * FROM redirecciones {$where} ORDER BY hits DESC, origen LIMIT 500",
+            $parametros,
+        );
+
+        return $filas;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function porId(int $id): ?array
+    {
+        $fila = $this->conexion->fetchAssociative('SELECT * FROM redirecciones WHERE id = ?', [$id]);
+
+        return $fila === false ? null : $fila;
+    }
+
+    public function origenOcupado(string $origen, ?int $exceptoId = null): bool
+    {
+        $sql = 'SELECT id FROM redirecciones WHERE origen = ?';
+        $parametros = [$origen];
+
+        if ($exceptoId !== null) {
+            $sql .= ' AND id <> ?';
+            $parametros[] = $exceptoId;
+        }
+
+        return $this->conexion->fetchOne($sql, $parametros) !== false;
+    }
+
+    public function crear(string $origen, string $destino, int $codigo, bool $activa): int
+    {
+        $this->conexion->insert('redirecciones', [
+            'origen' => $origen,
+            'destino' => $destino,
+            'codigo' => $codigo,
+            'activa' => $activa ? 1 : 0,
+        ]);
+
+        return (int) $this->conexion->lastInsertId();
+    }
+
+    public function actualizar(int $id, string $origen, string $destino, int $codigo, bool $activa): void
+    {
+        $this->conexion->update('redirecciones', [
+            'origen' => $origen,
+            'destino' => $destino,
+            'codigo' => $codigo,
+            'activa' => $activa ? 1 : 0,
+        ], ['id' => $id]);
+    }
+
+    public function eliminar(int $id): void
+    {
+        $this->conexion->delete('redirecciones', ['id' => $id]);
+    }
+
+    /**
+     * @return array{total: int, activas: int, hits: int}
+     */
+    public function resumen(): array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            'SELECT COUNT(*) AS total, SUM(activa) AS activas, COALESCE(SUM(hits), 0) AS hits FROM redirecciones',
+        );
+
+        return [
+            'total' => (int) ($fila['total'] ?? 0),
+            'activas' => (int) ($fila['activas'] ?? 0),
+            'hits' => (int) ($fila['hits'] ?? 0),
+        ];
+    }
 }

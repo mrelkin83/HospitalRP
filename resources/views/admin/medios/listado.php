@@ -1,7 +1,7 @@
 <?php
 /**
  * Biblioteca de medios.
- * Espera: $archivos (list<Archivo>), $mensaje (?string),
+ * Espera: $usos (list<array<string,int>> en el mismo orden que $archivos), $archivos (list<Archivo>), $mensaje (?string),
  *         $errores (array<string,string>), $tokenCsrf (string).
  */
 ?>
@@ -54,8 +54,10 @@
     </div>
 <?php } else { ?>
     <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <?php foreach ($archivos as $archivo) { ?>
-            <li class="tarjeta p-0 overflow-hidden">
+        <?php foreach ($archivos as $indice => $archivo) {
+            $usosDelArchivo = $usos[$indice] ?? [];
+            ?>
+            <li class="tarjeta p-0 overflow-hidden flex flex-col">
                 <img class="h-36 w-full object-cover" src="/archivos/<?= $archivo->id ?>"
                      alt="<?= $e($archivo->nombreOriginal) ?>" loading="lazy">
                 <div class="p-3">
@@ -67,6 +69,28 @@
                     <p class="mt-1 text-sm texto-suave break-words">
                         Alt: <?= $archivo->textoAlt !== null ? $e($archivo->textoAlt) : '—' ?>
                     </p>
+                </div>
+
+                <?php /* El borrado se apaga cuando la imagen sostiene contenido
+                         publicado, y se dice dónde. Borrarla igual dejaría la
+                         campaña o la noticia sin foto y sin aviso: su clave
+                         foránea es ON DELETE SET NULL. */ ?>
+                <div class="mt-auto border-t borde-suave p-3">
+                    <?php if ($usosDelArchivo !== []) { ?>
+                        <p class="text-xs texto-suave">
+                            En uso:
+                            <?php $partes = [];
+                            foreach ($usosDelArchivo as $seccion => $cuantos) {
+                                $partes[] = $cuantos . ' en ' . $seccion;
+                            } ?>
+                            <?= $e(implode(', ', $partes)) ?>.
+                        </p>
+                    <?php } else { ?>
+                        <form method="post" action="/admin/medios/<?= $archivo->id ?>/eliminar">
+                            <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                            <button type="submit" class="boton boton-peligro text-sm py-1 px-3 w-full">Borrar de la biblioteca</button>
+                        </form>
+                    <?php } ?>
                 </div>
             </li>
         <?php } ?>

@@ -4,11 +4,67 @@
  * Espera: $titulo (string), $usuarioNombre (string), $tokenCsrf (string),
  * $contenido (HTML ya compuesto y escapado por la vista de página).
  * Opcional: $conEditor (bool) — carga CKEditor 5 autoalojado.
+ * Opcional: $puede (callable(string): bool) — filtra el menú por permisos.
+ *           Si no llega se muestra completo: las pantallas anteriores a la
+ *           Fase 10 renderizan esta plantilla sin él, y un menú de más no deja
+ *           pasar a nadie (el Kernel sigue exigiendo el permiso de la ruta).
  */
 
 use App\Core\Support\Recursos;
 
 $conEditor ??= false;
+$puede ??= static fn (string $permiso): bool => true;
+
+/**
+ * El menú, agrupado. Antes eran veintiséis enlaces en una sola fila con
+ * desplazamiento horizontal: encontrar «Menús» exigía arrastrar a ciegas.
+ *
+ * @var array<string, array<string, array{0: string, 1: ?string}>>
+ */
+$secciones = [
+    'Contenido' => [
+        'Héroe de la portada' => ['/admin/heroes', 'contenido.ver'],
+        'Noticias' => ['/admin/noticias', 'contenido.ver'],
+        'Páginas' => ['/admin/paginas', 'contenido.ver'],
+        'Campañas' => ['/admin/campanas', 'contenido.ver'],
+        'Avisos' => ['/admin/avisos', 'contenido.ver'],
+        'Ventanas emergentes' => ['/admin/popups', 'contenido.ver'],
+        'FAQ' => ['/admin/faq', 'contenido.ver'],
+        'Categorías' => ['/admin/categorias', 'contenido.ver'],
+        'Medios' => ['/admin/medios', 'contenido.editar'],
+    ],
+    'Atención' => [
+        'Bandeja de trámites' => ['/admin/tramites', 'tramites.gestionar'],
+        'Tipos de trámite' => ['/admin/tipos-tramite', 'tramites.configurar'],
+        'Encuestas' => ['/admin/encuestas', 'encuestas.ver'],
+    ],
+    'Transparencia' => [
+        'Menú de transparencia' => ['/admin/transparencia', 'transparencia.ver'],
+        'Documentos' => ['/admin/documentos', 'documentos.ver'],
+        'Datos abiertos' => ['/admin/datasets', 'transparencia.ver'],
+        'Indicadores' => ['/admin/indicadores', 'indicadores.ver'],
+        'Políticas del sitio' => ['/admin/politicas', 'cumplimiento.politicas'],
+    ],
+    'Institucional' => [
+        'Sedes' => ['/admin/sedes', 'directorio.ver'],
+        'Servicios' => ['/admin/servicios', 'directorio.ver'],
+        'Especialidades' => ['/admin/especialidades', 'directorio.ver'],
+        'Directorio médico' => ['/admin/profesionales', 'directorio.ver'],
+        'Servidores públicos' => ['/admin/servidores-publicos', 'directorio.ver'],
+        'Dependencias' => ['/admin/dependencias', 'sistema.dependencias'],
+        'Convocatorias' => ['/admin/convocatorias', 'convocatorias.ver'],
+        'Eventos' => ['/admin/eventos', 'eventos.ver'],
+    ],
+    'Sistema' => [
+        'Ajustes del sitio' => ['/admin/configuracion', 'sistema.configuracion'],
+        'Usuarios' => ['/admin/usuarios', 'sistema.usuarios'],
+        'Roles y permisos' => ['/admin/roles', 'sistema.roles'],
+        'Auditoría' => ['/admin/auditoria', 'sistema.auditoria'],
+        'Menús del sitio' => ['/admin/menus', 'sistema.menus'],
+        'Redirecciones' => ['/admin/redirecciones', 'sistema.redirecciones'],
+        'Asistente de IA' => ['/admin/ia', 'sistema.ia'],
+    ],
+];
 ?>
 <!doctype html>
 <html lang="es">
@@ -19,6 +75,7 @@ $conEditor ??= false;
     <meta name="csrf" content="<?= $e($tokenCsrf) ?>">
     <title><?= $e($titulo) ?> — Panel · E.S.E. Hospital Rosario Pumarejo de López</title>
     <link rel="stylesheet" href="<?= $e(Recursos::url('/build/app.css')) ?>">
+    <script src="/js/menu.js" defer></script>
     <script src="/js/ia.js" defer></script>
     <?php if ($conEditor) { ?>
         <link rel="stylesheet" href="/vendor/ckeditor5/ckeditor5.css">
@@ -27,7 +84,7 @@ $conEditor ??= false;
         <script src="/js/editor.js" defer></script>
     <?php } ?>
 </head>
-<body>
+<body class="fondo-degradado-marca">
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
 
     <header class="border-b borde-suave fondo-superficie">
@@ -36,41 +93,50 @@ $conEditor ??= false;
                 Panel <span class="font-normal texto-suave">· E.S.E. Hospital Rosario Pumarejo de López</span>
             </a>
 
-            <form method="post" action="/admin/salir" class="ms-auto flex items-center gap-3">
-                <span class="text-sm texto-suave"><?= $e($usuarioNombre) ?></span>
-                <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
-                <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
-            </form>
+            <div class="ms-auto flex items-center gap-3">
+                <a href="/admin/perfil" class="text-sm font-semibold texto-titular"><?= $e($usuarioNombre) ?></a>
+                <form method="post" action="/admin/salir">
+                    <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                    <button type="submit" class="boton boton-secundario">Cerrar sesión</button>
+                </form>
+            </div>
         </div>
 
-        <nav aria-label="Secciones del panel" class="mx-auto max-w-6xl px-4 pb-2">
-            <ul class="flex gap-1 overflow-x-auto text-sm font-semibold">
-                <li><a href="/admin" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Inicio</a></li>
-                <li><a href="/admin/noticias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Noticias</a></li>
-                <li><a href="/admin/paginas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Páginas</a></li>
-                <li><a href="/admin/campanas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Campañas</a></li>
-                <li><a href="/admin/avisos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Avisos</a></li>
-                <li><a href="/admin/faq" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">FAQ</a></li>
-                <li><a href="/admin/categorias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Categorías</a></li>
-                <li><a href="/admin/tramites" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Trámites</a></li>
-                <li><a href="/admin/tipos-tramite" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Tipos de trámite</a></li>
-                <li><a href="/admin/documentos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Documentos</a></li>
-                <li><a href="/admin/politicas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Políticas</a></li>
-                <li><a href="/admin/transparencia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Transparencia</a></li>
-                <li><a href="/admin/datasets" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Datos abiertos</a></li>
-                <li><a href="/admin/dependencias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Dependencias</a></li>
-                <li><a href="/admin/sedes" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Sedes</a></li>
-                <li><a href="/admin/especialidades" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Especialidades</a></li>
-                <li><a href="/admin/servicios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Servicios</a></li>
-                <li><a href="/admin/profesionales" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Directorio médico</a></li>
-                <li><a href="/admin/servidores-publicos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Servidores públicos</a></li>
-                <li><a href="/admin/convocatorias" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Convocatorias</a></li>
-                <li><a href="/admin/eventos" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Eventos</a></li>
-                <li><a href="/admin/encuestas" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Encuestas</a></li>
-                <li><a href="/admin/medios" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Medios</a></li>
-                <li><a href="/admin/menus" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Menús</a></li>
-                <li><a href="/admin/ia" class="inline-block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800">IA</a></li>
-                <?php /* Trámites, documentos y transparencia se añaden fase por fase. */ ?>
+        <nav aria-label="Secciones del panel" class="mx-auto max-w-6xl px-4 pb-3">
+            <?php /* El submenú va flotando (`absolute`) y no dentro del flujo:
+                     desplegado, el ancho del ítem —y con él el de toda la
+                     barra— cambiaba y la fila saltaba. Flotando, abrir una
+                     sección no mueve nada de lo que hay alrededor. */ ?>
+            <ul class="flex flex-wrap items-center gap-2 text-sm">
+                <li>
+                    <a href="/admin" class="inline-block rounded-md px-3 py-2 font-semibold no-underline hover:bg-primario-50 dark:hover:bg-primario-800">Inicio</a>
+                </li>
+                <?php foreach ($secciones as $nombre => $enlaces) {
+                    $visibles = [];
+
+                    foreach ($enlaces as $etiqueta => [$url, $permiso]) {
+                        if ($permiso === null || $puede($permiso)) {
+                            $visibles[$etiqueta] = $url;
+                        }
+                    }
+
+                    if ($visibles === []) {
+                        continue;
+                    }
+                    ?>
+                    <li class="relative">
+                        <details class="menu-panel" name="menu-panel">
+                            <summary class="cursor-pointer rounded-md px-3 py-2 font-semibold hover:bg-primario-50 dark:hover:bg-primario-800"><?= $e($nombre) ?></summary>
+                            <ul class="absolute start-0 top-full z-30 mt-1 w-56 rounded-md border borde-suave fondo-superficie p-2 shadow-lg">
+                                <?php foreach ($visibles as $etiqueta => $url) { ?>
+                                    <li>
+                                        <a href="<?= $e($url) ?>" class="block rounded-md px-3 py-2 no-underline hover:bg-primario-50 dark:hover:bg-primario-800"><?= $e($etiqueta) ?></a>
+                                    </li>
+                                <?php } ?>
+                            </ul>
+                        </details>
+                    </li>
+                <?php } ?>
             </ul>
         </nav>
     </header>

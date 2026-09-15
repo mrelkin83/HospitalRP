@@ -84,8 +84,132 @@ final class SembrarConfiguracionCommand extends Command
             'Lunes a viernes, 7:30 a. m. a 12:00 m. y 2:00 a 6:00 p. m.',
             'texto', 'contacto', 'Horario de atención administrativa', null,
         ],
+        // --- Portada: el carrusel de campañas, administrable (2026-09-15) ---
+        // Estaban en constantes de PHP: cambiar de 7 a 10 segundos exigía un
+        // despliegue. Son decisiones de Comunicaciones, no de ingeniería.
+        'portada.campanas_cantidad' => [
+            '6',
+            'numero', 'portada', 'Campañas por pestaña', 'Cuántas entran en el carrusel de la portada. Entre 1 y 12; el resto se ve en /campanas',
+        ],
+        'portada.campanas_segundos' => [
+            '7',
+            'numero', 'portada', 'Segundos por campaña', 'Cuánto dura cada una en pantalla antes de pasar sola. 0 apaga la rotación automática',
+        ],
+        'portada.campanas_orden' => [
+            'recientes',
+            'texto', 'portada', 'Orden de las campañas', 'Escribe «recientes» (las últimas publicadas primero) o «vencen_antes» (las que terminan pronto primero)',
+        ],
+
+        'portada.heroes_segundos' => [
+            '8',
+            'numero', 'portada', 'Segundos por héroe', 'Cuánto dura en pantalla cada diapositiva del héroe antes de pasar sola. 0 apaga la rotación. Los héroes se crean en Panel → Héroe de la portada',
+        ],
+
+        // --- Portada: lo que rodea al héroe (2026-09-15) ---
+        // El TEXTO de cada héroe —píldora, título, párrafo y botones— NO está
+        // aquí: vive en la tabla `heroes`, una fila por diapositiva, porque hay
+        // varias y cada una dice lo suyo. Lo que queda en Ajustes es lo que es
+        // único y no se repite por diapositiva: el buscador, la tarjeta
+        // ilustrada y los dos avisos flotantes.
+        'hero.buscador_leyenda' => [
+            'Buscar trámites, médicos, noticias...',
+            'texto', 'hero', 'Texto guía del buscador', 'Lo que se lee dentro de la caja de búsqueda mientras está vacía',
+        ],
+        // La tarjeta ilustrada de la derecha es adorno, pero adorno con
+        // palabras: si el hospital le cambia el nombre al portal, esto también.
+        'hero.tarjeta_rotulo' => [
+            'Ecosistema Digital de Salud',
+            'texto', 'hero', 'Tarjeta: rótulo superior', 'Vacío, no se dibuja',
+        ],
+        'hero.tarjeta_version' => [
+            '',
+            'texto', 'hero', 'Tarjeta: distintivo de versión', 'Vacío de fábrica a propósito: un número de versión del portal no le dice nada al ciudadano',
+        ],
+        'hero.tarjeta_titulo' => [
+            'Rosario Digital',
+            'texto', 'hero', 'Tarjeta: título', null,
+        ],
+        'hero.tarjeta_texto' => [
+            'Tu portal clínico unificado e interactivo.',
+            'texto', 'hero', 'Tarjeta: frase bajo el título', null,
+        ],
+        'hero.tarjeta_pie' => [
+            'Protección de datos conforme a la Ley 1581',
+            'texto', 'hero', 'Tarjeta: leyenda del pie', 'Va junto al icono del escudo. Vacía, el pie de la tarjeta no se dibuja',
+        ],
+        // Los dos avisos flotantes afirman un estado del servicio —«sin
+        // esperas», «agendar en 2 minutos»— que nadie mide. Se apagan
+        // enteros, y vienen apagados: es el mismo motivo por el que se
+        // sacaron del héroe las cifras escritas a mano.
+        'hero.avisos_visibles' => [
+            '0',
+            'booleano', 'hero', 'Mostrar los dos avisos flotantes', 'Actívalos solo si alguien se hace cargo de que lo que dicen siga siendo cierto',
+        ],
+        'hero.aviso1_rotulo' => [
+            'Atención en sede',
+            'texto', 'hero', 'Aviso 1: rótulo', null,
+        ],
+        'hero.aviso1_texto' => [
+            'Normal (sin esperas)',
+            'texto', 'hero', 'Aviso 1: estado', 'Afirma cómo está el servicio ahora mismo: mantenlo al día o deja los avisos apagados',
+        ],
+        'hero.aviso2_rotulo' => [
+            'Próxima cita',
+            'texto', 'hero', 'Aviso 2: rótulo', null,
+        ],
+        'hero.aviso2_texto' => [
+            'Agendar en 2 minutos',
+            'texto', 'hero', 'Aviso 2: estado', null,
+        ],
+
+        // --- Pie de página y marca (2026-09-15) ---
+        // Estaban escritos dentro de `publico/base.php`: cambiar el rótulo de
+        // una columna del pie exigía un despliegue. Lo que es texto o imagen
+        // pasa aquí; la maqueta (cuántas columnas, dónde va cada bloque) sigue
+        // en la plantilla, que es diseño y no contenido.
+        'marca.logo' => [
+            '/img/logo_pequeno.jpeg',
+            'texto', 'entidad', 'Logotipo de la entidad', 'Ruta del archivo. Se usa en el encabezado y en el pie',
+        ],
+        'pie.titulo_marca' => [
+            'República de Colombia',
+            'texto', 'pie', 'Rótulo sobre el nombre de la entidad', null,
+        ],
+        'pie.titulo_enlaces' => [
+            'Enlaces de interés',
+            'texto', 'pie', 'Título de la 2.ª columna', 'Sus enlaces se editan en Menús del sitio, ubicación «pie_1»',
+        ],
+        'pie.titulo_normatividad' => [
+            'Normatividad',
+            'texto', 'pie', 'Título de la 3.ª columna', 'Sus enlaces se editan en Menús del sitio, ubicación «pie_2»',
+        ],
+        'pie.titulo_atencion' => [
+            'Atención al ciudadano',
+            'texto', 'pie', 'Título de la 4.ª columna', null,
+        ],
+        'pie.derechos' => [
+            'Todos los derechos reservados.',
+            'texto', 'pie', 'Leyenda de derechos', 'Va detrás de «© año, nombre de la entidad»',
+        ],
+        'pie.leyenda_normativa' => [
+            'Cumplimos con la Ley 1712 de 2014 y la Resolución 1519 de 2020.',
+            'texto', 'pie', 'Leyenda normativa', 'Declara el cumplimiento de la ley de transparencia. Cambiarla solo si cambia la norma',
+        ],
+        'govco.url' => [
+            'https://www.gov.co/',
+            'texto', 'pie', 'Enlace del Portal GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
+        ],
+        'govco.leyenda' => [
+            'Portal Único del Estado Colombiano',
+            'texto', 'pie', 'Leyenda de la barra GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
+        ],
+        'govco.logo' => [
+            '/img/logo_gov.co.png',
+            'texto', 'pie', 'Logotipo GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
+        ],
         'redes.facebook' => ['https://www.facebook.com/Hospital-Rosario-Pumarejo-De-Lopez', 'texto', 'redes', 'Facebook (URL)', 'Verificar URL exacta'],
         'redes.instagram' => ['https://www.instagram.com/hospitalrosariovalledupar', 'texto', 'redes', 'Instagram (URL)', null],
+        'redes.tiktok' => ['', 'texto', 'redes', 'TikTok (URL)', 'Pegar la URL del perfil, por ejemplo https://www.tiktok.com/@usuario'],
         'redes.youtube' => ['https://www.youtube.com/channel/UCdbJFQt1lBHhGjOpSC62SEQ', 'texto', 'redes', 'YouTube (URL)', null],
         'redes.x' => ['https://x.com/ESEHospitalRos1', 'texto', 'redes', 'X / Twitter (URL)', null],
         'redes.linkedin' => ['', 'texto', 'redes', 'LinkedIn (URL)', null],

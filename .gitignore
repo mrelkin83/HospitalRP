@@ -38,3 +38,8 @@ desktop.ini
 
 # Laragon
 /.laragon/
+
+# Exportaciones de la herramienta de diseño (Stitch). Son material de
+# referencia que se regenera, no código: pesan y no aportan historia.
+/stitch*.zip
+/stitch_hospital_digital_experience_home/

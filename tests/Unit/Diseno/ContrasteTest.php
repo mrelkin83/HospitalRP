@@ -54,7 +54,10 @@ final class ContrasteTest extends TestCase
         // El cian es ilegible sobre claro (1.39:1) pero cumple de sobra
         // sobre el azul 900, que es el único sitio donde se usa.
         yield 'cian de marca sobre azul 900' => ['#00F2FE', '#0A192F'];
-        yield 'texto del pie sobre azul 900' => ['#D6E4F5', '#0A192F'];
+        // La paleta se re-tintó hacia el cian el 2026-09-15 (primario-100
+        // pasó de #D6E4F5 a #CDF1F9, primario-300 de #7FA9D8 a #66CDF0).
+        // Los dos pares se volvieron a medir y mejoraron: 14,71:1 y 10,61:1.
+        yield 'texto del pie sobre azul 900' => ['#CDF1F9', '#0A192F'];
         yield 'texto tenue del pie sobre azul 900' => ['#AFC9E8', '#0A192F'];
         yield 'blanco sobre azul 700 (héroe y botones)' => ['#FFFFFF', '#1A365D'];
         yield 'titular del degradado sobre fondo' => ['#1A365D', '#FFFFFF'];
@@ -62,7 +65,7 @@ final class ContrasteTest extends TestCase
         // oscuros daba 1,54:1 sobre el fondo del tema y el titular no se
         // leía. Ambos extremos del gradiente deben cumplir por separado.
         yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#090E1A'];
-        yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#090E1A'];
+        yield 'oscuro: degradado, extremo medio' => ['#66CDF0', '#090E1A'];
 
 
     }

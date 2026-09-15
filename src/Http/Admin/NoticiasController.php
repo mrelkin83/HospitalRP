@@ -52,6 +52,11 @@ final readonly class NoticiasController
         return $this->pagina('Noticias', $this->vistas->render('admin/noticias/listado', [
             'noticias' => $this->noticias->listarParaPanel(),
             'mensaje' => $this->mensajeDeEstado($peticion),
+            // Editar y papelera desde la propia fila: la papelera vivía dentro
+            // del formulario y había que abrir la pieza para retirarla.
+            'tokenCsrf' => $this->sesion->tokenCsrf(),
+            'puedeEditar' => $this->sesion->usuarioId() !== null
+                && $this->autorizacion->puede($this->sesion->usuarioId(), 'contenido.editar'),
         ]));
     }
 

@@ -8,6 +8,7 @@ use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\ConfigDinamica;
 use App\Core\Support\Vistas;
 use App\Modules\Contenido\Repository\AvisoRepository;
+use App\Modules\Contenido\Repository\PopupRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,6 +25,7 @@ final readonly class LayoutPublico
         private ConfigAplicacion $aplicacion,
         private MenuRepository $menus,
         private AvisoRepository $avisos,
+        private PopupRepository $popups,
     ) {
     }
 
@@ -52,6 +54,12 @@ final readonly class LayoutPublico
             'esPortada' => $esPortada,
             'aviso' => $aviso,
             'emergencia' => $aviso !== null && $aviso->esCritico(),
+            // Un aviso crítico transforma la portada para que el teléfono sea
+            // lo primero; taparlo con una ventana emergente encima iría justo
+            // contra eso. En emergencia no hay popup, sea cual sea.
+            'popup' => $aviso !== null && $aviso->esCritico()
+                ? null
+                : $this->popups->vigente($esPortada),
             'menuSuperior' => $this->menus->itemsPorUbicacion('superior'),
             'menuPrincipal' => $this->menus->itemsPorUbicacion('principal'),
             'menuPie1' => $this->menus->itemsPorUbicacion('pie_1'),

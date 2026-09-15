@@ -38,32 +38,36 @@
        Los tres anclajes son suyos: 500 = #2B6CB0 (secondary),
        700 = #1A365D (primary), 900 = #0A192F (dark). El resto se
        interpoló y TODO par en uso está verificado en ContrasteTest. */
-    --color-primario-50: #EBF2FA;
-    --color-primario-100: #D6E4F5;
-    --color-primario-200: #AFC9E8;
-    --color-primario-300: #7FA9D8;
-    --color-primario-400: #4E87C6;
-    --color-primario-500: #2B6CB0;
-    --color-primario-600: #225A96;
-    --color-primario-700: #1A365D;
-    --color-primario-800: #12294A;
-    --color-primario-900: #0A192F;
+    /* --- Marca Oficial (Paleta Institucional del Hospital) ---
+       Escala de marca interpolada de forma armónica basada en los 4 colores oficiales:
+       - Azul Oscuro: #1D5BA7 (Primario / primario-700)
+       - Azul Medio: #0065AE (Secundario / primario-600)
+       - Azul Celeste: #0997D5 (Destacados / primario-500)
+       - Azul Claro: #35BDE9 (Acentos y luces / primario-400) */
+    --color-primario-50: #EDF9FC;
+    --color-primario-100: #CDF1F9;
+    --color-primario-200: #9CE0F5;
+    --color-primario-300: #66CDF0;
+    --color-primario-400: #35BDE9; /* Azul Claro Oficial */
+    --color-primario-500: #0997D5; /* Azul Celeste Oficial */
+    --color-primario-600: #0065AE; /* Azul Medio Oficial */
+    --color-primario-700: #1D5BA7; /* Azul Oscuro Oficial */
+    --color-primario-800: #12366E;
+    --color-primario-900: #0A1B3A;
+    /* El azul más profundo de la escala. Existe porque la tarjeta del hero la
+       pide como «cristal oscuro» (bg-primario-950/50) para que el texto blanco
+       tenga fondo: sin este token Tailwind no genera la clase, la tarjeta se
+       queda transparente y el texto acaba sobre el celeste de la capa de
+       abajo, a 2,19:1. Con el token, el mismo texto queda entre 6,5 y 8,4:1. */
+    --color-primario-950: #050D1F;
 
-    --color-tinta: #0A192F;
+    --color-tinta: #103463;
 
-    /* Cian de marca. SOLO sobre fondo oscuro: da 1,39:1 sobre blanco
-       —ilegible— pero 12,7:1 sobre el azul 900. Por eso vive en la barra
-       superior, el pie y las tarjetas oscuras, nunca como texto claro.
-       Sobre fondo claro es decorativo: resplandores, bordes, degradados. */
-    --color-marca-cian: #00F2FE;
+    /* Acentos y luces de marca. El Azul Claro oficial para los glows y bordes */
+    --color-marca-cian: #35BDE9;
 
-    /* Azul celeste: el cian de arriba, translúcido. Es el tono de la mancha
-       difuminada del héroe pero en velo, para que quede lo más claro posible.
-       Deja que la tarjeta recoja el tinte de lo que tiene debajo donde
-       solapa el héroe.
-       Al no ser un color fijo, el contraste se verificó sobre TODOS los
-       fondos posibles, no sobre uno (ver ContrasteTest). */
-    --color-celeste: color-mix(in srgb, #00F2FE 3%, transparent);
+    /* Azul celeste de velo de marca, translúcido. */
+    --color-celeste: color-mix(in srgb, #35BDE9 5%, transparent);
 
     /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
     --color-marca-verde: #2F9A72;
@@ -98,9 +102,9 @@
    las utilidades de Tailwind no.
    ===================================================================== */
 :root {
-    --fondo: #EBF1F6; /* Fondo gris azulado clínico más suave */
+    --fondo: #EBF4F9; /* Fondo gris azulado clínico muy suave derivado del Azul Claro institucional */
     --superficie: #FFFFFF; /* Superficie blanco puro para tarjetas y bloques que resalta con contraste total */
-    --gradiente-fondo: linear-gradient(135deg, #FFFFFF 0%, #E2ECF5 100%) fixed; /* Gradiente de fondo fijo de gran luminosidad */
+    --gradiente-fondo: linear-gradient(135deg, #FFFFFF 0%, #DFF0F7 100%) fixed; /* Gradiente de fondo fijo de gran luminosidad y frescura */
     --borde: #E2E8F0;
     --texto: var(--color-gris-800);
     --texto-suave: var(--color-gris-600);
@@ -317,6 +321,47 @@
     background: linear-gradient(135deg, var(--superficie) 0%, var(--fondo) 100%);
 }
 
+/* Fondo de marca: los cuatro azules oficiales en diagonal, tapados por un
+   velo del 50 % del color de fondo del tema.
+
+   El velo no es adorno. Los cuatro azules a plena saturación detrás de una
+   jornada entera de tablas cansan la vista (queja del 2026-09-15). Al teñirse
+   el velo con `--fondo`, aclara en tema claro y oscurece en tema oscuro, así
+   que el degradado se lee como un matiz y no como una pared.
+
+   Va como utilidad y no en `body` para que solo lo pidan las pantallas que lo
+   quieren: el sitio público conserva su `--gradiente-fondo`. */
+@utility fondo-degradado-marca {
+    background-color: var(--fondo);
+    background-image:
+        linear-gradient(var(--velo-fondo), var(--velo-fondo)),
+        linear-gradient(135deg, #1D5BA7 0%, #0065AE 34%, #0997D5 67%, #35BDE9 100%);
+}
+
+/* El velo se escribe en rgba y no con `color-mix(… var(--fondo) 50% …)` a
+   propósito: Tailwind acompaña cada `color-mix` de una regla de respaldo con
+   el color OPACO, y ese respaldo taparía el degradado entero en vez de
+   velarlo. Aquí el degradado o se ve velado o no se ve: no hay término medio
+   que valga la pena. */
+.fondo-degradado-marca {
+    --velo-fondo: rgb(235 244 249 / 0.5); /* --fondo claro (#EBF4F9) al 50 % */
+}
+
+[data-tema="oscuro"] .fondo-degradado-marca {
+    --velo-fondo: rgb(9 14 26 / 0.5); /* --fondo oscuro (#090E1A) al 50 % */
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-tema]) .fondo-degradado-marca {
+        --velo-fondo: rgb(9 14 26 / 0.5);
+    }
+}
+
+/* En alto contraste el degradado estorba: el fondo vuelve a ser plano. */
+[data-contraste="alto"] .fondo-degradado-marca {
+    background-image: none;
+}
+
 /* =====================================================================
    Componentes base. Pocos y de verdad: crecen cuando una fase los pida.
    ===================================================================== */
@@ -356,14 +401,14 @@
         box-shadow: none;
     }
 
-    /* Titular en degradado */
+    /* Titular en degradado - Sincronizado exactamente entre Azul Celeste (#0997D5) y Azul Claro (#35BDE9) */
     .texto-degradado {
-        color: var(--color-primario-700);
+        color: var(--color-primario-500);
     }
 
     @supports (background-clip: text) or (-webkit-background-clip: text) {
         .texto-degradado {
-            background-image: linear-gradient(135deg, var(--color-primario-800) 0%, var(--color-primario-500) 100%);
+            background-image: linear-gradient(135deg, var(--color-primario-500) 0%, var(--color-primario-400) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -371,12 +416,12 @@
     }
 
     [data-tema="oscuro"] .texto-degradado {
-        color: var(--color-primario-200);
+        color: var(--color-primario-400);
     }
 
     @supports (background-clip: text) or (-webkit-background-clip: text) {
         [data-tema="oscuro"] .texto-degradado {
-            background-image: linear-gradient(135deg, var(--color-primario-100) 0%, var(--color-marca-cian) 100%);
+            background-image: linear-gradient(135deg, var(--color-primario-500) 0%, var(--color-primario-400) 100%);
             color: transparent;
         }
     }
@@ -482,6 +527,88 @@
         pointer-events: none;
     }
 
+    /* Cabecera de sección: la banda con el título que encabeza El Hospital,
+       Servicios, Programas, Ciudadanía, Prensa, Participa y Transparencia.
+
+       Recorre los cuatro azules del manual de identidad, de oscuro a claro.
+       Encima va un velo del azul más profundo al 20 %, que deja el color vivo.
+       Ojo al último tramo: el texto blanco sobre el azul claro del final queda
+       en 3,23:1, suficiente para el título grande de la cabecera (WCAG admite
+       3:1 desde 24 px o 18,7 px en negrita) pero NO para texto normal. Los
+       otros tres tramos van de 4,69:1 a 8,66:1. Si algún día entra un párrafo
+       de tamaño corriente en esta banda, hay que subir el velo.
+
+       Es una clase y no utilidades repetidas en nueve plantillas porque las
+       nueve cabeceras son la misma pieza: cambiarla en un sitio debe cambiarlas
+       todas. */
+    .cabecera-seccion {
+        background-image:
+            linear-gradient(
+                color-mix(in srgb, var(--color-primario-950) 20%, transparent),
+                color-mix(in srgb, var(--color-primario-950) 20%, transparent)
+            ),
+            linear-gradient(
+                135deg,
+                var(--color-primario-700) 0%,
+                var(--color-primario-600) 35%,
+                var(--color-primario-500) 70%,
+                var(--color-primario-400) 100%
+            );
+    }
+
+    /* Enlaces del menú principal premium con subrayado deslizante brillante */
+    .menu-principal-enlace {
+        position: relative;
+        transition: color 0.3s ease, background-color 0.3s;
+        border-radius: 0.5rem;
+    }
+    
+    .menu-principal-enlace::after {
+        content: '';
+        position: absolute;
+        width: 80%;
+        transform: scaleX(0);
+        height: 2px;
+        bottom: 2px;
+        left: 10%;
+        background: linear-gradient(90deg, var(--color-marca-cian), var(--accion));
+        transform-origin: bottom right;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 999px;
+    }
+    
+    .menu-principal-enlace:hover {
+        color: var(--accion);
+        background-color: color-mix(in srgb, var(--accion) 5%, transparent);
+    }
+    
+    .menu-principal-enlace:hover::after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+    }
+
+    /* Custom Scrollbar Premium */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.02);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: color-mix(in srgb, var(--borde) 85%, transparent);
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        transition: background 0.3s;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accion);
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
     /* Salto al contenido */
     .salto-contenido {
         position: absolute;
@@ -582,6 +709,130 @@
         margin-top: 0.5rem;
         font-size: 0.875em;
         color: var(--texto-suave);
+    }
+
+    /* --- Ventana emergente (Panel → Ventanas emergentes) ---
+       Un <dialog> nativo: el navegador pone el foco, la inercia del fondo y
+       el cierre con Escape. Aquí solo va el aspecto. */
+    .popup {
+        width: min(32rem, calc(100vw - 2rem));
+        max-height: calc(100svh - 3rem);
+        /* El navegador centra un <dialog> modal con `margin: auto`, pero el
+           preflight de Tailwind pone `margin: 0` a todo y lo dejaba clavado en
+           la esquina superior izquierda. Aquí se le devuelve lo suyo. */
+        margin: auto;
+        padding: 0;
+        border: 1px solid var(--borde);
+        border-radius: 1.5rem;
+        background-color: var(--superficie);
+        color: var(--texto);
+        overflow: hidden auto;
+        box-shadow: 0 32px 64px -16px rgb(10 25 47 / 0.35);
+    }
+
+    .popup::backdrop {
+        background-color: rgb(5 13 31 / 0.6);
+        backdrop-filter: blur(2px);
+    }
+
+    .popup-cerrar-fila {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        justify-content: flex-end;
+        /* Altura cero: la fila no empuja la imagen hacia abajo, el botón flota
+           sobre ella. */
+        height: 0;
+        padding: 0.75rem;
+    }
+
+    .popup-cerrar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 0;
+        border-radius: 50%;
+        /* Fondo propio y no transparente: sobre una imagen clara, una equis
+           suelta desaparece. */
+        background-color: rgb(5 13 31 / 0.55);
+        color: #FFFFFF;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .popup-cerrar svg {
+        width: 1.125rem;
+        height: 1.125rem;
+    }
+
+    .popup-cerrar:hover {
+        background-color: rgb(5 13 31 / 0.8);
+    }
+
+    .popup-cerrar:focus-visible {
+        outline: 2px solid #FFFFFF;
+        outline-offset: 2px;
+    }
+
+    .popup-imagen {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 40 / 21;
+        object-fit: cover;
+    }
+
+    .popup-cuerpo {
+        padding: 1.5rem;
+    }
+
+    [data-contraste="alto"] .popup {
+        border: 2px solid var(--borde);
+        box-shadow: none;
+    }
+
+    /* Campo de contraseña con botón de «ver».
+
+       El botón flota dentro del campo, así que el campo le reserva sitio con
+       `padding-inline-end`: sin eso la contraseña larga pasa por debajo del
+       icono y no se lee justo cuando el usuario la ha destapado para leerla. */
+    .campo-clave {
+        position: relative;
+    }
+
+    .campo-clave .campo {
+        padding-inline-end: 3.25rem;
+    }
+
+    .campo-clave-ojo {
+        position: absolute;
+        inset-inline-end: 0.375rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 0;
+        border-radius: 0.75rem;
+        background-color: transparent;
+        color: var(--texto-suave);
+        cursor: pointer;
+        transition: color 0.2s, background-color 0.2s;
+    }
+
+    .campo-clave-ojo:hover {
+        color: var(--enlace);
+        background-color: color-mix(in srgb, var(--enlace) 8%, transparent);
+    }
+
+    .campo-clave-ojo:focus-visible {
+        outline: 2px solid var(--anillo);
+        outline-offset: 2px;
     }
 
     /* Tablas de datos premium */
@@ -707,4 +958,233 @@
         font-size: 0.875em;
         color: var(--texto-suave);
     }
+
+    /* --- Barras de indicadores (estadísticas) ---
+       El ancho tiene que salir del dato, y el dato es dinámico. La vía
+       natural —style="width: 63%"— está cerrada: el sitio público sirve
+       `style-src 'self'` sin 'unsafe-inline', y relajar la CSP entera para
+       dibujar una barra sería un pésimo negocio.
+
+       Así que el ancho se cuantiza en pasos de 5% y cada paso es una clase.
+       Pierde precisión —63% se dibuja como 65%— y da igual: la cifra exacta
+       está escrita al lado en texto, que es lo que leen tanto la persona
+       como el lector de pantalla. La barra solo da la proporción de un
+       vistazo; no es la fuente del dato. */
+    /* El riel iba al 14 % sobre tarjeta blanca: 1,17:1 de contraste, es decir
+       invisible, y el relleno quedaba a 2,8:1 del riel —por debajo del 3:1 que
+       exige la WCAG 1.4.11 para gráficos—, así que no se distinguía dónde
+       terminaba la parte llena. En una cifra de ocupación hospitalaria eso no
+       es un detalle estético: la barra deja de comunicar la proporción. */
+    .barra-fondo {
+        height: 0.5rem;
+        border-radius: 9999px;
+        background: color-mix(in srgb, var(--color-primario-500) 30%, transparent);
+        overflow: hidden;
+    }
+
+    /* Relleno en los azules medios del manual, no en los claros: sobre blanco
+       dan 6:1 y 11,8:1, y contra el riel nuevo, 4,4:1 y 8,4:1. */
+    .barra {
+        display: block;
+        height: 100%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, var(--color-primario-600), var(--color-primario-800));
+    }
+
+    [data-tema="oscuro"] .barra-fondo {
+        /* Sobre la tarjeta oscura el mismo 30 % del azul medio desaparecería;
+           el riel se arma con el azul claro, que sí levanta del fondo. */
+        background: color-mix(in srgb, var(--color-primario-400) 25%, transparent);
+    }
+
+    [data-tema="oscuro"] .barra {
+        background: linear-gradient(90deg, var(--color-primario-300), var(--color-primario-400));
+    }
+    .barra-0 { width: 0%; }
+    .barra-5 { width: 5%; }
+    .barra-10 { width: 10%; }
+    .barra-15 { width: 15%; }
+    .barra-20 { width: 20%; }
+    .barra-25 { width: 25%; }
+    .barra-30 { width: 30%; }
+    .barra-35 { width: 35%; }
+    .barra-40 { width: 40%; }
+    .barra-45 { width: 45%; }
+    .barra-50 { width: 50%; }
+    .barra-55 { width: 55%; }
+    .barra-60 { width: 60%; }
+    .barra-65 { width: 65%; }
+    .barra-70 { width: 70%; }
+    .barra-75 { width: 75%; }
+    .barra-80 { width: 80%; }
+    .barra-85 { width: 85%; }
+    .barra-90 { width: 90%; }
+    .barra-95 { width: 95%; }
+    .barra-100 { width: 100%; }
+
+
+    /* Aquí estuvo el tema «Stark Industries HUD» del panel: cian sobre negro,
+       `backdrop-filter: blur()` en cada tarjeta y `!important` en casi toda
+       regla. Retirado el 2026-09-15 —lo pidió el usuario, y con razón: el
+       texto cian sobre vidrio difuminado se lee borroso y no alcanza contraste
+       AA—. El panel vuelve a los tokens del sistema de diseño, que ya tienen
+       su variante oscura probada en ContrasteTest. */
+
+}
+
+/* =====================================================================
+   Pestañas y carrusel de «Campañas y comunicados» (portada)
+   =====================================================================
+
+   FUERA de @layer a propósito. El servidor entrega las dos audiencias
+   completas y marca cuál va visible; Alpine solo reescribe `data-activa` al
+   pulsar. Esconder es cosa del CSS y solo cuando hay JavaScript para volver a
+   mostrar —de ahí `[data-js]`, que sitio.js pone antes del primer pintado—:
+   sin JS quedan las dos listas una debajo de otra, contenido legible y
+   rastreable, no una caja muda.
+
+   Lo de la capa no es manía: la diapositiva lleva la utilidad `grid`, y en
+   Tailwind v4 @layer utilities gana a @layer components. Dentro de components
+   este `display: none` perdía y se veían las tres diapositivas a la vez. El
+   CSS sin capa va por encima de todas ellas.
+   ===================================================================== */
+[data-js] .comunicaciones-panel[data-activa="false"],
+[data-js] .comunicaciones-diapositiva[data-activa="false"] {
+    display: none;
+}
+
+/* Sin JS los rótulos de pestaña no cambiarían nada, así que no se anuncian
+   como botones: se ocultan y cada panel se lee con su propio título. */
+html:not([data-js]) .comunicaciones-pestanas,
+html:not([data-js]) .comunicaciones-navegacion {
+    display: none;
+}
+
+/* Con JS el rótulo lo da la pestaña; sin JS es el único título que distingue
+   una lista de la otra, así que ahí sí se ve. */
+[data-js] .comunicaciones-titulo-panel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+
+/* =====================================================================
+   Encuesta de la portada
+   =====================================================================
+
+   Mismo patrón que las pestañas de comunicaciones y por la misma razón de
+   capas: el servidor entrega el cuestionario y los resultados, marca cuál va
+   visible con `data-activa`, y solo se esconde algo cuando hay JavaScript
+   para volver a mostrarlo. Sin JS se ven todas las preguntas y el envío es el
+   de siempre; los botones de paso, que sin JS no harían nada, desaparecen.
+   ===================================================================== */
+[data-js] .encuesta-cuestionario[data-activa="false"],
+[data-js] .encuesta-resultados[data-activa="false"],
+[data-js] .encuesta-pregunta[data-activa="false"],
+[data-js] .encuesta-aviso[data-activa="false"] {
+    display: none;
+}
+
+html:not([data-js]) .encuesta-paso {
+    display: none;
+}
+
+/* Con JS el botón alterna sin recargar; sin JS manda el enlace. */
+[data-js] .encuesta-enlace-resultados {
+    display: none;
+}
+
+.encuesta-pregunta + .encuesta-pregunta {
+    margin-top: 1.5rem;
+}
+
+/* Escala 1-5: el `input` va oculto para lectores de pantalla (`sr-only`) y
+   quien pinta el peldaño es el `span`. Sin estas reglas la selección no se
+   veía: se marcaba el radio, sí, pero en pantalla no cambiaba NADA y el
+   ciudadano no sabía si había elegido bien. El foco también se dibuja, que se
+   navega con teclado. */
+.encuesta-opcion:checked + span {
+    background: var(--color-primario-700);
+    border-color: var(--color-primario-700);
+    color: #FFFFFF;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--color-primario-700) 70%, transparent);
+    transform: translateY(-1px);
+}
+
+.encuesta-opcion:focus-visible + span {
+    outline: 3px solid var(--color-primario-500);
+    outline-offset: 2px;
+}
+
+/* Marcada y con el puntero encima: manda la marca, no el hover. */
+.encuesta-opcion:checked + span:hover {
+    background: var(--color-primario-800);
+}
+
+/* Trampa para robots: fuera de la pantalla, nunca `display: none`, porque
+   algunos bots rellenan solo lo que el CSS esconde de esa forma. */
+.campo-trampa {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* =====================================================================
+   Menú principal con submenús
+   =====================================================================
+
+   Fuera de @layer, como el resto de lo que esconde y muestra: el submenú
+   flota (`absolute`) para que abrirlo no ensanche ni empuje la barra —el
+   mismo problema que ya se corrigió en el panel—. El marcador por omisión
+   de <summary> se quita: el triángulo lo dibuja el SVG, que gira al abrir.
+   ===================================================================== */
+.menu-desplegable summary::-webkit-details-marker,
+.menu-desplegable summary::marker {
+    display: none;
+    content: '';
+}
+
+/* En la fila con desplazamiento horizontal del móvil, un panel absoluto se
+   recortaría; ahí el submenú se abre en flujo, debajo de su raíz. */
+@media (max-width: 1023px) {
+    .menu-submenu {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+    }
+}
+
+
+/* =====================================================================
+   Carrusel del héroe de la portada
+   =====================================================================
+
+   Mismo patrón —y misma razón de capas— que las pestañas de campañas: el
+   servidor entrega TODAS las diapositivas y marca cuál va activa; heroes.js
+   solo reescribe `data-activa`. Esconder es cosa del CSS y únicamente cuando
+   hay JavaScript para volver a mostrar, de ahí `[data-js]`, que sitio.js pone
+   en `<html>` antes del primer pintado. Sin JS quedan las diapositivas una
+   debajo de otra: contenido legible y rastreable, no una caja muda.
+
+   Va FUERA de @layer porque la diapositiva lleva utilidades de Tailwind y en
+   la v4 @layer utilities gana a @layer components: dentro de components este
+   `display: none` perdería y se verían todas a la vez.
+   ===================================================================== */
+[data-js] .heroe-diapositiva[data-activa="false"] {
+    display: none;
+}
+
+/* Los mandos no hacen nada sin JavaScript, así que sin JavaScript no están:
+   un botón que no responde es peor que la ausencia del botón. */
+html:not([data-js]) .heroe-navegacion {
+    display: none;
 }

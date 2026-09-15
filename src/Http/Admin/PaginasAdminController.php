@@ -45,6 +45,9 @@ final readonly class PaginasAdminController
         return $this->pagina('Páginas', $this->vistas->render('admin/paginas/listado', [
             'paginas' => $this->paginas->listarParaPanel(),
             'mensaje' => $this->mensajeDeEstado($peticion),
+            'tokenCsrf' => $this->sesion->tokenCsrf(),
+            'puedeEditar' => $this->sesion->usuarioId() !== null
+                && $this->autorizacion->puede($this->sesion->usuarioId(), 'contenido.editar'),
         ]));
     }
 

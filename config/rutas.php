@@ -19,9 +19,11 @@ use App\Http\Admin\FaqController;
 use App\Http\Admin\IaController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
+use App\Http\Admin\HeroesController;
 use App\Http\Admin\MenusController;
 use App\Http\Admin\NoticiasController;
 use App\Http\Admin\ConvocatoriasAdminController;
+use App\Http\Admin\IndicadoresAdminController;
 use App\Http\Admin\EncuestasAdminController;
 use App\Http\Admin\EventosAdminController;
 use App\Http\Admin\ServidoresPublicosAdminController;
@@ -34,12 +36,20 @@ use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\PaginasAdminController;
 use App\Http\Admin\PanelController;
+use App\Http\Admin\AuditoriaAdminController;
+use App\Http\Admin\ConfiguracionController;
+use App\Http\Admin\PerfilController;
+use App\Http\Admin\RedireccionesController;
+use App\Http\Admin\RolesController;
+use App\Http\Admin\UsuariosController;
 use App\Http\Admin\PoliticasController;
+use App\Http\Admin\PopupsController;
 use App\Http\Admin\ProfesionalesController;
 use App\Http\Admin\SedesController;
 use App\Http\Admin\ServiciosController;
 use App\Http\Web\ArchivoController;
 use App\Http\Web\BuscarController;
+use App\Http\Web\CampanasPublicoController;
 use App\Http\Web\DirectorioPublicoController;
 use App\Http\Web\FaqPublicoController;
 use App\Http\Web\DocumentosPublicoController;
@@ -47,6 +57,7 @@ use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\ConvocatoriasPublicoController;
 use App\Http\Web\EncuestasPublicoController;
 use App\Http\Web\EventosPublicoController;
+use App\Http\Web\EstadisticasController;
 use App\Http\Web\GaleriaController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MapaSitioController;
@@ -95,6 +106,34 @@ $rutas->add('noticias.categoria', new Route(
 $rutas->add('noticias.detalle', new Route(
     path: '/noticias/{slug}',
     defaults: ['_controlador' => [NoticiasPublicoController::class, 'detalle']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+// --- Campañas y comunicados ---
+//
+// Las campañas se administraban desde el panel sin tener URL pública: la
+// portada las anunciaba y el botón no llevaba a ninguna parte. El listado va
+// partido por audiencia porque son dos públicos distintos, no un filtro:
+// `/campanas` es la cara ciudadana y `/trabajadores-y-contratistas` la del
+// talento humano (convocatorias, capacitación, bienestar), que es información
+// pública y no una intranet.
+
+$rutas->add('campanas', new Route(
+    path: '/campanas',
+    defaults: ['_controlador' => [CampanasPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+$rutas->add('trabajadores', new Route(
+    path: '/trabajadores-y-contratistas',
+    defaults: ['_controlador' => [CampanasPublicoController::class, 'trabajadores']],
+    methods: ['GET'],
+));
+
+$rutas->add('campanas.detalle', new Route(
+    path: '/campanas/{slug}',
+    defaults: ['_controlador' => [CampanasPublicoController::class, 'detalle']],
     requirements: ['slug' => '[a-z0-9\-]+'],
     methods: ['GET'],
 ));
@@ -464,6 +503,52 @@ $rutas->add('admin.avisos.guardar', new Route(
     methods: ['POST'],
 ));
 
+// --- Panel: ventanas emergentes ---
+
+$rutas->add('admin.popups', new Route(
+    path: '/admin/popups',
+    defaults: [
+        '_controlador' => [PopupsController::class, 'listado'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.ver',
+    ],
+    methods: ['GET'],
+));
+
+$rutas->add('admin.popups.crear', new Route(
+    path: '/admin/popups',
+    defaults: [
+        '_controlador' => [PopupsController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.popups.guardar', new Route(
+    path: '/admin/popups/{id}',
+    defaults: [
+        '_controlador' => [PopupsController::class, 'guardar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
+$rutas->add('admin.popups.eliminar', new Route(
+    path: '/admin/popups/{id}/eliminar',
+    defaults: [
+        '_controlador' => [PopupsController::class, 'eliminar'],
+        '_acceso' => 'privado',
+        // Borrar no es editar: pide el permiso de publicación, el mismo que
+        // hace falta para retirar contenido del sitio.
+        '_permiso' => 'contenido.publicar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
 // --- Panel: preguntas frecuentes ---
 
 $rutas->add('admin.faq', new Route(
@@ -730,6 +815,20 @@ $rutas->add('admin.medios.subir', new Route(
     methods: ['POST'],
 ));
 
+// Borrar de la biblioteca. El controlador se niega si la imagen está en uso:
+// ocho de las claves foráneas que apuntan a `archivos` son ON DELETE SET NULL
+// y dejarían en blanco contenido publicado sin decir nada.
+$rutas->add('admin.medios.eliminar', new Route(
+    path: '/admin/medios/{id}/eliminar',
+    defaults: [
+        '_controlador' => [MediosController::class, 'eliminar'],
+        '_acceso' => 'privado',
+        '_permiso' => 'contenido.editar',
+    ],
+    requirements: ['id' => '\d+'],
+    methods: ['POST'],
+));
+
 // --- Panel: menús ---
 
 $rutas->add('admin.menus', new Route(
@@ -809,6 +908,14 @@ $rutas->add('encuestas', new Route(
     methods: ['GET'],
 ));
 
+// Antes que `/encuestas/{slug}`: si no, «resultados» se leería como un slug.
+$rutas->add('encuestas.resultados', new Route(
+    path: '/encuestas/{slug}/resultados',
+    defaults: ['_controlador' => [EncuestasPublicoController::class, 'resultados']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
 // Antes que `/encuestas/{slug}`: si no, «gracias» se leería como un slug.
 $rutas->add('encuestas.gracias', new Route(
     path: '/encuestas/{slug}/gracias',
@@ -852,6 +959,14 @@ $rutas->add('admin.convocatorias.crear', new Route('/admin/convocatorias', $pane
 $rutas->add('admin.convocatorias.guardar', new Route('/admin/convocatorias/{id}', $panel(ConvocatoriasAdminController::class, 'guardar', 'convocatorias.editar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.convocatorias.eliminar', new Route('/admin/convocatorias/{id}/eliminar', $panel(ConvocatoriasAdminController::class, 'eliminar', 'convocatorias.editar'), ['id' => '\d+'], methods: ['POST']));
 
+// El héroe de la portada: varias diapositivas con imagen, orden y vigencia.
+// Va con los permisos de contenido y no con uno propio: es contenido de la
+// portada, y quien edita campañas y noticias es quien lo edita.
+$rutas->add('admin.heroes', new Route('/admin/heroes', $panel(HeroesController::class, 'listado', 'contenido.ver'), methods: ['GET']));
+$rutas->add('admin.heroes.crear', new Route('/admin/heroes', $panel(HeroesController::class, 'guardar', 'contenido.editar'), methods: ['POST']));
+$rutas->add('admin.heroes.guardar', new Route('/admin/heroes/{id}', $panel(HeroesController::class, 'guardar', 'contenido.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.heroes.eliminar', new Route('/admin/heroes/{id}/eliminar', $panel(HeroesController::class, 'eliminar', 'contenido.editar'), ['id' => '\d+'], methods: ['POST']));
+
 $rutas->add('admin.eventos', new Route('/admin/eventos', $panel(EventosAdminController::class, 'listado', 'eventos.ver'), methods: ['GET']));
 $rutas->add('admin.eventos.crear', new Route('/admin/eventos', $panel(EventosAdminController::class, 'guardar', 'eventos.editar'), methods: ['POST']));
 $rutas->add('admin.eventos.guardar', new Route('/admin/eventos/{id}', $panel(EventosAdminController::class, 'guardar', 'eventos.editar'), ['id' => '\d+'], methods: ['POST']));
@@ -865,10 +980,73 @@ $rutas->add('admin.encuestas.pregunta.crear', new Route('/admin/encuestas/{id}/p
 $rutas->add('admin.encuestas.detalle', new Route('/admin/encuestas/{id}', $panel(EncuestasAdminController::class, 'detalle', 'encuestas.ver'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.encuestas.guardar', new Route('/admin/encuestas/{id}', $panel(EncuestasAdminController::class, 'guardar', 'encuestas.editar'), ['id' => '\d+'], methods: ['POST']));
 
+$rutas->add('admin.indicadores', new Route('/admin/indicadores', $panel(IndicadoresAdminController::class, 'listado', 'indicadores.ver'), methods: ['GET']));
+$rutas->add('admin.indicadores.crear', new Route('/admin/indicadores', $panel(IndicadoresAdminController::class, 'guardar', 'indicadores.editar'), methods: ['POST']));
+$rutas->add('admin.indicadores.guardar', new Route('/admin/indicadores/{id}', $panel(IndicadoresAdminController::class, 'guardar', 'indicadores.editar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.indicadores.eliminar', new Route('/admin/indicadores/{id}/eliminar', $panel(IndicadoresAdminController::class, 'eliminar', 'indicadores.editar'), ['id' => '\d+'], methods: ['POST']));
+
 $rutas->add('admin.servidores', new Route('/admin/servidores-publicos', $panel(ServidoresPublicosAdminController::class, 'listado', 'directorio.ver'), methods: ['GET']));
 $rutas->add('admin.servidores.crear', new Route('/admin/servidores-publicos', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), methods: ['POST']));
 $rutas->add('admin.servidores.guardar', new Route('/admin/servidores-publicos/{id}', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.servidores.eliminar', new Route('/admin/servidores-publicos/{id}/eliminar', $panel(ServidoresPublicosAdminController::class, 'eliminar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: sistema (cuentas, permisos, ajustes y auditoría) ---
+// Lo que hasta la Fase 9 solo existía por consola o en la base de datos. Los
+// permisos son propios y separados: quien administra usuarios no tiene por qué
+// poder reescribir los datos de contacto de la entidad, ni al revés.
+
+$sistema = static fn (string $controlador, string $metodo, string $permiso): array => [
+    '_controlador' => [$controlador, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => $permiso,
+];
+
+$rutas->add('admin.usuarios', new Route('/admin/usuarios', $sistema(UsuariosController::class, 'listado', 'sistema.usuarios'), methods: ['GET']));
+$rutas->add('admin.usuarios.crear', new Route('/admin/usuarios', $sistema(UsuariosController::class, 'crear', 'sistema.usuarios'), methods: ['POST']));
+// Antes que `/admin/usuarios/{id}`: si no, «restablecer» nunca se alcanzaría.
+$rutas->add('admin.usuarios.restablecer', new Route('/admin/usuarios/{id}/restablecer', $sistema(UsuariosController::class, 'restablecer', 'sistema.usuarios'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.usuarios.desbloquear', new Route('/admin/usuarios/{id}/desbloquear', $sistema(UsuariosController::class, 'desbloquear', 'sistema.usuarios'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.usuarios.eliminar', new Route('/admin/usuarios/{id}/eliminar', $sistema(UsuariosController::class, 'eliminar', 'sistema.usuarios'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.usuarios.restaurar', new Route('/admin/usuarios/{id}/restaurar', $sistema(UsuariosController::class, 'restaurar', 'sistema.usuarios'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.usuarios.actualizar', new Route('/admin/usuarios/{id}', $sistema(UsuariosController::class, 'actualizar', 'sistema.usuarios'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.roles', new Route('/admin/roles', $sistema(RolesController::class, 'listado', 'sistema.roles'), methods: ['GET']));
+$rutas->add('admin.roles.crear', new Route('/admin/roles', $sistema(RolesController::class, 'crear', 'sistema.roles'), methods: ['POST']));
+$rutas->add('admin.roles.eliminar', new Route('/admin/roles/{id}/eliminar', $sistema(RolesController::class, 'eliminar', 'sistema.roles'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.roles.actualizar', new Route('/admin/roles/{id}', $sistema(RolesController::class, 'actualizar', 'sistema.roles'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.configuracion', new Route('/admin/configuracion', $sistema(ConfiguracionController::class, 'formulario', 'sistema.configuracion'), methods: ['GET']));
+$rutas->add('admin.configuracion.guardar', new Route('/admin/configuracion', $sistema(ConfiguracionController::class, 'guardar', 'sistema.configuracion'), methods: ['POST']));
+
+$rutas->add('admin.auditoria', new Route('/admin/auditoria', $sistema(AuditoriaAdminController::class, 'listado', 'sistema.auditoria'), methods: ['GET']));
+
+$rutas->add('admin.redirecciones', new Route('/admin/redirecciones', $sistema(RedireccionesController::class, 'listado', 'sistema.redirecciones'), methods: ['GET']));
+$rutas->add('admin.redirecciones.crear', new Route('/admin/redirecciones', $sistema(RedireccionesController::class, 'guardar', 'sistema.redirecciones'), methods: ['POST']));
+$rutas->add('admin.redirecciones.eliminar', new Route('/admin/redirecciones/{id}/eliminar', $sistema(RedireccionesController::class, 'eliminar', 'sistema.redirecciones'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.redirecciones.guardar', new Route('/admin/redirecciones/{id}', $sistema(RedireccionesController::class, 'guardar', 'sistema.redirecciones'), ['id' => '\d+'], methods: ['POST']));
+
+// La cuenta propia no lleva permiso: todo el que entra al panel tiene derecho a
+// ver sus datos y a cambiar su contraseña, incluso con el rol más limitado.
+// Condicionarlo a un permiso dejaría cuentas que solo un administrador podría
+// rescatar.
+$propia = static fn (string $metodo): array => [
+    '_controlador' => [PerfilController::class, $metodo],
+    '_acceso' => 'privado',
+];
+
+$rutas->add('admin.perfil', new Route('/admin/perfil', $propia('index'), methods: ['GET']));
+$rutas->add('admin.perfil.guardar', new Route('/admin/perfil', $propia('guardar'), methods: ['POST']));
+$rutas->add('admin.perfil.password', new Route('/admin/perfil/password', $propia('formularioPassword'), methods: ['GET']));
+$rutas->add('admin.perfil.password.guardar', new Route('/admin/perfil/password', $propia('cambiarPassword'), methods: ['POST']));
+
+// --- Información estadística ---
+// Ruta fija y no página: el contenido son cifras de la tabla `indicadores`,
+// que el hospital carga desde el panel.
+$rutas->add('estadisticas', new Route(
+    path: '/estadisticas',
+    defaults: ['_controlador' => [EstadisticasController::class, 'mostrar']],
+    methods: ['GET'],
+));
 
 $rutas->add('galeria', new Route(
     path: '/galeria',

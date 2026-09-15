@@ -30,6 +30,12 @@
         if (prefs.movimiento) { raiz.dataset.movimiento = 'reducido'; } else { delete raiz.dataset.movimiento; }
     }
 
+    // Marca de «hay JavaScript», puesta antes del primer pintado. El CSS la
+    // usa para esconder lo que solo tiene sentido escondido si algo puede
+    // volver a mostrarlo (las pestañas y el carrusel de la portada). Sin JS
+    // no se esconde nada y el contenido queda completo.
+    raiz.dataset.js = '1';
+
     var prefs = leer();
     aplicar(prefs);
 
@@ -55,6 +61,9 @@
         movimiento: function () {
             prefs.movimiento = !prefs.movimiento;
             if (!prefs.movimiento) { delete prefs.movimiento; }
+            // Los carruseles que rotan solos escuchan esto para parar (o
+            // reanudar) en el acto, sin obligar a recargar la página.
+            window.dispatchEvent(new CustomEvent('cambio-de-movimiento'));
         },
     };
 

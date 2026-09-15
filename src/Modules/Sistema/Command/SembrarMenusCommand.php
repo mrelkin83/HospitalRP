@@ -38,6 +38,27 @@ final class SembrarMenusCommand extends Command
      *
      * @var array<string, array{string, string, int, list<array{string, string, int, list<array{string, string, int}>}>}>
      */
+    /**
+     * Accesos rápidos de la portada: las ocho tarjetas que vivían escritas a
+     * mano en `resources/views/publico/inicio.php`. Se siembran tal cual
+     * estaban —mismo texto, mismo orden, mismo icono— para que el cambio no se
+     * note en el sitio y sí en el panel.
+     *
+     * [etiqueta, url, frase, clave de icono]
+     *
+     * @var list<array{string, string, string, string}>
+     */
+    private const array ACCESOS = [
+        ['Citas', '/citas', 'Solicita o consulta tu cita médica', 'calendario'],
+        ['Urgencias', '/urgencias', 'Atención inmediata 24/7', 'cruz'],
+        ['Especialidades', '/especialidades', 'Conoce nuestras especialidades', 'estetoscopio'],
+        ['Directorio médico', '/directorio', 'Profesionales a tu disposición', 'persona'],
+        ['Trámites', '/atencion-ciudadania/tramites', 'Información y requisitos', 'documento'],
+        ['Consulta tu trámite', '/atencion-ciudadania/pqrsdf/consultar', 'Sigue tu radicado en línea', 'lupa'],
+        ['PQRSDF', '/atencion-ciudadania/pqrsdf', 'Peticiones, quejas, reclamos y más', 'mensaje'],
+        ['Transparencia', '/transparencia', 'Información pública y rendición de cuentas', 'escudo'],
+    ];
+
     private const array MENUS = [
         'principal' => ['Menú principal', 'principal', 1, [
             ['El Hospital', '/el-hospital', 0, [
@@ -91,6 +112,10 @@ final class SembrarMenusCommand extends Command
                 ['Contratación', '/transparencia/contratacion', 0],
                 ['Planeación, presupuesto e informes', '/transparencia/planeacion-presupuesto-informes', 0],
                 ['Datos abiertos', '/transparencia/datos-abiertos', 0],
+                // Va bajo Transparencia y no en la barra superior: la barra ya
+                // se desbordaba en móvil, y además este es su sitio natural
+                // —son cifras de la entidad, no un servicio al ciudadano.
+                ['Información estadística', '/estadisticas', 0],
                 ['Convocatorias', '/convocatorias', 0],
             ]],
             ['Participa', '/participa', 1, [
@@ -113,6 +138,15 @@ final class SembrarMenusCommand extends Command
                 ['Galería de imágenes', '/galeria', 0],
                 ['Calendario de eventos', '/eventos', 0],
             ]],
+            // Sin hijos a propósito: la plantilla pinta como enlace plano el
+            // ítem que no tiene submenú, así que «Contacto» sale como un botón
+            // más de la barra y no como un desplegable de una sola opción.
+            //
+            // Repite destino con «Contáctenos», que cuelga de Atención a la
+            // Ciudadanía. No es un descuido: allí está por estructura —es un
+            // canal de atención— y aquí por alcance, a un clic desde
+            // cualquier página.
+            ['Contacto', '/contacto', 0, []],
         ]],
         'superior' => ['Barra superior', 'superior', 1, [
             ['Transparencia', '/transparencia', 1, []],
@@ -139,6 +173,9 @@ final class SembrarMenusCommand extends Command
         ]],
         'pie-institucional' => ['Pie: gestión institucional', 'pie_3', 0, [
             ['Talento humano', '/talento-humano', 0, []],
+            // Sin login: la página agrupa los trámites del personal, que se
+            // radican por el canal público como cualquier otra solicitud.
+            ['Trabajadores y contratistas', '/trabajadores-y-contratistas', 0, []],
             ['Convocatorias y empleo', '/convocatorias', 0, []],
             ['MECI', '/gestion/meci', 0, []],
             ['MIPG', '/gestion/mipg', 0, []],
@@ -198,6 +235,8 @@ final class SembrarMenusCommand extends Command
                 $renombrados += $this->sincronizarEtiquetas($etiquetasDelPlano);
             }
         }
+
+        $creados += $this->sembrarAccesos();
 
         if ($renombrados > 0) {
             $io->writeln(sprintf('<info>%d etiquetas actualizadas al plano.</info>', $renombrados));
@@ -320,6 +359,36 @@ final class SembrarMenusCommand extends Command
      *
      * @param-out int $creados
      */
+    /**
+     * Las ocho tarjetas de la portada, en su propio menú.
+     *
+     * Idempotente por URL, como el resto: una tarjeta que el hospital haya
+     * reescrito no se toca. La frase y el icono solo se ponen al crearla.
+     */
+    private function sembrarAccesos(): int
+    {
+        $creados = 0;
+        $menuId = $this->asegurarMenu('accesos-portada', 'Accesos rápidos de la portada', 'accesos', 0, $creados);
+
+        foreach (self::ACCESOS as $orden => [$etiqueta, $url, $frase, $icono]) {
+            $existia = false !== $this->conexion->fetchOne(
+                'SELECT id FROM menu_items WHERE menu_id = ? AND url = ?',
+                [$menuId, $url],
+            );
+
+            $id = $this->asegurarItem($menuId, null, $etiqueta, $url, $orden, 0, $creados);
+
+            if (!$existia) {
+                $this->conexion->update('menu_items', [
+                    'descripcion' => $frase,
+                    'icono' => $icono,
+                ], ['id' => $id]);
+            }
+        }
+
+        return $creados;
+    }
+
     private function asegurarItem(
         int $menuId,
         ?int $padreId,

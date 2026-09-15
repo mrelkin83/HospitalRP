@@ -18,6 +18,7 @@ final readonly class Campana
         public string $contenido,
         public ?int $imagenId,
         public ?string $poblacionObjetivo,
+        public Audiencia $audiencia,
         public ?string $inicio,
         public ?string $fin,
         public EstadoAprobacion $estado,
@@ -39,6 +40,7 @@ final readonly class Campana
             contenido: (string) ($fila['contenido'] ?? ''),
             imagenId: isset($fila['imagen_id']) ? (int) $fila['imagen_id'] : null,
             poblacionObjetivo: isset($fila['poblacion_objetivo']) ? (string) $fila['poblacion_objetivo'] : null,
+            audiencia: Audiencia::desde(isset($fila['audiencia']) ? (string) $fila['audiencia'] : null),
             inicio: isset($fila['inicio']) ? (string) $fila['inicio'] : null,
             fin: isset($fila['fin']) ? (string) $fila['fin'] : null,
             estado: EstadoAprobacion::from((string) $fila['estado_aprobacion']),
@@ -58,6 +60,7 @@ final readonly class Campana
             'contenido' => $this->contenido,
             'imagen_id' => $this->imagenId,
             'poblacion_objetivo' => $this->poblacionObjetivo,
+            'audiencia' => $this->audiencia->value,
             'inicio' => $this->inicio,
             'fin' => $this->fin,
         ];

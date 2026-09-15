@@ -18,6 +18,11 @@ use App\Modules\Busqueda\Command\IndexarCommand;
 use App\Modules\Busqueda\Repository\IndiceBusquedaRepository;
 use App\Modules\Busqueda\Service\IndexadorService;
 use App\Modules\Contenido\Command\ContenidoProgramadoCommand;
+use App\Core\Storage\AlmacenArchivos;
+use App\Modules\Contenido\Command\SembrarCampanasCommand;
+use App\Modules\Contenido\Command\SembrarImagenesCommand;
+use App\Modules\Contenido\Service\GeneradorPortadas;
+use App\Modules\Indicadores\Command\SembrarIndicadoresCommand;
 use App\Modules\Contenido\Command\SembrarPaginasCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Cumplimiento\Command\SembrarCumplimientoCommand;
@@ -28,8 +33,13 @@ use App\Modules\Tramites\Command\SembrarFestivosCommand;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Command\SembrarTramitesCommand;
 use App\Modules\Transparencia\Command\SembrarTransparenciaCommand;
+use App\Core\Auth\PoliticaPassword;
 use App\Modules\Sistema\Command\CrearAdminCommand;
 use App\Modules\Sistema\Command\SanearVistasCommand;
+use App\Core\Config\ConfigAplicacion;
+use App\Modules\Sistema\Command\SembrarDemoCommand;
+use App\Modules\Sistema\Command\SembrarRolesCommand;
+use App\Modules\Sistema\Service\CatalogoPermisos;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use App\Modules\Sistema\Command\SembrarMenusCommand;
 use App\Modules\Sistema\Command\SembrarRedireccionesCommand;
@@ -43,10 +53,20 @@ $auditoria = new AuditoriaService($conexion);
 $indexador = new IndexadorService($conexion, new IndiceBusquedaRepository($conexion));
 
 $aplicacion = new Application('E.S.E. Hospital Rosario Pumarejo de López — consola', 'fase-0');
-$aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria));
+$aplicacion->add(new CrearAdminCommand($conexion, new HasherPassword(), $auditoria, new PoliticaPassword()));
 $aplicacion->add(new SembrarConfiguracionCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarMenusCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarPaginasCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarCampanasCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarImagenesCommand(
+    $conexion,
+    $auditoria,
+    new AlmacenArchivos($conexion, dirname(__DIR__) . '/storage/uploads'),
+    new GeneradorPortadas(),
+));
+$aplicacion->add(new SembrarIndicadoresCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarDemoCommand($conexion, $auditoria, ConfigAplicacion::desde($env)));
+$aplicacion->add(new SembrarRolesCommand($conexion, $auditoria, new CatalogoPermisos()));
 $aplicacion->add(new SembrarDirectorioCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarTransparenciaCommand($conexion, $auditoria));
 $aplicacion->add(new SembrarFestivosCommand($conexion));

@@ -8,6 +8,7 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
+use App\Core\Auth\AutorizacionService;
 use App\Core\Auth\Sesion;
 use App\Core\Support\Vistas;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +33,7 @@ final readonly class PantallaAdmin
         private Sesion $sesion,
         private Vistas $vistas,
         private AuditoriaService $auditoria,
+        private AutorizacionService $autorizacion,
     ) {
     }
 
@@ -40,11 +42,18 @@ final readonly class PantallaAdmin
     {
         $this->sesion->iniciar();
 
+        $usuarioId = $this->sesion->usuarioId();
+
         $html = $this->vistas->render('admin/base', [
             'titulo' => $titulo,
             'usuarioNombre' => $this->sesion->usuarioNombre() ?? 'Usuario',
             'tokenCsrf' => $this->sesion->tokenCsrf(),
             'contenido' => $contenido,
+            // El menú se dibuja con lo que este usuario puede abrir. Enseñar
+            // secciones que van a responder 403 no es informativo: es hacerle
+            // perder el tiempo y sembrar la duda de si el panel está roto.
+            'puede' => fn (string $permiso): bool => $usuarioId !== null
+                && $this->autorizacion->puede($usuarioId, $permiso),
         ]);
 
         $respuesta = new Response($html, $estado, ['Content-Type' => 'text/html; charset=utf-8']);
@@ -87,6 +96,24 @@ final readonly class PantallaAdmin
         $this->sesion->iniciar();
 
         return $this->sesion->usuarioId();
+    }
+
+    /**
+     * Dato de un solo uso entre dos peticiones (patrón flash).
+     *
+     * @see Sesion::guardarFlash() para el porqué de no usar la URL
+     */
+    public function guardarEnLaSesion(string $clave, mixed $valor): void
+    {
+        $this->sesion->iniciar();
+        $this->sesion->guardarFlash($clave, $valor);
+    }
+
+    public function sacarDeLaSesion(string $clave): mixed
+    {
+        $this->sesion->iniciar();
+
+        return $this->sesion->sacarFlash($clave);
     }
 
     /** Toda acción con efecto institucional deja rastro (CLAUDE.md §2.3). */

@@ -9,8 +9,10 @@ use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
+use App\Core\Support\Enlaces;
 use App\Core\Support\Vistas;
 use App\Modules\Sistema\Repository\MenuRepository;
+use App\Modules\Sistema\Service\CatalogoIconos;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +37,8 @@ final readonly class MenusController
 
         foreach ($this->menus->menus() as $menu) {
             $menu['items'] = $this->menus->itemsDeMenu($menu['id']);
+            // Para el selector «depende de» de cada fila.
+            $menu['raices'] = $this->menus->raicesDeMenu($menu['id']);
             $menus[] = $menu;
         }
 
@@ -42,6 +46,9 @@ final readonly class MenusController
             'menus' => $menus,
             'mensaje' => $peticion->query->has('guardado') ? 'Cambios guardados.' : null,
             'tokenCsrf' => $this->sesion->tokenCsrf(),
+            // Los accesos rápidos de la portada se editan aquí: llevan frase e
+            // icono, y el icono se elige de una lista, no se pega.
+            'iconos' => (new CatalogoIconos())->etiquetas(),
         ]));
     }
 
@@ -56,7 +63,7 @@ final readonly class MenusController
         $etiqueta = trim($peticion->request->getString('etiqueta'));
         $url = trim($peticion->request->getString('url'));
 
-        if ($item === null || $etiqueta === '' || $url === '') {
+        if ($item === null || $etiqueta === '' || !Enlaces::aceptable($url)) {
             return new RedirectResponse('/admin/menus', Response::HTTP_SEE_OTHER);
         }
 
@@ -66,6 +73,10 @@ final readonly class MenusController
             $url,
             $peticion->request->getInt('orden'),
             $peticion->request->getBoolean('visible'),
+            // 0 = enlace de primer nivel. El repositorio rechaza los ciclos.
+            $peticion->request->getInt('padre_id') ?: null,
+            trim($peticion->request->getString('descripcion')),
+            trim($peticion->request->getString('icono')),
         );
 
         $this->auditar($peticion, AccionAuditoria::Actualizacion, $id, sprintf(
@@ -88,7 +99,7 @@ final readonly class MenusController
         $etiqueta = trim($peticion->request->getString('etiqueta'));
         $url = trim($peticion->request->getString('url'));
 
-        if ($etiqueta !== '' && $url !== '') {
+        if ($etiqueta !== '' && Enlaces::aceptable($url)) {
             $id = $this->menus->crearItem($menuId, $etiqueta, $url, $peticion->request->getInt('orden'));
             $this->auditar($peticion, AccionAuditoria::Creacion, $id, sprintf(
                 'Añadió el enlace de menú «%s» (%s)',

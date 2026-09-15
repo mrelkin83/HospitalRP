@@ -333,6 +333,31 @@ CREATE TABLE avisos (
   KEY idx_avisos_activo (activo, desde, hasta)
 ) ENGINE=InnoDB;
 
+-- Ventanas emergentes. Separadas de `avisos` porque un aviso es una banda
+-- dentro de la página y un popup se planta encima: solo el popup necesita
+-- saber cada cuánto reaparece (`frecuencia`) y en qué páginas (`ubicacion`).
+CREATE TABLE popups (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  titulo          VARCHAR(200) NOT NULL,
+  mensaje         VARCHAR(1000) NOT NULL,
+  imagen_id       BIGINT UNSIGNED NULL,
+  url             VARCHAR(500) NULL,
+  texto_boton     VARCHAR(80)  NULL,
+  ubicacion       ENUM('todas','portada') NOT NULL DEFAULT 'portada',
+  frecuencia      ENUM('siempre','sesion','diaria') NOT NULL DEFAULT 'sesion',
+  desde           DATETIME     NULL,
+  hasta           DATETIME     NULL,
+  activo          TINYINT(1)   NOT NULL DEFAULT 0,
+  prioridad       SMALLINT     NOT NULL DEFAULT 0,
+  creado_por      BIGINT UNSIGNED NULL,
+  creado_en       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_popups_vigencia (activo, desde, hasta),
+  CONSTRAINT fk_popups_imagen FOREIGN KEY (imagen_id) REFERENCES archivos (id) ON DELETE SET NULL,
+  CONSTRAINT fk_popups_creador FOREIGN KEY (creado_por) REFERENCES usuarios (id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
 CREATE TABLE faq (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   pregunta        VARCHAR(500) NOT NULL,

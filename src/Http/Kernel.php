@@ -137,6 +137,16 @@ final readonly class Kernel
             return new RedirectResponse('/admin/entrar', Response::HTTP_SEE_OTHER);
         }
 
+        // Contraseña provisional: el panel no deja hacer nada más que
+        // cambiarla. La clave la conoce quien creó o restableció la cuenta, así
+        // que mientras siga vigente el funcionario no es el único que puede
+        // entrar como él, y eso invalida la trazabilidad de todo lo que firme.
+        $rechazoPassword = $this->exigirCambioDePassword($sesion, $parametros);
+
+        if ($rechazoPassword !== null) {
+            return $rechazoPassword;
+        }
+
         $permiso = $parametros['_permiso'] ?? null;
 
         if (is_string($permiso) && $permiso !== '') {
@@ -153,6 +163,36 @@ final readonly class Kernel
         }
 
         return null;
+    }
+
+    /**
+     * Encierra al usuario en la pantalla de cambio de contraseña mientras la
+     * suya sea provisional. Devuelve null cuando puede seguir.
+     *
+     * Se exceptúan la propia pantalla de cambio y el cierre de sesión: sin lo
+     * segundo, una cuenta con clave provisional no podría ni salir del panel.
+     *
+     * @param array<string, mixed> $parametros
+     */
+    private function exigirCambioDePassword(Sesion $sesion, array $parametros): ?Response
+    {
+        if (!$sesion->debeCambiarPassword()) {
+            return null;
+        }
+
+        $ruta = $parametros['_route'] ?? null;
+
+        $permitidas = [
+            'admin.perfil.password',
+            'admin.perfil.password.guardar',
+            'admin.salir',
+        ];
+
+        if (is_string($ruta) && in_array($ruta, $permitidas, true)) {
+            return null;
+        }
+
+        return new RedirectResponse('/admin/perfil/password', Response::HTTP_SEE_OTHER);
     }
 
     private function invocar(mixed $referencia, Request $peticion): Response

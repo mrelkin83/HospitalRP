@@ -63,6 +63,15 @@ final class ContrasteTest extends TestCase
         // leía. Ambos extremos del gradiente deben cumplir por separado.
         yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#0B1220'];
         yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#0B1220'];
+
+        // --- Tarjetas de acceso de la portada (azul celeste) ---
+        // El celeste sale del cian al 15 % sobre la superficie clara: es
+        // el mismo tono de la mancha del héroe. Al ser fondo de TEXTO y no
+        // adorno, cada par tiene que cumplir por sí mismo.
+        yield 'titular sobre celeste' => ['#0A192F', '#D0F6FB'];
+        yield 'texto suave sobre celeste' => ['#4B5563', '#D0F6FB'];
+        yield 'oscuro: titular sobre celeste' => ['#E7ECF5', '#113143'];
+        yield 'oscuro: texto suave sobre celeste' => ['#A9B4C6', '#113143'];
     }
 
     #[DataProvider('paresDeTextoYFondo')]

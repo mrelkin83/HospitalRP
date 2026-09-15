@@ -57,6 +57,14 @@
        Sobre fondo claro es decorativo: resplandores, bordes, degradados. */
     --color-marca-cian: #00F2FE;
 
+    /* Azul celeste: el cian de arriba al 15 % sobre la superficie clara, que
+       es exactamente el tono de la mancha difuminada del héroe. Se fija como
+       color sólido en vez de dejarlo a una opacidad porque las tarjetas
+       llevan sombra interna, y sobre un fondo translúcido esa sombra deja ver
+       lo que hay debajo. Contraste verificado en ContrasteTest. */
+    --color-celeste: #D0F6FB;
+    --color-celeste-oscuro: #113143;
+
     /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
     --color-marca-verde: #2F9A72;
 
@@ -345,6 +353,56 @@
         background-image: none;
         -webkit-text-fill-color: currentColor;
         color: var(--titular);
+    }
+
+    /* Tarjeta de acceso rápido de la portada.
+       Dos sombras a la vez, y cada una hace un trabajo distinto: la INTERNA
+       hunde la superficie para que la tarjeta deje de leerse como un plano y
+       la EXTERNA la separa del fondo. Con una sola, o flota sin volumen o se
+       hunde sin despegar.
+
+       El azul celeste es el mismo de la mancha del héroe. No se usa opacidad
+       porque la sombra interna dejaría ver el fondo a través. */
+    .tarjeta-acceso {
+        background-color: var(--color-celeste);
+        border: 1px solid color-mix(in srgb, var(--color-marca-cian) 35%, transparent);
+        box-shadow:
+            inset 0 2px 6px 0 color-mix(in srgb, var(--color-primario-900) 14%, transparent),
+            inset 0 -1px 0 0 rgb(255 255 255 / 0.55),
+            0 6px 16px -4px color-mix(in srgb, var(--color-primario-900) 22%, transparent);
+    }
+
+    /* Al pasar por encima la tarjeta sube y la sombra interna cede: el gesto
+       es «se levanta», no «cambia de color». */
+    .tarjeta-acceso:hover {
+        box-shadow:
+            inset 0 1px 3px 0 color-mix(in srgb, var(--color-primario-900) 8%, transparent),
+            inset 0 -1px 0 0 rgb(255 255 255 / 0.55),
+            0 12px 24px -6px color-mix(in srgb, var(--color-primario-900) 28%, transparent);
+    }
+
+    [data-tema="oscuro"] .tarjeta-acceso {
+        background-color: var(--color-celeste-oscuro);
+        border-color: color-mix(in srgb, var(--color-marca-cian) 22%, transparent);
+        box-shadow:
+            inset 0 2px 6px 0 rgb(0 0 0 / 0.45),
+            inset 0 -1px 0 0 color-mix(in srgb, var(--color-marca-cian) 12%, transparent),
+            0 6px 16px -4px rgb(0 0 0 / 0.5);
+    }
+
+    [data-tema="oscuro"] .tarjeta-acceso:hover {
+        box-shadow:
+            inset 0 1px 3px 0 rgb(0 0 0 / 0.3),
+            inset 0 -1px 0 0 color-mix(in srgb, var(--color-marca-cian) 12%, transparent),
+            0 12px 24px -6px rgb(0 0 0 / 0.6);
+    }
+
+    /* En alto contraste manda el borde, no el relieve: las sombras suaves no
+       se distinguen y el tinte de fondo resta contraste al texto. */
+    [data-contraste="alto"] .tarjeta-acceso {
+        background-color: var(--fondo);
+        border: 2px solid var(--borde);
+        box-shadow: none;
     }
 
     /* Resplandor cian. Es sombra, nunca texto ni borde con significado. */

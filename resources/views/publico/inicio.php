@@ -23,10 +23,13 @@
 use App\Core\Support\Fechas;
 
 // [título, descripción, ruta, trazo SVG, clases del azulejo del icono]
+// El azulejo neutro va en BLANCO y no en `primario-50`: sobre el celeste
+// de la tarjeta (#D0F6FB) ese tono casi desaparece, y el blanco además
+// refuerza el relieve que dan las dos sombras.
 $accesos = [
     ['Citas', 'Solicita o consulta tu cita médica', '/citas',
         'M8 2v3M16 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z',
-        'bg-primario-50 text-primario-700 dark:bg-primario-800 dark:text-primario-100'],
+        'bg-white text-primario-700 dark:bg-primario-900 dark:text-primario-100'],
     ['Urgencias', 'Atención inmediata 24/7', '/urgencias',
         'M12 4v16M4 12h16',
         'bg-error-100 text-error-600 dark:bg-error-900 dark:text-white'],
@@ -35,16 +38,16 @@ $accesos = [
         'bg-exito-100 text-exito-600 dark:bg-exito-900 dark:text-white'],
     ['Directorio médico', 'Profesionales a tu disposición', '/directorio',
         'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM5 20.5a7 7 0 0 1 14 0',
-        'bg-primario-50 text-primario-700 dark:bg-primario-800 dark:text-primario-100'],
+        'bg-white text-primario-700 dark:bg-primario-900 dark:text-primario-100'],
     ['Trámites', 'Información y requisitos', '/atencion-ciudadania/tramites',
         'M7 3.5h7L18.5 8v12a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1ZM14 3.5V8h4.5M8.5 12.5h7M8.5 16h7',
         'bg-aviso-100 text-aviso-600 dark:bg-aviso-900 dark:text-white'],
     ['Consulta tu trámite', 'Sigue tu radicado en línea', '/atencion-ciudadania/pqrsdf/consultar',
         'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13ZM15.5 15.5 21 21',
-        'bg-primario-50 text-primario-700 dark:bg-primario-800 dark:text-primario-100'],
+        'bg-white text-primario-700 dark:bg-primario-900 dark:text-primario-100'],
     ['PQRSDF', 'Peticiones, quejas, reclamos y más', '/atencion-ciudadania/pqrsdf',
         'M4 5.5h16v11H9l-5 4v-15ZM8 9.5h8M8 12.5h5',
-        'bg-primario-50 text-primario-700 dark:bg-primario-800 dark:text-primario-100'],
+        'bg-white text-primario-700 dark:bg-primario-900 dark:text-primario-100'],
     ['Transparencia', 'Información pública y rendición de cuentas', '/transparencia',
         'M12 3 5 6v5c0 4.5 3 8.5 7 9.5 4-1 7-5 7-9.5V6l-7-3ZM9 12l2 2 4-4',
         'bg-exito-100 text-exito-600 dark:bg-exito-900 dark:text-white'],
@@ -121,7 +124,7 @@ $accesos = [
     <ul class="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <?php foreach ($accesos as [$titulo, $descripcion, $url, $trazo, $azulejo]) { ?>
             <li>
-                <a class="panel-vidrio group flex h-full flex-col gap-3 rounded-2xl p-5 no-underline transition-transform hover:-translate-y-1" href="<?= $e($url) ?>">
+                <a class="tarjeta-acceso group flex h-full flex-col gap-3 rounded-2xl p-5 no-underline transition-all hover:-translate-y-1" href="<?= $e($url) ?>">
                     <span class="grid h-12 w-12 place-items-center rounded-2xl <?= $e($azulejo) ?>" aria-hidden="true">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

@@ -64,14 +64,7 @@ final class ContrasteTest extends TestCase
         yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#0B1220'];
         yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#0B1220'];
 
-        // --- Tarjetas de acceso de la portada (azul celeste) ---
-        // El celeste sale del cian al 15 % sobre la superficie clara: es
-        // el mismo tono de la mancha del héroe. Al ser fondo de TEXTO y no
-        // adorno, cada par tiene que cumplir por sí mismo.
-        yield 'titular sobre celeste' => ['#0A192F', '#D0F6FB'];
-        yield 'texto suave sobre celeste' => ['#4B5563', '#D0F6FB'];
-        yield 'oscuro: titular sobre celeste' => ['#E7ECF5', '#113143'];
-        yield 'oscuro: texto suave sobre celeste' => ['#A9B4C6', '#113143'];
+
     }
 
     #[DataProvider('paresDeTextoYFondo')]
@@ -102,6 +95,73 @@ final class ContrasteTest extends TestCase
                 ),
             );
         }
+    }
+
+    /**
+     * Las tarjetas de acceso llevan un VELO de cian, no un color fijo: el
+     * fondo real es lo que haya debajo, y solapan el héroe, así que caen
+     * sobre dos fondos distintos en cada tema.
+     *
+     * No se fijan los hexadecimales ya mezclados, que se quedarían obsoletos
+     * en silencio: la prueba lee el porcentaje del velo de `app.css`, calcula
+     * la mezcla sobre cada fondo posible y exige AA en los cuatro. Si alguien
+     * sube la opacidad para que se vea «más celeste», esto lo frena.
+     */
+    public function testElVeloCelesteCumpleSobreTodoFondoPosible(): void
+    {
+        $css = self::hojaDeTokens();
+
+        self::assertSame(
+            1,
+            preg_match('/--color-celeste:\s*color-mix\(in srgb,\s*(#[0-9A-Fa-f]{6})\s+(\d+)%/', $css, $m),
+            'No se encontró el velo celeste en app.css con la forma esperada.',
+        );
+
+        [, $tinte, $porcentaje] = $m;
+        $alfa = ((int) $porcentaje) / 100;
+
+        // fondo posible => textos que se dibujan encima
+        $casos = [
+            'fondo claro' => ['#FFFFFF', ['#0A192F', '#4B5563']],
+            'superficie del héroe' => ['#F5F7FB', ['#0A192F', '#4B5563']],
+            'fondo oscuro' => ['#0B1220', ['#E7ECF5', '#A9B4C6']],
+            'superficie oscura' => ['#131C2E', ['#E7ECF5', '#A9B4C6']],
+        ];
+
+        foreach ($casos as $nombre => [$debajo, $textos]) {
+            $resultante = self::mezclar($tinte, $debajo, $alfa);
+
+            foreach ($textos as $texto) {
+                $ratio = self::ratioDeContraste($texto, $resultante);
+
+                self::assertGreaterThanOrEqual(
+                    self::MINIMO_AA,
+                    $ratio,
+                    sprintf(
+                        'El velo al %s%% sobre %s da %s, y %s encima queda en %.2f:1.',
+                        $porcentaje,
+                        $nombre,
+                        $resultante,
+                        $texto,
+                        $ratio,
+                    ),
+                );
+            }
+        }
+    }
+
+    /** Mezcla alfa de dos colores opacos, como hace el navegador al componer. */
+    private static function mezclar(string $frente, string $fondo, float $alfa): string
+    {
+        $canal = static fn (string $hex, int $i): int => (int) hexdec(substr(ltrim($hex, '#'), $i, 2));
+        $salida = '#';
+
+        foreach ([0, 2, 4] as $i) {
+            $valor = (int) round($alfa * $canal($frente, $i) + (1 - $alfa) * $canal($fondo, $i));
+            $salida .= str_pad(dechex($valor), 2, '0', STR_PAD_LEFT);
+        }
+
+        return strtoupper($salida);
     }
 
     public function testElVerdeDeMarcaNoSeUsaComoColorDeTexto(): void

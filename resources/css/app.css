@@ -57,13 +57,14 @@
        Sobre fondo claro es decorativo: resplandores, bordes, degradados. */
     --color-marca-cian: #00F2FE;
 
-    /* Azul celeste: el cian de arriba al 15 % sobre la superficie clara, que
-       es exactamente el tono de la mancha difuminada del héroe. Se fija como
-       color sólido en vez de dejarlo a una opacidad porque las tarjetas
-       llevan sombra interna, y sobre un fondo translúcido esa sombra deja ver
-       lo que hay debajo. Contraste verificado en ContrasteTest. */
-    --color-celeste: #D0F6FB;
-    --color-celeste-oscuro: #113143;
+    /* Azul celeste: el cian de arriba, translúcido. Es el tono de la mancha
+       difuminada del héroe pero en velo, para que quede lo más claro posible.
+       La sombra interna se pinta ENCIMA del fondo, no lo atraviesa, así que
+       la translucidez no la estropea; lo que sí hace es dejar que la tarjeta
+       recoja el tinte de lo que tiene debajo donde solapa el héroe.
+       Al no ser un color fijo, el contraste se verificó sobre TODOS los
+       fondos posibles, no sobre uno (ver ContrasteTest). */
+    --color-celeste: color-mix(in srgb, #00F2FE 10%, transparent);
 
     /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
     --color-marca-verde: #2F9A72;
@@ -361,8 +362,10 @@
        la EXTERNA la separa del fondo. Con una sola, o flota sin volumen o se
        hunde sin despegar.
 
-       El azul celeste es el mismo de la mancha del héroe. No se usa opacidad
-       porque la sombra interna dejaría ver el fondo a través. */
+       El azul celeste va translúcido, al 10 %: es el velo más claro que
+       sigue leyéndose como celeste. La sombra interna se pinta encima del
+       fondo, así que la translucidez no la afecta, y de paso la tarjeta
+       recoge el tinte del héroe donde lo solapa. */
     .tarjeta-acceso {
         background-color: var(--color-celeste);
         border: 1px solid color-mix(in srgb, var(--color-marca-cian) 35%, transparent);
@@ -381,8 +384,9 @@
             0 12px 24px -6px color-mix(in srgb, var(--color-primario-900) 28%, transparent);
     }
 
+    /* El velo es el mismo; lo que cambia es lo que hay debajo. Solo se
+       retocan borde y sombras, que sí dependen del tema. */
     [data-tema="oscuro"] .tarjeta-acceso {
-        background-color: var(--color-celeste-oscuro);
         border-color: color-mix(in srgb, var(--color-marca-cian) 22%, transparent);
         box-shadow:
             inset 0 2px 6px 0 rgb(0 0 0 / 0.45),

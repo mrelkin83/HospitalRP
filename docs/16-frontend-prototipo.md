@@ -54,15 +54,34 @@ La sección PRENSA del Joomla tenía tres entradas. Estado tras la Fase 9:
 
 | Del Joomla | Estado |
 |---|---|
-| Boletines de prensa | ✅ Categoría de noticia con listado propio en `/noticias/categoria/boletines-de-prensa` |
-| Revista Conexión Salud | ❌ Sin equivalente |
-| Galería | ❌ Sin ruta pública (el módulo Medios existe en el panel) |
+| Boletines de prensa | ✅ Categoría de noticia · `/noticias/categoria/boletines-de-prensa` |
+| Revista Conexión Salud | ✅ Categoría documental · `/documentos?categoria=revista-conexion-salud` |
+| Galería | ✅ `/galeria`, sobre la biblioteca de medios |
 
-Los boletines son noticias —una publicación con fecha—, así que se resolvieron
-como categoría y no como módulo aparte: el hospital los administra desde
-Noticias eligiendo la categoría, sin plantilla nueva. El listado público
-ganó filtrado por categoría, que el módulo no tenía aunque la tabla guardaba
-`categoria_id` desde la Fase 1.
+**Ninguna necesitó módulo nuevo**, y esa fue la decisión de diseño: cada una
+encaja en algo que ya existía.
+
+- Los **boletines** son noticias —una publicación con fecha—, así que son una
+  categoría. El listado público ganó filtrado por categoría, que el módulo no
+  tenía aunque la tabla guardaba `categoria_id` desde la Fase 1.
+- La **revista** es un PDF periódico: un documento. Va como categoría
+  documental, con lo que hereda metadatos, vigencia, versiones y TRD — más de
+  lo que tenía en el Joomla. El filtro del buscador admite ahora slug además
+  de id, porque un id cambia entre instalaciones y dejaría el ítem de menú
+  roto al resembrar.
+- La **galería** sale de la biblioteca de medios, que ya guarda `publico`,
+  `texto_alt`, `ancho` y `alto`.
+
+En las tres, un slug inexistente responde **404** en lugar de caer al listado
+completo: devolver otra cosa y llamarla lo que se pidió es mentir.
+
+### La trampa de la galería
+
+La biblioteca del panel guarda **todo** lo subido, incluidos los adjuntos que
+la ciudadanía manda en los trámites. Reutilizar su consulta para la galería
+habría publicado documentos privados de personas sin que nadie se enterara.
+Por eso `imagenesPublicas()` es un método aparte con `publico = 1`, y la
+primera prueba del archivo comprueba justo eso.
 
 ## Alcance y lo que queda
 

@@ -127,6 +127,33 @@ final readonly class AlmacenArchivos
         return array_map(Archivo::desdeFila(...), $filas);
     }
 
+    /**
+     * Imágenes para la galería PÚBLICA. Se diferencia de `imagenesRecientes`
+     * en una condición que no es opcional: `publico = 1`.
+     *
+     * La biblioteca del panel enseña todo lo subido, incluidos los adjuntos
+     * de trámites, que son privados. Reutilizar aquel método para la galería
+     * habría publicado los documentos que adjunta la ciudadanía.
+     *
+     * @return array{imagenes: list<Archivo>, total: int}
+     */
+    public function imagenesPublicas(int $pagina, int $porPagina): array
+    {
+        $total = (int) $this->conexion->fetchOne(
+            "SELECT COUNT(*) FROM archivos WHERE publico = 1 AND mime LIKE 'image/%'",
+        );
+
+        $filas = $this->conexion->fetchAllAssociative(sprintf(
+            "SELECT * FROM archivos WHERE publico = 1 AND mime LIKE 'image/%%'
+              ORDER BY id DESC
+              LIMIT %d OFFSET %d",
+            max(1, $porPagina),
+            max(0, ($pagina - 1) * $porPagina),
+        ));
+
+        return ['imagenes' => array_map(Archivo::desdeFila(...), $filas), 'total' => $total];
+    }
+
     public function porId(int $id): ?Archivo
     {
         $fila = $this->conexion->fetchAssociative('SELECT * FROM archivos WHERE id = ?', [$id]);

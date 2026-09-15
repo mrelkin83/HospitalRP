@@ -484,16 +484,34 @@ final class SembrarPaginasCommand extends Command
         'comunicados' => 'Comunicados oficiales',
     ];
 
+    /**
+     * La Revista Conexión Salud es un PDF periódico con portada y fecha, o
+     * sea un documento. Va como categoría documental y no como módulo propio:
+     * la gestión documental ya le da metadatos, vigencia, versiones y TRD, que
+     * es más de lo que tenía en el Joomla.
+     *
+     * @var array<string, string> slug => nombre
+     */
+    private const array CATEGORIAS_DOCUMENTO = [
+        'revista-conexion-salud' => 'Revista Conexión Salud',
+    ];
+
     /** @return int categorías creadas */
     private function sembrarCategorias(): int
     {
         $creadas = 0;
         $orden = 0;
 
-        foreach (self::CATEGORIAS_NOTICIA as $slug => $nombre) {
+        $porTipo = [
+            'noticia' => self::CATEGORIAS_NOTICIA,
+            'documento' => self::CATEGORIAS_DOCUMENTO,
+        ];
+
+        foreach ($porTipo as $tipo => $categorias) {
+        foreach ($categorias as $slug => $nombre) {
             $existe = $this->conexion->fetchOne(
                 'SELECT id FROM categorias WHERE tipo = ? AND slug = ?',
-                ['noticia', $slug],
+                [$tipo, $slug],
             );
 
             if ($existe !== false) {
@@ -503,12 +521,13 @@ final class SembrarPaginasCommand extends Command
             }
 
             $this->conexion->insert('categorias', [
-                'tipo' => 'noticia',
+                'tipo' => $tipo,
                 'nombre' => $nombre,
                 'slug' => $slug,
                 'orden' => $orden++,
             ]);
             $creadas++;
+        }
         }
 
         return $creadas;

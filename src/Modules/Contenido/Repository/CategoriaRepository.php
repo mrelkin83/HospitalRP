@@ -68,4 +68,28 @@ final readonly class CategoriaRepository
             $filas,
         );
     }
+
+    /**
+     * Resuelve una categoría por su slug.
+     *
+     * El buscador documental filtra por id, y un id no sirve para un ítem de
+     * menú: cambia entre instalaciones según el orden de sembrado, así que
+     * `/documentos?categoria=7` se rompería al resembrar. El slug es estable
+     * y además se lee.
+     *
+     * @return ?array{id: int, nombre: string, slug: string}
+     */
+    public function porSlug(string $tipo, string $slug): ?array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            'SELECT id, nombre, slug FROM categorias WHERE tipo = ? AND slug = ? AND activa = 1',
+            [$tipo, $slug],
+        );
+
+        return $fila === false ? null : [
+            'id' => (int) $fila['id'],
+            'nombre' => (string) $fila['nombre'],
+            'slug' => (string) $fila['slug'],
+        ];
+    }
 }

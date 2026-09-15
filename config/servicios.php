@@ -93,6 +93,7 @@ use App\Http\Web\TransparenciaPublicoController;
 use App\Http\Web\ConvocatoriasPublicoController;
 use App\Http\Web\EncuestasPublicoController;
 use App\Http\Web\EventosPublicoController;
+use App\Http\Web\GaleriaController;
 use App\Http\Web\MapaSitioController;
 use App\Http\Web\ServidoresPublicosController;
 use App\Http\Web\UrgenciasContactoController;
@@ -341,6 +342,10 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MapaSitioController::class, MapaSitioController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(GaleriaController::class, GaleriaController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

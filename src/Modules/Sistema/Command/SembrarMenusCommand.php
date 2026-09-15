@@ -105,6 +105,12 @@ final class SembrarMenusCommand extends Command
                 // noticia con su propio listado filtrado, para que el ítem
                 // lleve a los boletines y no al listado completo.
                 ['Boletines de prensa', '/noticias/categoria/boletines-de-prensa', 0],
+                // La revista es un PDF periódico: vive en la gestión
+                // documental, filtrada por su categoría. El filtro admite
+                // slug además de id para que este enlace no dependa del
+                // orden en que se sembraron las categorías.
+                ['Revista Conexión Salud', '/documentos?categoria=revista-conexion-salud', 0],
+                ['Galería de imágenes', '/galeria', 0],
                 ['Calendario de eventos', '/eventos', 0],
             ]],
         ]],

@@ -47,6 +47,7 @@ use App\Http\Web\EspecialidadesPublicoController;
 use App\Http\Web\ConvocatoriasPublicoController;
 use App\Http\Web\EncuestasPublicoController;
 use App\Http\Web\EventosPublicoController;
+use App\Http\Web\GaleriaController;
 use App\Http\Web\InicioController;
 use App\Http\Web\MapaSitioController;
 use App\Http\Web\MuestraDisenoController;
@@ -80,6 +81,14 @@ $rutas->add('buscar', new Route(
 $rutas->add('noticias.listado', new Route(
     path: '/noticias',
     defaults: ['_controlador' => [NoticiasPublicoController::class, 'listado']],
+    methods: ['GET'],
+));
+
+// Dos segmentos, así que no choca con el detalle, que es de uno solo.
+$rutas->add('noticias.categoria', new Route(
+    path: '/noticias/categoria/{categoria}',
+    defaults: ['_controlador' => [NoticiasPublicoController::class, 'listado']],
+    requirements: ['categoria' => '[a-z0-9\-]+'],
     methods: ['GET'],
 ));
 
@@ -860,6 +869,12 @@ $rutas->add('admin.servidores', new Route('/admin/servidores-publicos', $panel(S
 $rutas->add('admin.servidores.crear', new Route('/admin/servidores-publicos', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), methods: ['POST']));
 $rutas->add('admin.servidores.guardar', new Route('/admin/servidores-publicos/{id}', $panel(ServidoresPublicosAdminController::class, 'guardar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.servidores.eliminar', new Route('/admin/servidores-publicos/{id}/eliminar', $panel(ServidoresPublicosAdminController::class, 'eliminar', 'directorio.editar'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('galeria', new Route(
+    path: '/galeria',
+    defaults: ['_controlador' => [GaleriaController::class, 'mostrar']],
+    methods: ['GET'],
+));
 
 // --- Mapa del sitio (Fase 9) ---
 // Ruta fija y no página: se arma desde los menús vigentes, así que añadir un

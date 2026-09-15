@@ -32,6 +32,34 @@ final readonly class DocumentosPublicoController
 
     public function buscador(Request $peticion): Response
     {
+        // `?categoria=` admite id o slug. El slug es lo que usan los ítems de
+        // menú —«Revista Conexión Salud»— porque un id cambia entre
+        // instalaciones según el orden de sembrado y dejaría el enlace roto.
+        $porSlug = $peticion->query->getString('categoria');
+
+        if ($porSlug !== '' && !ctype_digit($porSlug)) {
+            $categoria = $this->categorias->porSlug('documento', $porSlug);
+
+            // Un slug que no existe NO puede caer al listado completo: sería
+            // devolver otra cosa y llamarla lo que se pidió. Mismo criterio
+            // que en las categorías de noticias.
+            if ($categoria === null) {
+                return $this->layout->responder(
+                    titulo: 'Categoría no encontrada',
+                    descripcion: null,
+                    contenido: $this->vistas->render('publico/mensaje', [
+                        'encabezado' => 'Categoría no encontrada',
+                        'mensaje' => 'Esa categoría de documentos no existe. '
+                            . 'Consulta el buscador completo de documentos.',
+                    ]),
+                    noindex: true,
+                    estado: Response::HTTP_NOT_FOUND,
+                );
+            }
+
+            $peticion->query->set('categoria', (string) $categoria['id']);
+        }
+
         $filtros = FiltrosDocumento::desdePeticion($peticion);
         ['documentos' => $documentos, 'total' => $total] = $this->documentos->buscarPublicos($filtros);
 

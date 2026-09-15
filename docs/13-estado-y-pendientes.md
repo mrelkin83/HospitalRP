@@ -126,6 +126,17 @@ Ordenados por importancia:
 
 ## 7. Rarezas del entorno de desarrollo (para quien retome)
 
+- **Nunca sembrar ni editar datos con la CLI de `mysql` en Windows.** Su
+  `character_set_client` es **cp850**, así que los caracteres no ASCII se
+  corrompen al escribir: un guion `–` acaba almacenado como `ÔÇô`. Pasó con
+  `sedes.horario` y solo se vio en la portada. La aplicación conecta en
+  utf8mb4 y escribe bien, así que todo lo que toque datos va por
+  `php bin/consola`. Para consultar desde la CLI, `--default-character-set=utf8mb4`.
+- **Cuidado al buscar mojibake con `LIKE`:** la colación `utf8mb4_0900_ai_ci`
+  es insensible a acentos y mayúsculas, de modo que `LIKE '%ÔÇ%'` se comporta
+  como `'%oc%'` y devuelve medio sitio. Para detectarlo hay que comparar bytes
+  desde PHP, e incluir las columnas **JSON** (ahí estaba el caso real).
+
 - Servidor local: `php -S 127.0.0.1:8090 -t public public/index.php` —
   **con el router**, o las URL del Joomla y las redirecciones parecen rotas.
   Matar servidores previos: un proceso viejo retiene el puerto.

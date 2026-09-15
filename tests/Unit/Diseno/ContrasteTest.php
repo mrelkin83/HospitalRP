@@ -38,17 +38,17 @@ final class ContrasteTest extends TestCase
         yield 'texto sobre superficie' => ['#1F2937', '#F5F7FB'];
 
         // --- Tema oscuro ---
-        yield 'oscuro: texto sobre fondo' => ['#E7ECF5', '#0B1220'];
-        yield 'oscuro: texto suave sobre fondo' => ['#A9B4C6', '#0B1220'];
-        yield 'oscuro: enlace sobre fondo' => ['#8FC3F5', '#0B1220'];
+        yield 'oscuro: texto sobre fondo' => ['#E7ECF5', '#090E1A'];
+        yield 'oscuro: texto suave sobre fondo' => ['#A9B4C6', '#090E1A'];
+        yield 'oscuro: enlace sobre fondo' => ['#8FC3F5', '#090E1A'];
         yield 'oscuro: texto del botón primario' => ['#FFFFFF', '#225A96'];
-        yield 'oscuro: texto sobre superficie' => ['#E7ECF5', '#131C2E'];
+        yield 'oscuro: texto sobre superficie' => ['#E7ECF5', '#121A2E'];
 
         // --- Alto contraste ---
         yield 'alto contraste: texto' => ['#000000', '#FFFFFF'];
         yield 'alto contraste: enlace' => ['#12294A', '#FFFFFF'];
-        yield 'alto contraste oscuro: texto' => ['#FFFFFF', '#0B1220'];
-        yield 'alto contraste oscuro: enlace' => ['#AFC9E8', '#0B1220'];
+        yield 'alto contraste oscuro: texto' => ['#FFFFFF', '#090E1A'];
+        yield 'alto contraste oscuro: enlace' => ['#AFC9E8', '#090E1A'];
 
         // --- Lenguaje del prototipo: superficies oscuras de marca ---
         // El cian es ilegible sobre claro (1.39:1) pero cumple de sobra
@@ -61,8 +61,8 @@ final class ContrasteTest extends TestCase
         // El degradado del héroe se invierte en oscuro: con los azules
         // oscuros daba 1,54:1 sobre el fondo del tema y el titular no se
         // leía. Ambos extremos del gradiente deben cumplir por separado.
-        yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#0B1220'];
-        yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#0B1220'];
+        yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#090E1A'];
+        yield 'oscuro: degradado, extremo medio' => ['#7FA9D8', '#090E1A'];
 
 
     }
@@ -124,8 +124,8 @@ final class ContrasteTest extends TestCase
         $casos = [
             'fondo claro' => ['#FFFFFF', ['#0A192F', '#4B5563']],
             'superficie del héroe' => ['#F5F7FB', ['#0A192F', '#4B5563']],
-            'fondo oscuro' => ['#0B1220', ['#E7ECF5', '#A9B4C6']],
-            'superficie oscura' => ['#131C2E', ['#E7ECF5', '#A9B4C6']],
+            'fondo oscuro' => ['#090E1A', ['#E7ECF5', '#A9B4C6']],
+            'superficie oscura' => ['#121A2E', ['#E7ECF5', '#A9B4C6']],
         ];
 
         foreach ($casos as $nombre => [$debajo, $textos]) {

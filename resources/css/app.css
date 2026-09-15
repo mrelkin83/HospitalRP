@@ -98,9 +98,10 @@
    las utilidades de Tailwind no.
    ===================================================================== */
 :root {
-    --fondo: #FFFFFF;
-    --superficie: var(--color-gris-50);
-    --borde: var(--color-gris-200);
+    --fondo: #EBF1F6; /* Fondo gris azulado clínico más suave */
+    --superficie: #FFFFFF; /* Superficie blanco puro para tarjetas y bloques que resalta con contraste total */
+    --gradiente-fondo: linear-gradient(135deg, #FFFFFF 0%, #E2ECF5 100%) fixed; /* Gradiente de fondo fijo de gran luminosidad */
+    --borde: #E2E8F0;
     --texto: var(--color-gris-800);
     --texto-suave: var(--color-gris-600);
     --titular: var(--color-tinta);
@@ -112,9 +113,10 @@
 }
 
 [data-tema="oscuro"] {
-    --fondo: #0B1220;
-    --superficie: #131C2E;
-    --borde: #2A3650;
+    --fondo: #090E1A; /* Fondo oscuro espacial profundo */
+    --superficie: #121A2E; /* Superficies de tarjetas ligeramente más claras para dar elevación */
+    --gradiente-fondo: linear-gradient(135deg, #090E1A 0%, #121A2E 100%) fixed; /* Gradiente oscuro fijo */
+    --borde: #202D42;
     --texto: #E7ECF5;
     --texto-suave: #A9B4C6;
     --titular: #E7ECF5;
@@ -127,9 +129,10 @@
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-tema]) {
-        --fondo: #0B1220;
-        --superficie: #131C2E;
-        --borde: #2A3650;
+        --fondo: #090E1A;
+        --superficie: #121A2E;
+        --gradiente-fondo: linear-gradient(135deg, #090E1A 0%, #121A2E 100%) fixed;
+        --borde: #202D42;
         --texto: #E7ECF5;
         --texto-suave: #A9B4C6;
         --titular: #E7ECF5;
@@ -148,6 +151,7 @@
     --titular: #000000;
     --borde: #374151;
     --enlace: #12294A;
+    --gradiente-fondo: var(--fondo);
 }
 
 [data-tema="oscuro"][data-contraste="alto"] {
@@ -156,6 +160,7 @@
     --titular: #FFFFFF;
     --borde: #9AA4B5;
     --enlace: #AFC9E8;
+    --gradiente-fondo: var(--fondo);
 }
 
 [data-contraste="alto"] a {
@@ -177,7 +182,7 @@
    ===================================================================== */
 @layer base {
     body {
-        background-color: var(--fondo);
+        background: var(--gradiente-fondo);
         color: var(--texto);
         font-family: var(--font-sans);
         /* 16px mínimo (CLAUDE.md §6); fluida hasta 17.5px en pantallas grandes */
@@ -384,7 +389,7 @@
 
     /* Tarjetas generales: Rediseño Premium con sutil elevación en hover y bisel de luz */
     .tarjeta {
-        background-color: var(--fondo);
+        background-color: var(--superficie);
         border: 1px solid var(--borde);
         border-radius: 1.5rem; /* Tarjetas más curvas, estilo bento moderno */
         padding: 1.5rem;

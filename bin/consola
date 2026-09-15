@@ -29,6 +29,7 @@ use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Command\SembrarTramitesCommand;
 use App\Modules\Transparencia\Command\SembrarTransparenciaCommand;
 use App\Modules\Sistema\Command\CrearAdminCommand;
+use App\Modules\Sistema\Command\SanearVistasCommand;
 use App\Modules\Sistema\Command\SembrarConfiguracionCommand;
 use App\Modules\Sistema\Command\SembrarMenusCommand;
 use App\Modules\Sistema\Command\SembrarRedireccionesCommand;
@@ -59,4 +60,5 @@ $aplicacion->add(new AlertasVencimientoCommand(
 $aplicacion->add(new ContenidoProgramadoCommand(new ProgramadorPublicacionService($conexion, $auditoria, $indexador)));
 $aplicacion->add(new IndexarCommand($indexador));
 $aplicacion->add(new SembrarRedireccionesCommand(new RedireccionRepository($conexion)));
+$aplicacion->add(new SanearVistasCommand());
 $aplicacion->run();

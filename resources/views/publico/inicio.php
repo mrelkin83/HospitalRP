@@ -95,8 +95,8 @@ $heroEnlace2 = $config->texto('hero.enlace2', '/servicios');
                     <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-primario-500/20 rounded-full blur-3xl"></div>
                 </div>
 
-                <!-- Capa 2: Tarjeta Principal del Portal (Simulación de Dashboard de Paciente) -->
-                <div class="panel-vidrio absolute w-[90%] sm:w-[85%] h-[80%] sm:h-[75%] top-[10%] left-[5%] sm:left-[7.5%] rounded-3xl p-5 sm:p-6 shadow-2xl border-white/20 flex flex-col justify-between backdrop-blur-xl">
+                <!-- Capa 2: Tarjeta Principal del Portal (Simulación de Dashboard de Paciente) - Con Cristal Oscuro Permanente (Dark Glass) para Contraste Infalible -->
+                <div class="absolute w-[90%] sm:w-[85%] h-[80%] sm:h-[75%] top-[10%] left-[5%] sm:left-[7.5%] rounded-3xl p-5 sm:p-6 shadow-2xl bg-primario-950/40 border border-white/15 flex flex-col justify-between backdrop-blur-xl">
                     <div class="flex items-center justify-between border-b border-white/10 pb-3">
                         <div class="flex items-center gap-3">
                             <span class="h-3 w-3 rounded-full bg-[color:var(--color-marca-cyan)] animate-pulse"></span>

@@ -63,7 +63,7 @@
        solapa el héroe.
        Al no ser un color fijo, el contraste se verificó sobre TODOS los
        fondos posibles, no sobre uno (ver ContrasteTest). */
-    --color-celeste: color-mix(in srgb, #00F2FE 6%, transparent);
+    --color-celeste: color-mix(in srgb, #00F2FE 3%, transparent);
 
     /* Verde de marca: decorativo (iconos, franjas). Para texto, exito-*. */
     --color-marca-verde: #2F9A72;
@@ -361,9 +361,8 @@
        de ser adorno y pasa a ser lo que delimita la tarjeta —sobre todo en
        tema oscuro, donde el velo apenas se despega del fondo.
 
-       El celeste es un velo de cian al 6 %: lo más claro que sigue leyéndose
-       como color. La tarjeta recoge además el tinte del héroe donde lo
-       solapa. */
+       El celeste es un velo de cian al 3 %: apenas un tinte. La tarjeta
+       recoge además el color de lo que tiene debajo donde solapa el héroe. */
     .tarjeta-acceso {
         background-color: var(--color-celeste);
         border: 1px solid color-mix(in srgb, var(--color-marca-cian) 35%, transparent);
@@ -378,10 +377,18 @@
 
     /* El velo es el mismo; lo que cambia es lo que hay debajo. Solo se
        retocan borde y sombras, que sí dependen del tema. */
-    /* El velo es el mismo; lo que cambia es lo que hay debajo. En oscuro el
-       borde se sube de opacidad: con un velo tan tenue y sin sombra interior,
-       es lo único que separa la tarjeta del fondo. */
+    /* El velo es el mismo en los dos temas; lo que cambia es sobre qué se
+       apoya. En claro basta con la página: un velo del 3 % sobre blanco
+       sigue leyéndose. En oscuro no: sobre el fondo de página quedaba a 14
+       unidades de él y la tarjeta desaparecía. Por eso aquí el velo se apoya
+       en la superficie, que ya es el escalón de elevación del tema oscuro, y
+       la distancia sube a 43.
+
+       El borde también se refuerza: sin sombra interior es lo que delimita
+       la tarjeta. */
     [data-tema="oscuro"] .tarjeta-acceso {
+        background-color: var(--superficie);
+        background-image: linear-gradient(var(--color-celeste), var(--color-celeste));
         border-color: color-mix(in srgb, var(--color-marca-cian) 32%, transparent);
         box-shadow: 0 6px 16px -4px rgb(0 0 0 / 0.5);
     }

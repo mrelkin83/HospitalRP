@@ -71,6 +71,9 @@ use App\Http\Web\PaginasController;
 use App\Http\Web\PoliticasPublicoController;
 use App\Http\Web\SedesPublicoController;
 use App\Http\Web\SeoController;
+use App\Http\Web\CuentasDescargaController;
+use App\Http\Web\CuentasNuevaController;
+use App\Http\Web\CuentasPortalController;
 use App\Http\Web\ServiciosPublicoController;
 use App\Http\Web\ServidoresPublicosController;
 use App\Http\Web\TramitesPublicoController;
@@ -1086,6 +1089,37 @@ $rutas->add('galeria', new Route(
     defaults: ['_controlador' => [GaleriaController::class, 'mostrar']],
     methods: ['GET'],
 ));
+
+// --- Portal de cuentas de cobro (fase 2 del módulo) ---
+// Rutas públicas: la autenticación del contratista (cédula + contrato +
+// código) la hace el propio portal, no el candado del panel.
+
+$rutaCuentas = static fn (string $controlador, string $metodo): array => [
+    '_controlador' => [$controlador, $metodo],
+];
+
+$rutas->add('cuentas.ingreso', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'ingreso'), methods: ['GET']));
+$rutas->add('cuentas.ingreso.codigo', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'solicitarCodigo'), methods: ['POST']));
+$rutas->add('cuentas.codigo', new Route('/cuentas/codigo', $rutaCuentas(CuentasPortalController::class, 'verificarCodigo'), methods: ['POST']));
+$rutas->add('cuentas.salir', new Route('/cuentas/salir', $rutaCuentas(CuentasPortalController::class, 'salir'), methods: ['POST']));
+$rutas->add('cuentas.inicio', new Route('/cuentas/inicio', $rutaCuentas(CuentasPortalController::class, 'inicio'), methods: ['GET']));
+$rutas->add('cuentas.misdatos', new Route('/cuentas/mis-datos', $rutaCuentas(CuentasPortalController::class, 'misDatos'), methods: ['GET']));
+$rutas->add('cuentas.misdatos.guardar', new Route('/cuentas/mis-datos/{paso}', $rutaCuentas(CuentasPortalController::class, 'guardarMisDatos'), ['paso' => '[1-3]'], methods: ['POST']));
+$rutas->add('cuentas.nueva1', new Route('/cuentas/nueva/1', $rutaCuentas(CuentasNuevaController::class, 'paso1'), methods: ['GET']));
+$rutas->add('cuentas.nueva1.confirmar', new Route('/cuentas/nueva/1', $rutaCuentas(CuentasNuevaController::class, 'confirmarPaso1'), methods: ['POST']));
+$rutas->add('cuentas.nueva.reportar', new Route('/cuentas/nueva/reportar', $rutaCuentas(CuentasNuevaController::class, 'reportarProblema'), methods: ['POST']));
+$rutas->add('cuentas.nueva2', new Route('/cuentas/nueva/2', $rutaCuentas(CuentasNuevaController::class, 'paso2'), methods: ['GET']));
+$rutas->add('cuentas.nueva2.guardar', new Route('/cuentas/nueva/2', $rutaCuentas(CuentasNuevaController::class, 'guardarPaso2'), methods: ['POST']));
+$rutas->add('cuentas.autoguardar', new Route('/cuentas/nueva/autoguardar', $rutaCuentas(CuentasNuevaController::class, 'autoguardar'), methods: ['POST']));
+$rutas->add('cuentas.nueva3', new Route('/cuentas/nueva/3', $rutaCuentas(CuentasNuevaController::class, 'paso3'), methods: ['GET']));
+$rutas->add('cuentas.nueva3.guardar', new Route('/cuentas/nueva/3', $rutaCuentas(CuentasNuevaController::class, 'guardarPaso3'), methods: ['POST']));
+$rutas->add('cuentas.nueva4', new Route('/cuentas/nueva/4', $rutaCuentas(CuentasNuevaController::class, 'paso4'), methods: ['GET']));
+$rutas->add('cuentas.vistaprevia', new Route('/cuentas/nueva/vista-previa/{documento}', $rutaCuentas(CuentasNuevaController::class, 'vistaPrevia'), ['documento' => 'cuenta|informe'], methods: ['GET']));
+$rutas->add('cuentas.enviar', new Route('/cuentas/nueva/enviar', $rutaCuentas(CuentasNuevaController::class, 'enviar'), methods: ['POST']));
+$rutas->add('cuentas.enviada', new Route('/cuentas/enviada/{id}', $rutaCuentas(CuentasNuevaController::class, 'enviada'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('cuentas.enviada.correo', new Route('/cuentas/enviada/{id}/correo', $rutaCuentas(CuentasNuevaController::class, 'enviarACorreo'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('cuentas.pdf', new Route('/cuentas/pdf/{id}/{documento}', $rutaCuentas(CuentasNuevaController::class, 'descargarPdf'), ['id' => '\d+', 'documento' => 'cuenta|informe'], methods: ['GET']));
+$rutas->add('cuentas.descarga', new Route('/cuentas/descarga/{token}', $rutaCuentas(CuentasDescargaController::class, 'descargar'), ['token' => '[a-f0-9]{64}'], methods: ['GET']));
 
 // --- Mapa del sitio (Fase 9) ---
 // Ruta fija y no página: se arma desde los menús vigentes, así que añadir un

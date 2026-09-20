@@ -84,8 +84,17 @@ use App\Modules\Indicadores\Repository\IndicadorRepository;
 use App\Modules\Contenido\Repository\HeroRepository;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
 use App\Modules\CuentasCobro\Repository\ContratoRepository;
+use App\Modules\CuentasCobro\Repository\CuentaRepository;
 use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Repository\SupervisorRepository;
+use App\Modules\CuentasCobro\Service\ArchivosCuentas;
+use App\Modules\CuentasCobro\Service\EnvioCuentaService;
+use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
+use App\Modules\CuentasCobro\Service\OtpService;
+use App\Modules\CuentasCobro\Service\SesionContratista;
+use App\Http\Web\CuentasDescargaController;
+use App\Http\Web\CuentasNuevaController;
+use App\Http\Web\CuentasPortalController;
 use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Directorio\Repository\ServidorPublicoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
@@ -644,6 +653,47 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(CuentasParametrosController::class, CuentasParametrosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    // --- Módulo de cuentas de cobro (fase 2: portal del contratista) ---
+
+    $contenedor->register(CuentaRepository::class, CuentaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(SesionContratista::class, SesionContratista::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(OtpService::class, OtpService::class)
+        ->setAutowired(true);
+
+    // Los archivos del módulo viven fuera del document root y aparte de la
+    // mediateca pública: son datos personales servidos con permiso.
+    $contenedor->register(ArchivosCuentas::class, ArchivosCuentas::class)
+        ->setArguments([dirname(__DIR__) . '/storage/cuentas']);
+
+    $contenedor->register(GeneradorDocumentosCuenta::class, GeneradorDocumentosCuenta::class)
+        ->setArguments([
+            new Reference(Connection::class),
+            new Reference(ParametrosCuentasRepository::class),
+            new Reference(ArchivosCuentas::class),
+            dirname(__DIR__) . '/templates/pdf',
+            dirname(__DIR__) . '/public/img/logo.png',
+        ]);
+
+    $contenedor->register(EnvioCuentaService::class, EnvioCuentaService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CuentasPortalController::class, CuentasPortalController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasNuevaController::class, CuentasNuevaController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasDescargaController::class, CuentasDescargaController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

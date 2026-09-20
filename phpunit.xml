@@ -44,5 +44,9 @@
         <env name="DB_PUERTO" value="3306"/>
         <env name="DB_NOMBRE" value="hrpl_pruebas"/>
         <env name="DB_USUARIO" value="root"/>
+        <!-- El portal de cuentas de cobro inyecta el notificador de correo;
+             en pruebas el transporte es nulo: nada sale de la máquina. -->
+        <env name="CORREO_DSN" value="null://null"/>
+        <env name="CORREO_REMITENTE" value="pruebas@hospital.local"/>
     </php>
 </phpunit>

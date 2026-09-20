@@ -60,7 +60,20 @@ aceptación de la fase verificados en
 `tests/Unit/Modules/CuentasCobro` y `tests/Feature/Http/CuentasCobroAdminTest`.
 OJO: el módulo contradice el «Fuera de v1: portal del contratista» de
 CLAUDE.md §7 — se construyó por orden expresa del 2026-09-20; falta actualizar
-esa sección. Siguen las fases 2 (portal del contratista + PDF), 3 (supervisor
+esa sección.
+
+**Módulo de cuentas de cobro — fase 2 terminada (2026-09-20).** Portal del
+contratista en `/cuentas/*`: ingreso con cédula + contrato + OTP por correo
+(WhatsApp/SMS quedan detrás del puerto sin implementación), «Mis datos» en 3
+pantallas con firma subida o dibujada y evidencia de habeas data, flujo P2–P6
+con autoguardado, aportes PILA sugeridos, PDF reales con Dompdf (GF-FR-002 e
+informe de actividades), radicado `CC-{año}-{sec}` (reusa
+`radicado_secuencias`), firma electrónica simple con hash en
+`cc_cuenta_firmas` y descargas con token de un solo uso
+(`cc_descarga_tokens`). CSS propio `public/css/cuentas.css` (18px+, botones
+56px, foco visible). Pendientes de la fase: verificación manual de Lighthouse
+≥95 / lector de pantalla / viewport 360px, aviso de expiración de sesión a
+los 28 minutos, y el PIN opcional (§7.1 P0). Siguen las fases 3 (supervisor
 y paquete), 4 (novedades y reportes) y 5 (extracción de minutas con IA).
 
 ## 2. Pendientes técnicos (código por hacer)

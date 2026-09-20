@@ -13,6 +13,7 @@
 /storage/cache/*
 /storage/logs/*
 /storage/backups/*
+/storage/cuentas/*
 !/storage/*/.gitkeep
 
 # Compilado por Tailwind / Vite

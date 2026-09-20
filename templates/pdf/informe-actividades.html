@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    @page { margin: 2cm 2cm 2.2cm 2cm; }
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #000; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    td, th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+    .sin-borde td { border: none; padding: 2px 4px; }
+    .centro { text-align: center; }
+    .negrita { font-weight: bold; }
+    .seccion { background: #eee; font-weight: bold; }
+    .encabezado td { font-size: 8pt; }
+    .pie { position: fixed; bottom: -1.6cm; left: 0; right: 0; font-size: 7pt; color: #333; }
+    .hoja:after { content: "Página " counter(page); }
+    .mini { font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<table class="encabezado">
+    <tr>
+        <td class="centro" style="width: 22%;"><img src="{{logo}}" alt="Logo" style="height: 46px; width: auto;"></td>
+        <td class="centro" style="width: 48%;">
+            <span class="negrita">E.S.E. HOSPITAL ROSARIO PUMAREJO DE LÓPEZ</span><br>
+            NIT: 892399994-5<br>
+            <span class="negrita">INFORME DE ACTIVIDADES</span>
+        </td>
+        <td style="width: 30%; padding: 0;">
+            <table class="mini">
+                <tr><td>CÓDIGO</td><td>{{sgc_codigo}}</td></tr>
+                <tr><td>VERSIÓN</td><td>{{sgc_version}}</td></tr>
+                <tr><td>FECHA</td><td>{{sgc_fecha}}</td></tr>
+                <tr><td>HOJA</td><td class="hoja"></td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table>
+    <tr><td class="centro negrita">
+        INFORME DE ACTIVIDADES No {{consecutivo}}<br>
+        CORRESPONDIENTE AL PERIODO COMPRENDIDO ENTRE EL {{periodo_desde_larga_mayus}} AL {{periodo_hasta_larga_mayus}}
+    </td></tr>
+</table>
+
+<table>
+    <tr><td colspan="4" class="seccion">1. INFORMACIÓN GENERAL</td></tr>
+    <tr><td class="negrita" style="width: 24%;">No DE CONTRATO</td><td style="width: 26%;">{{numero_contrato}}</td>
+        <td colspan="2">{{ciudad}}, {{fecha_suscripcion_larga}}</td></tr>
+    <tr><td class="negrita">TIPO DE CONTRATO</td><td colspan="3">{{tipo_contrato}}</td></tr>
+    <tr><td class="negrita">OBJETO</td><td colspan="3">{{objeto}}</td></tr>
+    <tr><td class="negrita">CONTRATANTE</td><td>HOSPITAL ROSARIO PUMAREJO DE LÓPEZ</td>
+        <td class="negrita" style="width: 22%;">NIT ESE</td><td>892399994-5</td></tr>
+    <tr><td class="negrita">CONTRATISTA</td><td>{{contratista_nombre}}</td>
+        <td class="negrita">Rep. Legal</td><td>N/A</td></tr>
+    <tr><td class="negrita">NIT CONTRATISTA</td><td>{{numero_documento}}</td>
+        <td class="negrita">No CC Rep. legal</td><td>N/A</td></tr>
+    <tr><td class="negrita">VALOR</td><td colspan="3">{{valor_total_letras}} ({{valor_total}})</td></tr>
+    <tr><td class="negrita">PLAZO</td><td>{{plazo_texto}}</td>
+        <td class="negrita">GARANTÍAS</td><td>{{garantias}}</td></tr>
+    <tr><td class="negrita">SUPERVISOR</td><td>{{supervisor_nombre}}</td>
+        <td class="negrita">CARGO DE SUPERVISOR</td><td>{{supervisor_cargo}}</td></tr>
+    <tr><td class="negrita">FECHA DE INICIO</td><td>{{fecha_acta_inicio}}</td>
+        <td class="negrita">ADICIÓN</td><td>NO</td></tr>
+    <tr><td class="negrita">FECHA DE TERMINACIÓN</td><td>{{fecha_terminacion}}</td>
+        <td class="negrita">SUSPENSIÓN</td><td>NO</td></tr>
+</table>
+
+<table class="mini">
+    <tr><td colspan="7" class="seccion">2. IMPUTACIÓN PRESUPUESTAL</td></tr>
+    <tr class="negrita centro">
+        <td>CONTRATO</td><td>Fecha</td><td>Rubro</td><td>Concepto</td><td>Recurso</td><td>CDP No. / RP No.</td><td>Valor</td>
+    </tr>
+    {{#imputaciones}}
+    <tr>
+        <td class="centro">{{numero_contrato}}</td>
+        <td class="centro">{{fecha}}</td>
+        <td>{{codigo_rubro}}</td>
+        <td>{{nombre_rubro}}</td>
+        <td>{{recurso}}</td>
+        <td class="centro">{{tipo}} {{numero}}</td>
+        <td class="centro">{{valor}}</td>
+    </tr>
+    {{/imputaciones}}
+</table>
+
+<table>
+    <tr><td colspan="2" class="seccion">3. EJECUCIÓN DE ACTIVIDADES FRENTE A LAS OBLIGACIONES DURANTE EL PERÍODO REPORTADO</td></tr>
+    <tr class="negrita centro"><td style="width: 50%;">OBLIGACIÓN CONTRACTUAL</td><td>OBLIGACIÓN EJECUTADA</td></tr>
+    {{#obligaciones}}
+    <tr><td>{{orden}}. {{texto}}</td><td>{{ejecucion}}</td></tr>
+    {{/obligaciones}}
+</table>
+
+<table>
+    <tr><td colspan="4" class="seccion">4. CUMPLIMIENTO DE LAS OBLIGACIONES DE SEGURIDAD SOCIAL Y PARAFISCALES</td></tr>
+    <tr><td class="negrita" colspan="2">OBLIGACIONES PRESTACIONALES</td>
+        <td class="negrita">VALOR DEL I.B.C</td><td>{{ibc}}</td></tr>
+    <tr><td class="negrita">Mes de salud</td><td>{{mes_salud}}</td>
+        <td class="negrita">Mes de pensión</td><td>{{mes_pension}}</td></tr>
+    <tr><td class="negrita" colspan="2">SEGURIDAD SOCIAL — PLANILLA N° {{numero_planilla}}</td>
+        <td class="negrita">VALOR DEL APORTE</td><td>{{total_ss}}</td></tr>
+    <tr><td>Salud</td><td>{{aporte_salud}}</td><td>Riesgos Laborales</td><td>{{aporte_arl}}</td></tr>
+    <tr><td>Pensión</td><td>{{aporte_pension}}</td><td>Fondo de solidaridad pensional</td><td>{{aporte_fsp}}</td></tr>
+    <tr><td class="negrita" colspan="2">PARAFISCALES</td>
+        <td class="negrita">VALOR DEL APORTE</td><td>{{total_parafiscales}}</td></tr>
+    <tr><td>Sena</td><td>{{aporte_sena}}</td><td>ICBF</td><td>{{aporte_icbf}}</td></tr>
+    <tr><td>Caja de Compensación Familiar</td><td>{{aporte_ccf}}</td><td></td><td></td></tr>
+</table>
+
+<table>
+    <tr><td class="seccion">5. DECLARACIONES GENERALES</td></tr>
+    <tr><td class="mini">Manifiesto que he cumplido con las obligaciones derivadas del contrato y que las actividades
+    mencionadas en el presente informe corresponden a las labores efectivamente desarrolladas en el periodo
+    indicado, declarando que seré responsable por las afirmaciones contenidas en el presente documento, que
+    sirve como soporte para certificar el cumplimiento del objeto del contrato. También declaro que he
+    cumplido con la obligación de realizar los aportes al Sistema General de Seguridad Social Integral –
+    SGSSI en los periodos y valores señalados.</td></tr>
+</table>
+
+<table>
+    <tr><td class="seccion">6. DECLARACIONES ESPECIALES</td></tr>
+    <tr><td class="mini">
+        Que la E.S.E. Hospital ROSARIO PUMAREJO DE LOPEZ - Cesar, debe por concepto de servicios prestados
+        profesionales por ejecución de las obligaciones del contrato de la referencia, en el periodo
+        comprendido {{periodo_texto}}, la suma de {{valor_letras}}.<br><br>
+        En virtud de lo contemplado en el parágrafo 2 del Artículo 17 de la Ley 1819 del 29/12/2016 que
+        modificó el Artículo 383 del Estatuto Tributario, declaro bajo la gravedad de juramento que no tengo
+        otro contrato o vinculados dos (2) o más trabajadores asociados a la actividad que realizo en esta
+        entidad.<br><br>
+        Autorizo que el valor adeudado a mi favor sea consignado en la CUENTA DE {{tipo_cuenta}}
+        N° {{numero_cuenta}} de {{banco}}. El presente documento se asimila a soporte equivalente de pago o
+        cuenta de cobro.
+    </td></tr>
+</table>
+
+<table>
+    <tr><td class="seccion">7. ANEXOS</td></tr>
+    {{#anexos}}
+    <tr><td class="mini">{{nombre}}</td></tr>
+    {{/anexos}}
+    <tr><td class="mini">Cuenta de cobro N° {{consecutivo}}</td></tr>
+</table>
+
+<br>
+
+<table class="sin-borde">
+    <tr><td style="width: 55%;">
+        {{{firma_contratista}}}<br>
+        _______________________________<br>
+        {{contratista_nombre}}<br>
+        No CC {{numero_documento}} de {{lugar_expedicion}}
+    </td><td></td></tr>
+</table>
+
+<div class="pie">{{renglon_verificacion}}</div>
+
+</body>
+</html>

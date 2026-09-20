@@ -1,0 +1,98 @@
+/*
+ * Portal de cuentas de cobro. CSS propio y pequeño, sin framework: el
+ * portal lo usan adultos mayores desde celulares de gama baja (§2 del
+ * documento del módulo). Tipografía 18px+, botones de 56px, contraste AA,
+ * foco visible. Funciona desde 320px de ancho.
+ */
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: #1a202e;
+    background: #f5f7fa;
+}
+.saltar { position: absolute; left: -9999px; }
+.saltar:focus { left: 1rem; top: 1rem; background: #fff; padding: .75rem 1rem; z-index: 10; }
+.cabecera {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fff; padding: .75rem 1rem; border-bottom: 2px solid #e2e8f0;
+}
+.cabecera img { max-width: 55%; height: auto; }
+.principal { max-width: 40rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.titulo { font-size: 26px; line-height: 1.25; margin: .75rem 0 1rem; }
+h2 { font-size: 22px; margin: 1.5rem 0 .5rem; }
+.pie { max-width: 40rem; margin: 0 auto; padding: 1rem; color: #48566b; font-size: 16px; }
+
+.progreso { margin: .5rem 0 .25rem; font-weight: 600; color: #2a4d8f; }
+.barra { background: #dbe3ee; border-radius: 999px; height: 12px; overflow: hidden; }
+.barra-lleno { background: #2a4d8f; height: 100%; border-radius: 999px; }
+.paso-1 { width: 25%; } .paso-2 { width: 50%; } .paso-3 { width: 75%; } .paso-4 { width: 100%; }
+
+.tarjeta {
+    background: #fff; border: 1px solid #dbe3ee; border-radius: 12px;
+    padding: 1.25rem; margin: 1rem 0;
+}
+.tarjeta h2:first-child { margin-top: 0; }
+.dato dt { color: #48566b; font-size: 16px; }
+.dato dd { margin: 0 0 .75rem; font-weight: 600; }
+
+label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
+.ayuda { font-weight: 400; color: #48566b; font-size: 16px; display: block; }
+input[type="text"], input[type="email"], input[type="tel"], input[type="date"],
+input[type="number"], input[type="month"], input[type="file"], select, textarea {
+    width: 100%; font-size: 18px; padding: .8rem; border: 2px solid #94a3b8;
+    border-radius: 10px; background: #fff; color: inherit; min-height: 56px;
+}
+textarea { min-height: 8rem; }
+input:focus, select:focus, textarea:focus, button:focus, a:focus {
+    outline: 3px solid #1d4ed8; outline-offset: 2px;
+}
+input[type="checkbox"] { width: 1.6rem; height: 1.6rem; min-height: 0; }
+.casilla { display: flex; gap: .75rem; align-items: flex-start; font-weight: 400; }
+
+.boton, .boton-secundario {
+    display: block; width: 100%; min-height: 56px; font-size: 20px;
+    font-weight: 700; border-radius: 12px; border: none; cursor: pointer;
+    padding: .9rem 1.25rem; margin-top: 1.25rem; text-align: center;
+    text-decoration: none;
+}
+.boton { background: #1d4ed8; color: #fff; }
+.boton:hover { background: #1e40af; }
+.boton-secundario { background: #fff; color: #1d4ed8; border: 2px solid #1d4ed8; }
+.boton-salir {
+    min-height: 44px; font-size: 16px; padding: .5rem 1rem; border-radius: 10px;
+    background: #fff; color: #1a202e; border: 2px solid #94a3b8; cursor: pointer;
+}
+.enlace-suave { color: #1d4ed8; }
+
+.alerta-error {
+    background: #fdecec; border: 2px solid #b3261e; color: #7f1d1d;
+    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+}
+.alerta-exito {
+    background: #e8f5ec; border: 2px solid #1b7d3c; color: #14532d;
+    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+}
+.alerta-aviso {
+    background: #fff7e0; border: 2px solid #946200; color: #713f12;
+    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+}
+
+.lista-cuentas { list-style: none; padding: 0; margin: 0; }
+.lista-cuentas li {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    border-top: 1px solid #dbe3ee; padding: .75rem 0; flex-wrap: wrap;
+}
+.estado { font-weight: 700; }
+
+.firma-lienzo {
+    border: 2px dashed #94a3b8; border-radius: 10px; width: 100%;
+    height: 10rem; touch-action: none; background: #fff;
+}
+.visor-pdf { width: 100%; height: 24rem; border: 2px solid #dbe3ee; border-radius: 10px; }
+
+@media (min-width: 640px) {
+    .dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.25rem; }
+}

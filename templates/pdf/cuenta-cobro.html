@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    @page { margin: 2cm 2cm 2.2cm 2cm; }
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; color: #000; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+    .sin-borde td, .sin-borde th { border: none; padding: 2px 4px; }
+    .centro { text-align: center; }
+    .negrita { font-weight: bold; }
+    .encabezado td { font-size: 8pt; }
+    .titulo { font-size: 13pt; font-weight: bold; text-align: center; margin: 10px 0 2px; }
+    .pie { position: fixed; bottom: -1.6cm; left: 0; right: 0; font-size: 7pt; color: #333; }
+    .hoja:after { content: "Página " counter(page); }
+    .mini { font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<table class="encabezado">
+    <tr>
+        <td class="centro" style="width: 22%;"><img src="{{logo}}" alt="Logo" style="height: 46px; width: auto;"></td>
+        <td class="centro" style="width: 48%;">
+            <span class="negrita">E.S.E. HOSPITAL ROSARIO PUMAREJO DE LÓPEZ</span><br>
+            NIT: 892399994-5<br>
+            <span class="negrita">CUENTA DE COBRO</span>
+        </td>
+        <td style="width: 30%; padding: 0;">
+            <table class="mini">
+                <tr><td>CÓDIGO</td><td>{{sgc_codigo}}</td></tr>
+                <tr><td>VERSIÓN</td><td>{{sgc_version}}</td></tr>
+                <tr><td>FECHA</td><td>{{sgc_fecha}}</td></tr>
+                <tr><td>HOJA</td><td class="hoja"></td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<p class="titulo">CUENTA DE COBRO</p>
+<p class="centro negrita">Cuenta de cobro N° {{consecutivo}}</p>
+
+<p class="centro">
+    <span class="negrita">E.S.E HOSPITAL ROSARIO PUMAREJO DE LOPEZ</span><br>
+    892.399.994 - 5<br>
+    <span class="negrita">DEBE A:</span>
+</p>
+
+<table>
+    <tr><td style="width: 35%;" class="negrita">Nombre del contratista</td><td>{{contratista_nombre}}</td></tr>
+    <tr><td class="negrita">RUT</td><td>{{numero_documento}}</td></tr>
+    <tr><td class="negrita">Dirección</td><td>{{direccion}}</td></tr>
+    <tr><td class="negrita">Teléfono / celular</td><td>{{telefonos}}</td></tr>
+    <tr><td class="negrita">Correo electrónico</td><td>{{correo}}</td></tr>
+    <tr><td class="negrita">Contacto</td><td>{{telefonos}}</td></tr>
+    <tr><td class="negrita">Fecha de cobro</td><td>{{fecha_cobro_larga}}</td></tr>
+    <tr><td class="negrita">Contrato N°</td><td>{{numero_contrato}} — CDP: {{cdp_numero}} — R.P.: {{rp_numero}}</td></tr>
+    <tr><td class="negrita">Adición: CDP / R.P.</td><td></td></tr>
+</table>
+
+<br>
+
+<table>
+    <tr class="negrita centro">
+        <td>CONCEPTO</td>
+        <td style="width: 13%;">FECHA DE INICIO CONTRATO</td>
+        <td style="width: 13%;">FECHA DE TERMINACIÓN CONTRATO</td>
+        <td style="width: 13%;">SECCIÓN O UBICACIÓN</td>
+        <td style="width: 14%;">TOTAL SERVICIOS</td>
+    </tr>
+    <tr>
+        <td>{{objeto}}, según contrato N° {{numero_contrato}}, suscrito el {{fecha_suscripcion_larga}} y conforme al informe de supervisión y ejecución de las actividades adjunto a la presente cuenta de cobro y correspondiente al periodo comprendido {{periodo_texto}}.</td>
+        <td class="centro">{{fecha_acta_inicio}}</td>
+        <td class="centro">{{fecha_terminacion}}</td>
+        <td class="centro">{{seccion_ubicacion}}</td>
+        <td class="centro">{{valor}}</td>
+    </tr>
+    <tr class="negrita">
+        <td colspan="4" class="centro">TOTALES</td>
+        <td class="centro">{{valor}}</td>
+    </tr>
+</table>
+
+<br><br>
+
+<table class="sin-borde">
+    <tr><td style="width: 55%;">
+        <span class="negrita">FIRMA DEL CONTRATISTA</span><br><br>
+        {{{firma_contratista}}}<br>
+        _______________________________<br>
+        {{contratista_nombre}}<br>
+        C.C. {{numero_documento}}
+    </td><td></td></tr>
+</table>
+
+<p class="mini">
+    Me permito certificar bajo la gravedad de juramento, que mi ingreso base de cotización corresponde al
+    40% del total de mis ingresos correspondiente al presente contrato. Así mismo solicito que se aplique
+    la tabla de retenciones que trata el art. 383 de E.T. y que este no es inferior a un (1) SMLV.
+</p>
+
+<table>
+    <tr>
+        <td style="width: 50%; padding: 0;">
+            <table class="mini">
+                <tr><td colspan="2" class="negrita centro">Anexos Cuenta de Cobro</td></tr>
+                <tr><td>Planilla pagos a seguridad social</td><td class="centro">SI</td></tr>
+                <tr><td>Copia RUT actualizado</td><td class="centro">SI</td></tr>
+                <tr><td>Informe de Actividades</td><td class="centro">SI</td></tr>
+                <tr><td>Informe de Supervisión</td><td class="centro">SI</td></tr>
+                <tr><td>Otros: Cont, CDP, RP, RUT, cédula</td><td class="centro"></td></tr>
+            </table>
+        </td>
+        <td style="width: 50%; padding: 0;">
+            <table class="mini">
+                <tr><td colspan="2" class="negrita centro">CÁLCULO APORTES OBLIGATORIOS A SEGURIDAD SOCIAL (SALUD, PENSIÓN Y ARL)</td></tr>
+                <tr><td>Aporte obligatorio a salud (12,5%)</td><td class="centro">{{aporte_salud}}</td></tr>
+                <tr><td>Aporte obligatorio a pensión (16%)</td><td class="centro">{{aporte_pension}}</td></tr>
+                <tr><td>Fondo de solidaridad pensional 1%</td><td class="centro">{{aporte_fsp}}</td></tr>
+                <tr><td>Aportes a Riesgos laborales (ARL) {{tarifa_arl}}</td><td class="centro">{{aporte_arl}}</td></tr>
+                <tr><td class="negrita">Total Aportes Obligatorios</td><td class="centro negrita">{{total_aportes}}</td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<div class="pie">{{renglon_verificacion}}</div>
+
+</body>
+</html>

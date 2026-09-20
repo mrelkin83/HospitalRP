@@ -112,10 +112,19 @@ final readonly class CuentaRepository
     public function crearBorrador(int $contratoId, array $pago, string $valorLetras): int
     {
         return (int) $this->conexion->transactional(function () use ($contratoId, $pago, $valorLetras): int {
-            $consecutivo = 1 + (int) $this->conexion->fetchOne(
-                "SELECT COUNT(*) FROM cc_cuentas WHERE contrato_id = ? AND estado <> 'ANULADA'",
+            // El consecutivo es el primer número libre entre las cuentas
+            // VIVAS (§8.5): si se anuló la N° 2, la cuenta que la reemplaza
+            // vuelve a ser la N° 2. Las anuladas no estorban: al anularse
+            // su consecutivo se corre al final (ver anulación en el panel).
+            $vivos = array_map(intval(...), $this->conexion->fetchFirstColumn(
+                "SELECT consecutivo FROM cc_cuentas WHERE contrato_id = ? AND estado <> 'ANULADA' ORDER BY consecutivo",
                 [$contratoId],
-            );
+            ));
+            $consecutivo = 1;
+
+            while (in_array($consecutivo, $vivos, true)) {
+                $consecutivo++;
+            }
 
             $this->conexion->insert('cc_cuentas', [
                 'contrato_id' => $contratoId,

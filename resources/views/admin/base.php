@@ -61,6 +61,7 @@ $secciones = [
         'Contratistas' => ['/admin/cuentas-cobro/contratistas', 'cuentas.administrar'],
         'Supervisores' => ['/admin/cuentas-cobro/supervisores', 'cuentas.administrar'],
         'Parámetros' => ['/admin/cuentas-cobro/parametros', 'cuentas.administrar'],
+        'Reportes' => ['/admin/cuentas-cobro/reportes', 'cuentas.administrar'],
     ],
     'Sistema' => [
         'Ajustes del sitio' => ['/admin/configuracion', 'sistema.configuracion'],

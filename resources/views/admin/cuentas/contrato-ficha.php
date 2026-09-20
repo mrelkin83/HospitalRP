@@ -179,6 +179,20 @@ $enRevision = $contrato['estado'] === 'EN_REVISION';
                 <label class="etiqueta" for="imp-valor">Valor (pesos)</label>
                 <input class="campo" id="imp-valor" type="number" name="valor" required min="1">
             </div>
+            <?php $adiciones = array_filter($novedades ?? [], static fn (array $n): bool => $n['tipo'] === 'ADICION'); ?>
+            <?php if ($adiciones !== []) { ?>
+                <div>
+                    <label class="etiqueta" for="imp-novedad">Pertenece a la adición</label>
+                    <select class="campo" id="imp-novedad" name="novedad_id">
+                        <option value="0">Al contrato inicial</option>
+                        <?php foreach ($adiciones as $adicion) { ?>
+                            <option value="<?= (int) $adicion['id'] ?>">
+                                Adición del <?= $e((string) $adicion['fecha']) ?> (<?= $e($moneda((string) $adicion['valor'])) ?>)
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+            <?php } ?>
             <div class="sm:col-span-3">
                 <button class="boton-principal" type="submit">Registrar</button>
             </div>
@@ -205,4 +219,123 @@ $enRevision = $contrato['estado'] === 'EN_REVISION';
             </ol>
         </details>
     <?php } ?>
+</section>
+
+<section class="tarjeta mt-4">
+    <h2 class="text-lg font-semibold texto-titular">Novedades del contrato</h2>
+    <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="text-left texto-suave">
+                <th class="p-2">Tipo</th><th class="p-2">Fecha</th><th class="p-2">Detalle</th><th class="p-2">Registró</th>
+            </tr></thead>
+            <tbody>
+                <?php if (($novedades ?? []) === []) { ?>
+                    <tr><td class="p-3 texto-suave" colspan="4">Sin novedades registradas.</td></tr>
+                <?php } ?>
+                <?php foreach ($novedades ?? [] as $novedad) { ?>
+                    <tr class="border-t borde-suave">
+                        <td class="p-2 font-semibold"><?= $e((string) $novedad['tipo']) ?></td>
+                        <td class="p-2 whitespace-nowrap"><?= $e($novedad['fecha'] . ($novedad['fecha_fin'] !== null ? ' a ' . $novedad['fecha_fin'] : '')) ?></td>
+                        <td class="p-2">
+                            <?php if ($novedad['valor'] !== null) { ?><?= $e($moneda((string) $novedad['valor'])) ?> · <?php } ?>
+                            <?php if ((int) ($novedad['plazo_meses'] ?? 0) > 0 || (int) ($novedad['plazo_dias'] ?? 0) > 0) { ?>
+                                <?= (int) $novedad['plazo_meses'] ?> meses, <?= (int) $novedad['plazo_dias'] ?> días ·
+                            <?php } ?>
+                            <?= $e((string) ($novedad['descripcion'] ?? '')) ?>
+                        </td>
+                        <td class="p-2"><?= $e((string) ($novedad['registrado_por'] ?? '')) ?></td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+
+    <details class="mt-3">
+        <summary class="cursor-pointer font-semibold texto-titular">Registrar novedad</summary>
+        <form class="mt-3 grid gap-3 sm:grid-cols-3" method="post"
+              action="/admin/cuentas-cobro/contratos/<?= $id ?>/novedades"
+              onsubmit="return confirm('Las novedades recalculan el cronograma futuro. ¿Registrar?');">
+            <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+            <div>
+                <label class="etiqueta" for="nov-tipo">Tipo</label>
+                <select class="campo" id="nov-tipo" name="tipo">
+                    <option value="ADICION">Adición (valor y plazo)</option>
+                    <option value="PRORROGA">Prórroga (solo plazo)</option>
+                    <option value="SUSPENSION">Suspensión</option>
+                    <option value="REINICIO">Reinicio</option>
+                    <option value="TERMINACION_ANTICIPADA">Terminación anticipada</option>
+                </select>
+            </div>
+            <div>
+                <label class="etiqueta" for="nov-fecha">Fecha del acto</label>
+                <input class="campo" id="nov-fecha" type="date" name="fecha" value="<?= date('Y-m-d') ?>">
+            </div>
+            <div>
+                <label class="etiqueta" for="nov-valor">Valor (solo adición)</label>
+                <input class="campo" id="nov-valor" type="number" name="valor" min="0">
+            </div>
+            <div>
+                <label class="etiqueta" for="nov-meses">Plazo meses</label>
+                <input class="campo" id="nov-meses" type="number" name="plazo_meses" min="0" value="0">
+            </div>
+            <div>
+                <label class="etiqueta" for="nov-dias">Plazo días</label>
+                <input class="campo" id="nov-dias" type="number" name="plazo_dias" min="0" value="0">
+            </div>
+            <div></div>
+            <div>
+                <label class="etiqueta" for="nov-desde">Suspensión: desde</label>
+                <input class="campo" id="nov-desde" type="date" name="fecha_desde">
+            </div>
+            <div>
+                <label class="etiqueta" for="nov-hasta">Suspensión: reanuda el</label>
+                <input class="campo" id="nov-hasta" type="date" name="fecha_hasta">
+            </div>
+            <div class="sm:col-span-3">
+                <label class="etiqueta" for="nov-descripcion">Descripción</label>
+                <input class="campo" id="nov-descripcion" type="text" name="descripcion" maxlength="400">
+            </div>
+            <div class="sm:col-span-3">
+                <button class="boton-principal" type="submit">Registrar novedad</button>
+            </div>
+        </form>
+    </details>
+</section>
+
+<section class="tarjeta mt-4">
+    <h2 class="text-lg font-semibold texto-titular">Cuentas de este contrato</h2>
+    <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="text-left texto-suave">
+                <th class="p-2">N°</th><th class="p-2">Radicado</th><th class="p-2">Periodo</th>
+                <th class="p-2">Valor</th><th class="p-2">Estado</th><th class="p-2"></th>
+            </tr></thead>
+            <tbody>
+                <?php if (($cuentasContrato ?? []) === []) { ?>
+                    <tr><td class="p-3 texto-suave" colspan="6">El contratista aún no presenta cuentas.</td></tr>
+                <?php } ?>
+                <?php foreach ($cuentasContrato ?? [] as $cuenta) { ?>
+                    <tr class="border-t borde-suave">
+                        <td class="p-2"><?= (int) $cuenta['consecutivo'] ?></td>
+                        <td class="p-2"><?= $e((string) ($cuenta['radicado'] ?? 'Borrador')) ?></td>
+                        <td class="p-2 whitespace-nowrap"><?= $e($cuenta['periodo_desde'] . ' a ' . $cuenta['periodo_hasta']) ?></td>
+                        <td class="p-2 whitespace-nowrap"><?= $e($moneda((string) $cuenta['valor'])) ?></td>
+                        <td class="p-2"><?= $e((string) $cuenta['estado']) ?></td>
+                        <td class="p-2">
+                            <?php if ($cuenta['estado'] !== 'ANULADA') { ?>
+                                <form class="flex flex-wrap items-end gap-2" method="post"
+                                      action="/admin/cuentas-cobro/cuentas/<?= (int) $cuenta['id'] ?>/anular"
+                                      onsubmit="return confirm('¿Anular esta cuenta? No cuenta para consecutivos ni acumulados.');">
+                                    <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                                    <input class="campo" type="text" name="motivo" maxlength="300" required
+                                           placeholder="Motivo de la anulación" aria-label="Motivo de la anulación">
+                                    <button class="enlace text-sm" type="submit">Anular</button>
+                                </form>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
 </section>

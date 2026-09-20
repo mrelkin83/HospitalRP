@@ -92,7 +92,10 @@ use App\Modules\CuentasCobro\Service\EnvioCuentaService;
 use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
 use App\Modules\CuentasCobro\Service\OtpService;
 use App\Modules\CuentasCobro\Service\SesionContratista;
+use App\Http\Admin\CuentasReportesController;
 use App\Http\Admin\CuentasSupervisionController;
+use App\Modules\CuentasCobro\Repository\ReportesCuentasRepository;
+use App\Modules\CuentasCobro\Service\NovedadesContratoService;
 use App\Http\Web\CuentasDescargaController;
 use App\Http\Web\CuentasNuevaController;
 use App\Http\Web\CuentasPortalController;
@@ -695,6 +698,16 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(CuentasSupervisionController::class, CuentasSupervisionController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(NovedadesContratoService::class, NovedadesContratoService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ReportesCuentasRepository::class, ReportesCuentasRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CuentasReportesController::class, CuentasReportesController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

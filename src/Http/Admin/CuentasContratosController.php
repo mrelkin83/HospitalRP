@@ -8,11 +8,14 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Support\Vistas;
 use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Modules\CuentasCobro\Entity\EstadoContrato;
+use App\Modules\CuentasCobro\Entity\EstadoCuenta;
 use App\Modules\CuentasCobro\Entity\ModalidadPeriodos;
 use App\Modules\CuentasCobro\Entity\TipoCuota;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
 use App\Modules\CuentasCobro\Repository\ContratoRepository;
+use App\Modules\CuentasCobro\Repository\CuentaRepository;
 use App\Modules\CuentasCobro\Repository\SupervisorRepository;
+use App\Modules\CuentasCobro\Service\NovedadesContratoService;
 use App\Modules\CuentasCobro\Service\CalculosCuenta;
 use App\Modules\CuentasCobro\Service\FechasCuenta;
 use App\Modules\CuentasCobro\Service\NumeroALetras;
@@ -42,6 +45,8 @@ final readonly class CuentasContratosController
         private ContratoRepository $contratos,
         private ContratistaRepository $contratistas,
         private SupervisorRepository $supervisores,
+        private NovedadesContratoService $novedades,
+        private CuentaRepository $cuentas,
     ) {
     }
 
@@ -198,6 +203,8 @@ final readonly class CuentasContratosController
             'imputaciones' => $this->contratos->imputaciones($id),
             'obligaciones' => $this->contratos->obligaciones($id),
             'pagos' => $this->contratos->pagos($id),
+            'novedades' => $this->novedades->novedadesDe($id),
+            'cuentasContrato' => $this->cuentas->delContrato($id),
             'diferencia' => CalculosCuenta::diferenciaConTotal(
                 $cuotas,
                 ContratoRepository::pesos((string) $contrato['valor_total']) + $this->contratos->totalAdiciones($id),
@@ -340,6 +347,20 @@ final readonly class CuentasContratosController
             return $this->volverConError("Para registrar el {$tipo} se necesitan número, fecha, rubro y valor.", $volverA);
         }
 
+        // El CDP/RP de una adición viaja amarrado a su novedad (§6).
+        $novedadId = $r->getInt('novedad_id');
+
+        if ($novedadId > 0) {
+            $esAdicionDelContrato = array_filter(
+                $this->novedades->novedadesDe($id),
+                static fn (array $n): bool => (int) $n['id'] === $novedadId && $n['tipo'] === 'ADICION',
+            ) !== [];
+
+            if (!$esAdicionDelContrato) {
+                return $this->volverConError('La adición seleccionada no pertenece a este contrato.', $volverA);
+            }
+        }
+
         $imputacionId = $this->contratos->agregarImputacion($id, [
             'tipo' => $tipo,
             'numero' => mb_substr($numero, 0, 30),
@@ -348,10 +369,125 @@ final readonly class CuentasContratosController
             'nombre_rubro' => mb_substr($nombreRubro, 0, 200),
             'recurso' => $this->texto($r->getString('recurso'), 120),
             'valor' => $valor,
+            'novedad_id' => $novedadId > 0 ? $novedadId : null,
         ]);
 
         $this->pantalla->auditar($peticion, AccionAuditoria::Creacion, 'cc_contrato_imputacion', $imputacionId, "{$tipo} {$numero} registrado al contrato " . $contrato['numero']);
         $this->pantalla->guardarEnLaSesion('cc_mensaje', "{$tipo} {$numero} registrado.");
+
+        return new RedirectResponse($volverA, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Registrar una novedad del contrato (fase 4): adición, prórroga,
+     * suspensión, reinicio o terminación anticipada. La aritmética vive en
+     * NovedadesContratoService; aquí solo se traduce el formulario.
+     */
+    public function registrarNovedad(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $contrato = $this->contratos->porId($id);
+
+        if ($contrato === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $r = $peticion->request;
+        $volverA = self::RUTA . '/' . $id;
+        $usuarioId = $this->pantalla->usuarioId() ?? 0;
+        $tipo = $r->getString('tipo');
+        $fecha = trim($r->getString('fecha')) !== '' ? trim($r->getString('fecha')) : date('Y-m-d');
+        $descripcion = trim($r->getString('descripcion'));
+
+        $resultado = match ($tipo) {
+            'ADICION' => $this->novedades->registrarAdicion(
+                $contrato,
+                $r->getInt('valor'),
+                max(0, $r->getInt('plazo_meses')),
+                max(0, $r->getInt('plazo_dias')),
+                $fecha,
+                $descripcion,
+                $usuarioId,
+            ),
+            'PRORROGA' => $this->novedades->registrarProrroga(
+                $contrato,
+                max(0, $r->getInt('plazo_meses')),
+                max(0, $r->getInt('plazo_dias')),
+                $fecha,
+                $descripcion,
+                $usuarioId,
+            ),
+            'SUSPENSION' => $this->novedades->registrarSuspension(
+                $contrato,
+                trim($r->getString('fecha_desde')),
+                trim($r->getString('fecha_hasta')),
+                $descripcion,
+                $usuarioId,
+            ),
+            'REINICIO' => $this->novedades->registrarReinicio($contrato, $fecha, $usuarioId),
+            'TERMINACION_ANTICIPADA' => $this->novedades->registrarTerminacionAnticipada($contrato, $fecha, $descripcion, $usuarioId),
+            default => ['ok' => false, 'mensaje' => 'Tipo de novedad desconocido.'],
+        };
+
+        if (!$resultado['ok']) {
+            return $this->volverConError($resultado['mensaje'], $volverA);
+        }
+
+        $this->pantalla->auditar($peticion, AccionAuditoria::Actualizacion, 'cc_contrato', $id, 'Novedad ' . $tipo . ' registrada al contrato ' . $contrato['numero']);
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', $resultado['mensaje']);
+
+        return new RedirectResponse($volverA, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Anular una cuenta (§5): cualquier estado, solo administración y con
+     * motivo. La anulada corre su consecutivo al final para que la cuenta
+     * que la reemplace pueda volver a usar su número, y la cuota vuelve a
+     * quedar disponible en el portal.
+     */
+    public function anularCuenta(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $cuenta = $this->cuentas->porId($peticion->attributes->getInt('id'));
+
+        if ($cuenta === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $volverA = self::RUTA . '/' . (int) $cuenta['contrato_id'];
+        $motivo = trim($peticion->request->getString('motivo'));
+
+        if ($motivo === '') {
+            return $this->volverConError('Anular una cuenta exige el motivo: queda en el historial y en la auditoría.', $volverA);
+        }
+
+        if ((string) $cuenta['estado'] === EstadoCuenta::ANULADA->value) {
+            return $this->volverConError('Esa cuenta ya está anulada.', $volverA);
+        }
+
+        $maximo = (int) $this->cuentas->delContrato((int) $cuenta['contrato_id'])[0]['consecutivo'];
+
+        $this->cuentas->transicionar(
+            (int) $cuenta['id'],
+            EstadoCuenta::from((string) $cuenta['estado']),
+            EstadoCuenta::ANULADA,
+            'ADMIN',
+            $this->pantalla->usuarioId(),
+            null,
+            $motivo,
+            (string) $peticion->getClientIp(),
+            ['consecutivo' => min(255, $maximo + 1)],
+        );
+
+        $this->pantalla->auditar($peticion, AccionAuditoria::CambioEstado, 'cc_cuenta', (int) $cuenta['id'], 'Cuenta ' . ($cuenta['radicado'] ?? 'en borrador') . ' anulada: ' . mb_substr($motivo, 0, 300));
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', 'Cuenta anulada. La cuota vuelve a estar disponible para el contratista.');
 
         return new RedirectResponse($volverA, Response::HTTP_SEE_OTHER);
     }

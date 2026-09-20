@@ -18,6 +18,7 @@ use App\Http\Admin\CategoriasController;
 use App\Http\Admin\CuentasContratistasController;
 use App\Http\Admin\CuentasContratosController;
 use App\Http\Admin\CuentasParametrosController;
+use App\Http\Admin\CuentasReportesController;
 use App\Http\Admin\CuentasSupervisionController;
 use App\Http\Admin\CuentasSupervisoresController;
 use App\Http\Admin\FaqController;
@@ -727,6 +728,10 @@ $rutas->add('admin.cc.supervisores.guardar', new Route('/admin/cuentas-cobro/sup
 $rutas->add('admin.cc.parametros', new Route('/admin/cuentas-cobro/parametros', $permisoCuentas(CuentasParametrosController::class, 'index'), methods: ['GET']));
 $rutas->add('admin.cc.parametros.anio', new Route('/admin/cuentas-cobro/parametros/anio', $permisoCuentas(CuentasParametrosController::class, 'guardarAnio'), methods: ['POST']));
 $rutas->add('admin.cc.parametros.plantilla', new Route('/admin/cuentas-cobro/parametros/plantillas/{clave}', $permisoCuentas(CuentasParametrosController::class, 'guardarPlantilla'), ['clave' => '[A-Z_]+'], methods: ['POST']));
+
+$rutas->add('admin.cc.contratos.novedad', new Route('/admin/cuentas-cobro/contratos/{id}/novedades', $permisoCuentas(CuentasContratosController::class, 'registrarNovedad'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.cuentas.anular', new Route('/admin/cuentas-cobro/cuentas/{id}/anular', $permisoCuentas(CuentasContratosController::class, 'anularCuenta'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.reportes', new Route('/admin/cuentas-cobro/reportes', $permisoCuentas(CuentasReportesController::class, 'index'), methods: ['GET']));
 
 // --- Panel: bandeja de supervisión de cuentas de cobro (fase 3) ---
 

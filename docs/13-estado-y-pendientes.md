@@ -84,8 +84,20 @@ GJ-FR-004 y CONGELA pagos anteriores y saldo, paquete combinado con FPDI
 (orden §11.4; anexo inimportable se omite y se avisa), devolución con
 notificación al contratista, marca «Entregada a Financiera», S4 con registro
 de acta. La firma del supervisor se sube en la propia bandeja. Aceptación
-verificada en `tests/Feature/Http/CuentasSupervisionTest`. Siguen las fases
-4 (novedades y reportes) y 5 (extracción de minutas con IA).
+verificada en `tests/Feature/Http/CuentasSupervisionTest`.
+
+**Módulo de cuentas de cobro — fase 4 terminada (2026-09-20).** Novedades del
+contrato desde la ficha (adición que agrega cuotas y mueve la terminación,
+prórroga, suspensión que prorratea la cuota afectada, desplaza las
+siguientes y deja el remanente al final, reinicio y terminación anticipada
+con prorrateo), CDP/RP amarrados a su adición, anulación de cuentas con
+motivo (la cuota vuelve a quedar disponible y el consecutivo se reutiliza),
+reportes A8 con CSV (tiempos por supervisor, estados por mes, sin acta,
+cuotas vencidas) y `php bin/consola cuentas:recordatorios` para el cron
+diario (contratista con cuota vencida: día 1 y cada 7; supervisor: a los 3
+días HÁBILES y cada 3). Aceptación en
+`tests/Feature/Http/CuentasNovedadesTest`. Sigue la fase 5 (extracción de
+minutas con IA).
 
 ## 2. Pendientes técnicos (código por hacer)
 
@@ -342,6 +354,7 @@ selector compartido, no un parche del héroe.
 | `bin/consola tramites:alertas` | Diaria (madrugada) | Avisa trámites vencidos o por vencer (3 días) |
 | `bin/consola busqueda:indexar` | Diaria (nocturna) | Red de seguridad del índice de búsqueda |
 | `bin/consola semillas:festivos` | Anual (enero) | Festivos del año actual y los dos siguientes |
+| `bin/consola cuentas:recordatorios` | Diaria (madrugada) | Recuerda cuentas por presentar (contratistas) y por revisar (supervisores, 3 días hábiles) |
 | Respaldos | Diaria | **Pendiente del módulo** (2.4) |
 
 ## 5. Fase 9 — lo que resta del plan

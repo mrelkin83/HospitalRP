@@ -56,6 +56,7 @@ $secciones = [
         'Eventos' => ['/admin/eventos', 'eventos.ver'],
     ],
     'Cuentas de cobro' => [
+        'Bandeja de supervisión' => ['/admin/cuentas-cobro/bandeja', 'cuentas.supervisar'],
         'Contratos' => ['/admin/cuentas-cobro/contratos', 'cuentas.administrar'],
         'Contratistas' => ['/admin/cuentas-cobro/contratistas', 'cuentas.administrar'],
         'Supervisores' => ['/admin/cuentas-cobro/supervisores', 'cuentas.administrar'],

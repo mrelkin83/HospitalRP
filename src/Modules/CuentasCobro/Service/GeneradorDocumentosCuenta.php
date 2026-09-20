@@ -105,7 +105,8 @@ final readonly class GeneradorDocumentosCuenta
                     t.lugar_expedicion, t.direccion, t.telefono, t.celular, t.correo, t.banco,
                     t.tipo_cuenta AS banco_tipo_cuenta, t.numero_cuenta AS banco_numero_cuenta,
                     t.firma_archivo AS contratista_firma,
-                    s.nombre_completo AS supervisor_nombre, s.cargo AS supervisor_cargo
+                    s.nombre_completo AS supervisor_nombre, s.cargo AS supervisor_cargo,
+                    s.firma_archivo AS supervisor_firma
                FROM cc_cuentas c
                JOIN cc_contratos k ON k.id = c.contrato_id
                JOIN cc_contratistas t ON t.id = k.contratista_id
@@ -132,7 +133,9 @@ final readonly class GeneradorDocumentosCuenta
             'ciudad' => (string) $cuenta['ciudad_suscripcion'],
             'fecha_suscripcion_larga' => FechasCuenta::larga(FechasCuenta::desdeMysql((string) $cuenta['fecha_suscripcion'])),
             'valor_total' => $moneda($cuenta['valor_total']),
-            'valor_total_letras' => (string) $cuenta['valor_total_letras'],
+            // Sin su paréntesis final «($ 14.100.000)»: las plantillas ya
+            // ponen la cifra al lado y saldría dos veces.
+            'valor_total_letras' => trim((string) preg_replace('/\s*\(\$\s*[\d.,]+\)\s*$/', '', (string) $cuenta['valor_total_letras'])),
             'plazo_texto' => (string) $cuenta['plazo_texto'],
             'garantias' => ((int) $cuenta['garantias'] === 1) ? 'SÍ' : 'NO',
             'fecha_acta_inicio' => $cuenta['fecha_acta_inicio'] === null ? '' : FechasCuenta::larga(FechasCuenta::desdeMysql((string) $cuenta['fecha_acta_inicio'])),
@@ -156,20 +159,97 @@ final readonly class GeneradorDocumentosCuenta
             'supervisor_nombre' => (string) ($cuenta['supervisor_nombre'] ?? ''),
             'supervisor_cargo' => (string) ($cuenta['supervisor_cargo'] ?? ''),
             'firma_contratista' => $this->imagenBase64($cuenta['contratista_firma']),
+            'firma_supervisor' => $this->imagenBase64($cuenta['supervisor_firma']),
+            'supervisor_nombre_mayus' => mb_strtoupper((string) ($cuenta['supervisor_nombre'] ?? ''), 'UTF-8'),
             'obligaciones' => $this->obligaciones($cuentaId),
             'imputaciones' => $this->imputaciones((int) $cuenta['kid'], $moneda),
             'cdp_numero' => $this->numerosImputacion((int) $cuenta['kid'], 'CDP'),
             'rp_numero' => $this->numerosImputacion((int) $cuenta['kid'], 'RP'),
             'anexos' => $this->anexos($cuentaId),
             ...$this->datosSeguridadSocial($ss, $moneda),
+            ...$this->avanceFinanciero($cuenta),
+            ...$this->fechaDelInforme($cuenta),
         ];
     }
 
-    /** @return list<array<string, string|int>> Una fila por obligación específica. */
+    /**
+     * El avance financiero del informe de supervisión (§11.3): ningún
+     * campo en blanco. En una cuenta APROBADA valen los montos CONGELADOS
+     * al aprobar; antes de aprobar se calculan en vivo para la vista
+     * previa del supervisor.
+     *
+     * @param array<string, mixed> $cuenta
+     *
+     * @return array<string, string>
+     */
+    private function avanceFinanciero(array $cuenta): array
+    {
+        $contratoId = (int) $cuenta['kid'];
+        $valorTotal = ContratoRepository::pesos((string) $cuenta['valor_total']);
+        $valorCuenta = ContratoRepository::pesos((string) $cuenta['valor']);
+        $adiciones = ContratoRepository::pesos((string) $this->conexion->fetchOne(
+            "SELECT COALESCE(SUM(valor), 0) FROM cc_contrato_novedades WHERE contrato_id = ? AND tipo = 'ADICION'",
+            [$contratoId],
+        ));
+
+        if ((string) $cuenta['estado'] === 'APROBADA') {
+            $pagosAnteriores = ContratoRepository::pesos((string) $cuenta['pagos_anteriores']);
+            $saldo = ContratoRepository::pesos((string) $cuenta['saldo_por_ejecutar']);
+        } else {
+            $pagosAnteriores = ContratoRepository::pesos((string) $this->conexion->fetchOne(
+                "SELECT COALESCE(SUM(valor), 0) FROM cc_cuentas
+                  WHERE contrato_id = ? AND estado IN ('APROBADA', 'ENTREGADA_FINANCIERA') AND consecutivo < ?",
+                [$contratoId, (int) $cuenta['consecutivo']],
+            ));
+            $saldo = $valorTotal + $adiciones - $pagosAnteriores - $valorCuenta;
+        }
+
+        return [
+            'valor_adicion' => $adiciones > 0 ? NumeroALetras::moneda($adiciones) : 'N. A.',
+            'valor_con_adicion' => NumeroALetras::moneda($valorTotal + $adiciones),
+            'anticipo' => NumeroALetras::moneda(0),
+            'pagos_anteriores' => NumeroALetras::moneda($pagosAnteriores),
+            'saldo_por_ejecutar' => NumeroALetras::moneda($saldo),
+            'adicion_sn' => $adiciones > 0 ? 'SÍ' : 'NO',
+            'suspension_sn' => $this->conexion->fetchOne(
+                "SELECT COUNT(*) FROM cc_contrato_novedades WHERE contrato_id = ? AND tipo = 'SUSPENSION'",
+                [$contratoId],
+            ) > 0 ? 'SÍ' : 'NO',
+        ];
+    }
+
+    /**
+     * «Dado en Valledupar a los Veintisiete (27) días del mes de julio de
+     * 2026»: la fecha del informe de supervisión, en letras (§11.3).
+     *
+     * @param array<string, mixed> $cuenta
+     *
+     * @return array<string, string>
+     */
+    private function fechaDelInforme(array $cuenta): array
+    {
+        $fecha = is_string($cuenta['fecha_informe_supervision'] ?? null)
+            ? FechasCuenta::desdeMysql((string) $cuenta['fecha_informe_supervision'])
+            : new \DateTimeImmutable('today');
+
+        return [
+            'dia_letras' => NumeroALetras::dia((int) $fecha->format('j')),
+            'mes_informe' => FechasCuenta::mes($fecha),
+            'anio_informe' => $fecha->format('Y'),
+        ];
+    }
+
+    /**
+     * Una fila por obligación específica, con la marca Sí/No/Parcial del
+     * supervisor. Las MISMAS obligaciones y descripciones alimentan el
+     * informe de actividades y el de supervisión, sin excepción (§11.3).
+     *
+     * @return list<array<string, string|int>>
+     */
     private function obligaciones(int $cuentaId): array
     {
         $filas = $this->conexion->fetchAllAssociative(
-            'SELECT o.orden, o.texto, a.descripcion_ejecucion
+            'SELECT o.orden, o.texto, a.descripcion_ejecucion, a.cumplimiento
                FROM cc_cuenta_actividades a
                JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
               WHERE a.cuenta_id = ?
@@ -181,6 +261,10 @@ final readonly class GeneradorDocumentosCuenta
             'orden' => (int) $f['orden'],
             'texto' => (string) $f['texto'],
             'ejecucion' => (string) ($f['descripcion_ejecucion'] ?? ''),
+            // Por defecto SÍ: es lo que el supervisor confirma al abrir (§7.2).
+            'marca_si' => ($f['cumplimiento'] ?? 'SI') === 'SI' ? 'X' : '',
+            'marca_no' => ($f['cumplimiento'] ?? '') === 'NO' ? 'X' : '',
+            'marca_parcial' => ($f['cumplimiento'] ?? '') === 'PARCIAL' ? 'X' : '',
         ], $filas);
     }
 

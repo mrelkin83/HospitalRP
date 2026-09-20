@@ -63,6 +63,10 @@ final readonly class CatalogoPermisos
                 // supervisor (revisar y aprobar cuentas) llegará con su
                 // bandeja en la fase 3 del módulo.
                 'cuentas.administrar' => 'Administrar contratos, contratistas, supervisores y parámetros de cuentas de cobro',
+                // La bandeja del supervisor: revisar, aprobar con firma o
+                // devolver las cuentas de SUS contratos. Separado de
+                // `administrar` a propósito: quien supervisa no configura.
+                'cuentas.supervisar' => 'Revisar y aprobar cuentas de cobro de los contratos que supervisa',
             ],
         ],
         'transparencia' => [

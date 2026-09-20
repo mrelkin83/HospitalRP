@@ -161,6 +161,50 @@ final readonly class CuentaRepository
         });
     }
 
+    /**
+     * La bandeja del supervisor (S1): las cuentas de SUS contratos, con
+     * los días que llevan esperando.
+     *
+     * @param ?list<string> $estados Filtro de pestaña; nulo = todas.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function bandejaDelSupervisor(int $supervisorId, ?array $estados = null): array
+    {
+        $sql = "SELECT c.*, k.numero AS numero_contrato, t.nombre_completo AS contratista_nombre,
+                       DATEDIFF(NOW(), c.enviada_en) AS dias_en_espera
+                  FROM cc_cuentas c
+                  JOIN cc_contratos k ON k.id = c.contrato_id
+                  JOIN cc_contratistas t ON t.id = k.contratista_id
+                 WHERE k.supervisor_id = ?";
+        $parametros = [$supervisorId];
+
+        if ($estados !== null && $estados !== []) {
+            $sql .= ' AND c.estado IN (' . implode(', ', array_fill(0, count($estados), '?')) . ')';
+            array_push($parametros, ...$estados);
+        }
+
+        return $this->conexion->fetchAllAssociative(
+            $sql . ' ORDER BY c.enviada_en IS NULL, c.enviada_en, c.id',
+            $parametros,
+        );
+    }
+
+    /** @return ?array<string, mixed> Un adjunto con la cuenta y el contrato a los que pertenece. */
+    public function adjuntoPorId(int $adjuntoId): ?array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            'SELECT a.*, c.contrato_id, k.supervisor_id
+               FROM cc_cuenta_adjuntos a
+               JOIN cc_cuentas c ON c.id = a.cuenta_id
+               JOIN cc_contratos k ON k.id = c.contrato_id
+              WHERE a.id = ?',
+            [$adjuntoId],
+        );
+
+        return $fila === false ? null : $fila;
+    }
+
     /** @return list<array<string, mixed>> Actividades con su obligación, en orden. */
     public function actividades(int $cuentaId): array
     {

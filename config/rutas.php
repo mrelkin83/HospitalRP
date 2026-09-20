@@ -18,6 +18,7 @@ use App\Http\Admin\CategoriasController;
 use App\Http\Admin\CuentasContratistasController;
 use App\Http\Admin\CuentasContratosController;
 use App\Http\Admin\CuentasParametrosController;
+use App\Http\Admin\CuentasSupervisionController;
 use App\Http\Admin\CuentasSupervisoresController;
 use App\Http\Admin\FaqController;
 use App\Http\Admin\IaController;
@@ -726,6 +727,26 @@ $rutas->add('admin.cc.supervisores.guardar', new Route('/admin/cuentas-cobro/sup
 $rutas->add('admin.cc.parametros', new Route('/admin/cuentas-cobro/parametros', $permisoCuentas(CuentasParametrosController::class, 'index'), methods: ['GET']));
 $rutas->add('admin.cc.parametros.anio', new Route('/admin/cuentas-cobro/parametros/anio', $permisoCuentas(CuentasParametrosController::class, 'guardarAnio'), methods: ['POST']));
 $rutas->add('admin.cc.parametros.plantilla', new Route('/admin/cuentas-cobro/parametros/plantillas/{clave}', $permisoCuentas(CuentasParametrosController::class, 'guardarPlantilla'), ['clave' => '[A-Z_]+'], methods: ['POST']));
+
+// --- Panel: bandeja de supervisión de cuentas de cobro (fase 3) ---
+
+$permisoSupervision = static fn (string $metodo): array => [
+    '_controlador' => [CuentasSupervisionController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'cuentas.supervisar',
+];
+
+$rutas->add('admin.cc.bandeja', new Route('/admin/cuentas-cobro/bandeja', $permisoSupervision('bandeja'), methods: ['GET']));
+$rutas->add('admin.cc.bandeja.firma', new Route('/admin/cuentas-cobro/bandeja/firma', $permisoSupervision('guardarMiFirma'), methods: ['POST']));
+$rutas->add('admin.cc.bandeja.revision', new Route('/admin/cuentas-cobro/bandeja/{id}', $permisoSupervision('revision'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.bandeja.previa', new Route('/admin/cuentas-cobro/bandeja/{id}/vista-previa', $permisoSupervision('vistaPrevia'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.bandeja.aprobar', new Route('/admin/cuentas-cobro/bandeja/{id}/aprobar', $permisoSupervision('aprobar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.bandeja.devolver', new Route('/admin/cuentas-cobro/bandeja/{id}/devolver', $permisoSupervision('devolver'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.bandeja.entregada', new Route('/admin/cuentas-cobro/bandeja/{id}/entregada', $permisoSupervision('marcarEntregada'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.bandeja.descargar', new Route('/admin/cuentas-cobro/bandeja/{id}/descargar/{documento}', $permisoSupervision('descargar'), ['id' => '\d+', 'documento' => 'cuenta|informe|supervision|paquete'], methods: ['GET']));
+$rutas->add('admin.cc.adjunto', new Route('/admin/cuentas-cobro/adjuntos/{id}', $permisoSupervision('adjunto'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.miscontratos', new Route('/admin/cuentas-cobro/mis-contratos', $permisoSupervision('misContratos'), methods: ['GET']));
+$rutas->add('admin.cc.miscontratos.acta', new Route('/admin/cuentas-cobro/mis-contratos/{id}/acta', $permisoSupervision('registrarActa'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: políticas ---
 

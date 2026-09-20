@@ -281,6 +281,11 @@ final class SembrarCuentasCobroCommand extends Command
             'apellidos' => $c['apellidos'],
             'celular' => '300000' . substr((string) $c['cedula'], -4),
             'correo' => 'contratista' . substr((string) $c['cedula'], -2) . '@ejemplo.test',
+            // Banco FICTICIO: sin él, los PDF de muestra salen con la
+            // autorización de consignación en blanco.
+            'banco' => 'Banco de Prueba',
+            'tipo_cuenta' => 'AHORROS',
+            'numero_cuenta' => '4500' . substr((string) $c['cedula'], -6),
             'clase_riesgo_arl' => 1,
         ]);
 

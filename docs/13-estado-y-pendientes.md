@@ -73,8 +73,19 @@ informe de actividades), radicado `CC-{año}-{sec}` (reusa
 (`cc_descarga_tokens`). CSS propio `public/css/cuentas.css` (18px+, botones
 56px, foco visible). Pendientes de la fase: verificación manual de Lighthouse
 ≥95 / lector de pantalla / viewport 360px, aviso de expiración de sesión a
-los 28 minutos, y el PIN opcional (§7.1 P0). Siguen las fases 3 (supervisor
-y paquete), 4 (novedades y reportes) y 5 (extracción de minutas con IA).
+los 28 minutos, y el PIN opcional (§7.1 P0).
+
+**Módulo de cuentas de cobro — fase 3 terminada (2026-09-20).** Bandeja del
+supervisor bajo `/admin/cuentas-cobro/bandeja` (permiso `cuentas.supervisar`,
+separado de `administrar`): pestañas S1, revisión S2 con cumplimiento
+Sí/No/Parcial (No/Parcial exigen observación), diferencias PILA >5 %
+resaltadas, aprobación con firma que genera el informe de supervisión
+GJ-FR-004 y CONGELA pagos anteriores y saldo, paquete combinado con FPDI
+(orden §11.4; anexo inimportable se omite y se avisa), devolución con
+notificación al contratista, marca «Entregada a Financiera», S4 con registro
+de acta. La firma del supervisor se sube en la propia bandeja. Aceptación
+verificada en `tests/Feature/Http/CuentasSupervisionTest`. Siguen las fases
+4 (novedades y reportes) y 5 (extracción de minutas con IA).
 
 ## 2. Pendientes técnicos (código por hacer)
 

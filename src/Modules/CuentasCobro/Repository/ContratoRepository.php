@@ -69,6 +69,24 @@ final readonly class ContratoRepository
         return $fila === false ? null : $fila;
     }
 
+    /**
+     * Los contratos que supervisa un supervisor (S4), con la marca de si
+     * les falta el acta de inicio.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listarDelSupervisor(int $supervisorId): array
+    {
+        return $this->conexion->fetchAllAssociative(
+            "SELECT k.*, c.nombre_completo AS contratista_nombre, c.numero_documento
+               FROM cc_contratos k
+               JOIN cc_contratistas c ON c.id = k.contratista_id
+              WHERE k.supervisor_id = ? AND k.estado IN ('ACTIVO', 'SUSPENDIDO')
+              ORDER BY k.fecha_acta_inicio IS NOT NULL, k.numero",
+            [$supervisorId],
+        );
+    }
+
     /** @return ?array<string, mixed> */
     public function porNumero(string $numero): ?array
     {

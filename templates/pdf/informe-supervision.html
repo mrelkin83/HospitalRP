@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    @page { margin: 2cm 2cm 2.2cm 2cm; }
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #000; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    td, th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+    .sin-borde td { border: none; padding: 2px 4px; }
+    .centro { text-align: center; }
+    .negrita { font-weight: bold; }
+    .seccion { background: #eee; font-weight: bold; }
+    .encabezado td { font-size: 8pt; }
+    .pie { position: fixed; bottom: -1.6cm; left: 0; right: 0; font-size: 7pt; color: #333; }
+    .hoja:after { content: "Página " counter(page); }
+    .mini { font-size: 8pt; }
+</style>
+</head>
+<body>
+
+<table class="encabezado">
+    <tr>
+        <td class="centro" style="width: 22%;"><img src="{{logo}}" alt="Logo" style="height: 46px; width: auto;"></td>
+        <td class="centro" style="width: 48%;">
+            <span class="negrita">E.S.E. HOSPITAL ROSARIO PUMAREJO DE LÓPEZ</span><br>
+            NIT: 892399994-5<br>
+            <span class="negrita">INFORME DE SUPERVISIÓN CONTRACTUAL</span>
+        </td>
+        <td style="width: 30%; padding: 0;">
+            <table class="mini">
+                <tr><td>CÓDIGO</td><td>{{sgc_codigo}}</td></tr>
+                <tr><td>VERSIÓN</td><td>{{sgc_version}}</td></tr>
+                <tr><td>FECHA</td><td>{{sgc_fecha}}</td></tr>
+                <tr><td>HOJA</td><td class="hoja"></td></tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table>
+    <tr><td class="centro negrita">INFORME DE SUPERVISIÓN N° {{consecutivo}}</td></tr>
+</table>
+
+<table>
+    <tr><td colspan="4" class="seccion">1. INFORMACIÓN GENERAL</td></tr>
+    <tr><td class="negrita" style="width: 24%;">No DE CONTRATO</td><td style="width: 26%;">{{numero_contrato}}</td>
+        <td colspan="2">{{ciudad}}, {{fecha_suscripcion_larga}}</td></tr>
+    <tr><td class="negrita">TIPO DE CONTRATO</td><td colspan="3">{{tipo_contrato}}</td></tr>
+    <tr><td class="negrita">OBJETO</td><td colspan="3">{{objeto}}</td></tr>
+    <tr><td class="negrita">CONTRATANTE</td><td>HOSPITAL ROSARIO PUMAREJO DE LÓPEZ</td>
+        <td class="negrita" style="width: 22%;">NIT ESE</td><td>892399994-5</td></tr>
+    <tr><td class="negrita">CONTRATISTA</td><td>{{contratista_nombre}}</td>
+        <td class="negrita">Rep. Legal</td><td>N/A</td></tr>
+    <tr><td class="negrita">NIT CONTRATISTA</td><td>{{numero_documento}}</td>
+        <td class="negrita">No CC Rep. legal</td><td>N/A</td></tr>
+    <tr><td class="negrita">VALOR</td><td colspan="3">{{valor_total_letras}} ({{valor_total}})</td></tr>
+    <tr><td class="negrita">VALOR ADICIÓN</td><td>{{valor_adicion}}</td>
+        <td class="negrita">VALOR CONTRATO + ADICIÓN</td><td>{{valor_con_adicion}}</td></tr>
+    <tr><td class="negrita">PLAZO</td><td>{{plazo_texto}}</td>
+        <td class="negrita">GARANTÍAS</td><td>{{garantias}}</td></tr>
+    <tr><td class="negrita">SUPERVISOR</td><td>{{supervisor_nombre}}</td>
+        <td class="negrita">CARGO DE SUPERVISOR</td><td>{{supervisor_cargo}}</td></tr>
+    <tr><td class="negrita">FECHA DE INICIO</td><td>{{fecha_acta_inicio}}</td>
+        <td class="negrita">ADICIÓN</td><td>{{adicion_sn}}</td></tr>
+    <tr><td class="negrita">FECHA DE TERMINACIÓN</td><td>{{fecha_terminacion}}</td>
+        <td class="negrita">SUSPENSIÓN</td><td>{{suspension_sn}}</td></tr>
+</table>
+
+<table class="mini">
+    <tr><td colspan="7" class="seccion">2. IMPUTACIÓN PRESUPUESTAL</td></tr>
+    <tr class="negrita centro">
+        <td>CONTRATO</td><td>Fecha</td><td>Rubro</td><td>Concepto</td><td>Recurso</td><td>CDP No. / RP No.</td><td>Valor</td>
+    </tr>
+    {{#imputaciones}}
+    <tr>
+        <td class="centro">{{numero_contrato}}</td>
+        <td class="centro">{{fecha}}</td>
+        <td>{{codigo_rubro}}</td>
+        <td>{{nombre_rubro}}</td>
+        <td>{{recurso}}</td>
+        <td class="centro">{{tipo}} {{numero}}</td>
+        <td class="centro">{{valor}}</td>
+    </tr>
+    {{/imputaciones}}
+</table>
+
+<table>
+    <tr><td colspan="2" class="seccion">3. AVANCE FINANCIERO</td></tr>
+    <tr class="negrita centro"><td>CONCEPTO</td><td style="width: 28%;">VALOR / N. A.</td></tr>
+    <tr><td>VALOR INICIAL DEL CONTRATO</td><td class="centro">{{valor_total}}</td></tr>
+    <tr><td>VALOR ADICIÓN</td><td class="centro">{{valor_adicion}}</td></tr>
+    <tr><td>ANTICIPO</td><td class="centro">{{anticipo}}</td></tr>
+    <tr><td>PAGOS ANTERIORES ACUMULADOS</td><td class="centro">{{pagos_anteriores}}</td></tr>
+    <tr><td>PAGO AUTORIZADO EN EL PRESENTE INFORME</td><td class="centro">{{valor}}</td></tr>
+    <tr><td>SALDO POR EJECUTAR</td><td class="centro">{{saldo_por_ejecutar}}</td></tr>
+    <tr class="negrita"><td>VALOR TOTAL DEL CONTRATO</td><td class="centro">{{valor_con_adicion}}</td></tr>
+</table>
+
+<table class="mini">
+    <tr><td colspan="6" class="seccion">4. CUMPLIMIENTO DE OBLIGACIONES</td></tr>
+    <tr class="negrita centro">
+        <td style="width: 4%;">No</td><td style="width: 38%;">Obligación</td>
+        <td>Descripción de ejecución por parte del contratista</td>
+        <td style="width: 5%;">Sí</td><td style="width: 5%;">No</td><td style="width: 7%;">Parcial</td>
+    </tr>
+    {{#obligaciones}}
+    <tr>
+        <td class="centro">{{orden}}</td>
+        <td>{{texto}}</td>
+        <td>{{ejecucion}}</td>
+        <td class="centro">{{marca_si}}</td>
+        <td class="centro">{{marca_no}}</td>
+        <td class="centro">{{marca_parcial}}</td>
+    </tr>
+    {{/obligaciones}}
+</table>
+
+<table>
+    <tr><td colspan="4" class="seccion">5. CUMPLIMIENTO DE LAS OBLIGACIONES DE SEGURIDAD SOCIAL Y PARAFISCALES</td></tr>
+    <tr><td class="mini" colspan="4">Mediante la adjunta al informe, se pasó a verificar el cumplimiento del artículo 50
+    de la Ley 789 de 2002 como documento de verificación y constancia del cumplimiento del pago de la
+    seguridad social en mi condición de supervisor del contrato estatal.</td></tr>
+    <tr><td class="negrita" colspan="2">OBLIGACIONES PRESTACIONALES</td>
+        <td class="negrita">VALOR DEL I.B.C</td><td>{{ibc}}</td></tr>
+    <tr><td class="negrita">Mes de salud</td><td>{{mes_salud}}</td>
+        <td class="negrita">Mes de pensión</td><td>{{mes_pension}}</td></tr>
+    <tr><td class="negrita" colspan="2">SEGURIDAD SOCIAL — PLANILLA N° {{numero_planilla}}</td>
+        <td class="negrita">VALOR DEL APORTE</td><td>{{total_ss}}</td></tr>
+    <tr><td>Salud</td><td>{{aporte_salud}}</td><td>Riesgos Laborales</td><td>{{aporte_arl}}</td></tr>
+    <tr><td>Pensión</td><td>{{aporte_pension}}</td><td>Fondo de solidaridad pensional</td><td>{{aporte_fsp}}</td></tr>
+    <tr><td class="negrita" colspan="2">PARAFISCALES</td>
+        <td class="negrita">VALOR DEL APORTE</td><td>{{total_parafiscales}}</td></tr>
+    <tr><td>Sena</td><td>{{aporte_sena}}</td><td>ICBF</td><td>{{aporte_icbf}}</td></tr>
+    <tr><td>Caja de Compensación Familiar</td><td>{{aporte_ccf}}</td><td></td><td></td></tr>
+</table>
+
+<table>
+    <tr><td class="seccion">6. CERTIFICACIÓN DE CUMPLIMIENTO</td></tr>
+    <tr><td class="mini">
+        De acuerdo a la información anteriormente suministrada en mi calidad de Supervisor (a), certifico
+        que durante el periodo comprendido {{periodo_texto}}, el Contratista cumplió oportunamente las
+        actividades objeto del contrato de la referencia y cumplió con el pago de Seguridad Social y/o
+        parafiscales correspondiente al mes de {{mes_salud_texto}}, de conformidad con el artículo 50 de la
+        ley 789 del 2002, Artículo 23 de la ley 1150 del 2007, Decreto 1703 del 2002 y demás leyes y
+        Decretos que lo reglamentan.<br><br>
+        Por lo anterior, el (a) suscrito (a) autoriza el pago correspondiente al periodo comprendido
+        {{periodo_texto}} por valor de {{valor_letras}} y se han consignado en la CUENTA DE
+        {{tipo_cuenta}} N° {{numero_cuenta}} de {{banco}} a nombre de {{contratista_nombre}},
+        identificado(a) con cédula de ciudadanía N° {{numero_documento}} de {{lugar_expedicion}}.
+    </td></tr>
+</table>
+
+<table>
+    <tr><td class="seccion">Se adjunta la relación de los siguientes anexos:</td></tr>
+    <tr><td class="mini">Informe de actividades Contratista</td></tr>
+    <tr><td class="mini">Certificado de pago seguridad social integral</td></tr>
+    {{#anexos}}
+    <tr><td class="mini">{{nombre}}</td></tr>
+    {{/anexos}}
+</table>
+
+<p class="mini">Dado en el municipio de Valledupar, Cesar, a los {{dia_letras}} días del mes de
+{{mes_informe}} de {{anio_informe}}.</p>
+
+<br>
+
+<table class="sin-borde">
+    <tr><td style="width: 55%;">
+        {{{firma_supervisor}}}<br>
+        _______________________________<br>
+        <span class="negrita">{{supervisor_nombre_mayus}}</span><br>
+        {{supervisor_cargo}}<br>
+        ESE Hospital Rosario Pumarejo De López<br>
+        Supervisión
+    </td><td></td></tr>
+</table>
+
+<div class="pie">{{renglon_verificacion}}</div>
+
+</body>
+</html>

@@ -150,7 +150,31 @@ final readonly class IaController
             return $this->error('Proveedor no reconocido.', Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse($this->fabrica->listarModelos($proveedor));
+        // Caché de una hora por proveedor: la pantalla carga la lista sola
+        // en cada visita sin castigar la API del proveedor, y un modelo
+        // recién publicado aparece a más tardar en una hora (o de una vez
+        // con «Actualizar ahora»).
+        $claveCache = 'ia.modelos_' . $proveedor;
+
+        if (!$peticion->query->getBoolean('refrescar')) {
+            $cache = json_decode((string) $this->valorConfig($claveCache), true);
+
+            if (is_array($cache) && (time() - (int) ($cache['t'] ?? 0)) < 3600 && ($cache['origen'] ?? '') === 'api') {
+                return new JsonResponse(['origen' => 'api', 'modelos' => $cache['modelos'], 'nota' => null]);
+            }
+        }
+
+        $resultado = $this->fabrica->listarModelos($proveedor);
+
+        if ($resultado['origen'] === 'api') {
+            $this->guardarClave($claveCache, json_encode([
+                't' => time(),
+                'origen' => 'api',
+                'modelos' => $resultado['modelos'],
+            ], JSON_THROW_ON_ERROR), 'json', 'Modelos del proveedor (caché)', editable: false);
+        }
+
+        return new JsonResponse($resultado);
     }
 
     /**

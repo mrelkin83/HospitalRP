@@ -14,20 +14,20 @@ ob_start(); ?>
 
 <section class="tarjeta">
     <h2>Así quedará su cuenta de cobro</h2>
-    <object class="visor-pdf" data="/cuentas/nueva/vista-previa/cuenta" type="application/pdf"
+    <iframe class="visor-pdf" src="/cuentas/nueva/vista-previa/cuenta" title="Vista previa del documento"
             aria-label="Vista previa de la cuenta de cobro">
         <p>Su navegador no muestra el PDF aquí.
            <a class="enlace-suave" href="/cuentas/nueva/vista-previa/cuenta" target="_blank" rel="noopener">Ábralo en otra pestaña</a>.</p>
-    </object>
+    </iframe>
 </section>
 
 <section class="tarjeta">
     <h2>Así quedará su informe de actividades</h2>
-    <object class="visor-pdf" data="/cuentas/nueva/vista-previa/informe" type="application/pdf"
+    <iframe class="visor-pdf" src="/cuentas/nueva/vista-previa/informe" title="Vista previa del documento"
             aria-label="Vista previa del informe de actividades">
         <p>Su navegador no muestra el PDF aquí.
            <a class="enlace-suave" href="/cuentas/nueva/vista-previa/informe" target="_blank" rel="noopener">Ábralo en otra pestaña</a>.</p>
-    </object>
+    </iframe>
 </section>
 
 <?php if (!$tieneFirma) { ?>

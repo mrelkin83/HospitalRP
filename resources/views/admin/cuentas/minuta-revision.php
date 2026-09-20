@@ -189,7 +189,7 @@ $aplicada = (string) $extraccion['estado'] === 'APLICADA';
                     </tbody>
                 </table>
             </div>
-            <button class="boton-secundario mt-2" type="button" id="agregar-cuota-minuta">Agregar cuota</button>
+            <button class="boton-secundario mt-2" type="button" data-agregar-fila="#tabla-cuotas-minuta">Agregar cuota</button>
 
             <h2 class="mt-5 text-lg font-semibold texto-titular">CDP</h2>
             <div class="mt-2 overflow-x-auto">
@@ -241,18 +241,5 @@ $aplicada = (string) $extraccion['estado'] === 'APLICADA';
     </section>
 </div>
 
-<script>
-(function () {
-    var boton = document.getElementById('agregar-cuota-minuta');
-
-    if (!boton) { return; }
-
-    boton.addEventListener('click', function () {
-        var cuerpo = document.querySelector('#tabla-cuotas-minuta tbody');
-        var fila = cuerpo.lastElementChild.cloneNode(true);
-        fila.querySelectorAll('input').forEach(function (campo) { campo.value = ''; });
-        fila.querySelector('select').selectedIndex = 0;
-        cuerpo.appendChild(fila);
-    });
-})();
-</script>
+<?php // El JS va en archivo aparte: la CSP (script-src 'self') bloquea el inline. ?>
+<script src="/js/cuentas-admin.js" defer></script>

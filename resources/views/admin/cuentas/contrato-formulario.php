@@ -163,7 +163,7 @@ $accion = $contrato === null ? '/admin/cuentas-cobro/contratos' : '/admin/cuenta
             </tbody>
         </table>
     </div>
-    <button class="boton-secundario mt-2" type="button" id="agregar-cuota">Agregar cuota</button>
+    <button class="boton-secundario mt-2" type="button" data-agregar-fila="#tabla-cuotas">Agregar cuota</button>
 
     <h2 class="mt-6 text-lg font-semibold texto-titular">Obligaciones</h2>
     <div class="mt-3 grid gap-4">
@@ -191,13 +191,5 @@ $accion = $contrato === null ? '/admin/cuentas-cobro/contratos' : '/admin/cuenta
     </div>
 </form>
 
-<script>
-// Filas de cuotas sin recargar: se clona la última y se limpia.
-document.getElementById('agregar-cuota').addEventListener('click', function () {
-    var cuerpo = document.querySelector('#tabla-cuotas tbody');
-    var fila = cuerpo.lastElementChild.cloneNode(true);
-    fila.querySelectorAll('input').forEach(function (campo) { campo.value = ''; });
-    fila.querySelector('select').selectedIndex = 0;
-    cuerpo.appendChild(fila);
-});
-</script>
+<?php // El JS va en archivo aparte: la CSP (script-src 'self') bloquea el inline. ?>
+<script src="/js/cuentas-admin.js" defer></script>

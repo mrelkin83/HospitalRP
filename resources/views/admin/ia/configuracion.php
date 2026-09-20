@@ -63,12 +63,16 @@ foreach ($funciones as $funcion) {
         </div>
         <div>
             <label class="etiqueta" for="ia-modelo">Modelo</label>
-            <input class="campo" id="ia-modelo" type="text" name="modelo" maxlength="80"
-                   value="<?= $e($modelo) ?>" list="ia-modelos-lista"
-                   placeholder="Vacío = el predeterminado del proveedor">
-            <datalist id="ia-modelos-lista"></datalist>
+            <select class="campo" id="ia-modelo" name="modelo" data-guardado="<?= $e($modelo) ?>">
+                <option value="">(predeterminado del proveedor)</option>
+                <?php if ($modelo !== '') { ?>
+                    <option value="<?= $e($modelo) ?>" selected><?= $e($modelo) ?></option>
+                <?php } ?>
+            </select>
             <p class="ayuda-campo">
-                <button type="button" class="enlace" id="ia-cargar-modelos">Cargar modelos disponibles</button>
+                La lista se carga sola del proveedor elegido y se refresca cada
+                hora: los modelos nuevos aparecen sin escribir nada.
+                <button type="button" class="enlace" id="ia-actualizar-modelos">Actualizar ahora</button>
                 <span id="ia-modelos-nota" aria-live="polite"></span>
             </p>
         </div>
@@ -92,37 +96,8 @@ foreach ($funciones as $funcion) {
     <p class="mt-4"><button type="submit" class="boton boton-primario">Guardar</button></p>
 </form>
 
-<script>
-// «Cargar modelos»: consulta el GET /models del proveedor elegido (con la
-// clave guardada) y llena la lista desplegable del campo Modelo.
-(function () {
-    var boton = document.getElementById('ia-cargar-modelos');
-
-    if (!boton) { return; }
-
-    boton.addEventListener('click', function () {
-        var proveedor = document.getElementById('ia-proveedor').value;
-        var nota = document.getElementById('ia-modelos-nota');
-        nota.textContent = ' Consultando…';
-
-        fetch('/admin/ia/modelos?proveedor=' + encodeURIComponent(proveedor))
-            .then(function (r) { return r.json(); })
-            .then(function (datos) {
-                var lista = document.getElementById('ia-modelos-lista');
-                lista.innerHTML = '';
-                (datos.modelos || []).forEach(function (modelo) {
-                    var opcion = document.createElement('option');
-                    opcion.value = modelo;
-                    lista.appendChild(opcion);
-                });
-                nota.textContent = ' ' + (datos.modelos || []).length + ' modelos ('
-                    + (datos.origen === 'api' ? 'en vivo' : 'lista de referencia') + ').'
-                    + (datos.nota ? ' ' + datos.nota : '');
-            })
-            .catch(function () { nota.textContent = ' No se pudo consultar.'; });
-    });
-})();
-</script>
+<?php // El JS va en archivo aparte: la CSP (script-src 'self') bloquea el inline. ?>
+<script src="/js/ia-config.js" defer></script>
 
 <section class="mt-8" aria-labelledby="consumo-titulo">
     <h2 id="consumo-titulo" class="text-lg font-semibold texto-titular">Consumo de los últimos 30 días</h2>

@@ -92,7 +92,13 @@ use App\Modules\CuentasCobro\Service\EnvioCuentaService;
 use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
 use App\Modules\CuentasCobro\Service\OtpService;
 use App\Modules\CuentasCobro\Service\SesionContratista;
+use App\Http\Admin\CuentasMinutasController;
 use App\Http\Admin\CuentasReportesController;
+use App\Modules\CuentasCobro\Repository\ExtraccionMinutaRepository;
+use App\Modules\CuentasCobro\Service\ConversorPdfImagenes;
+use App\Modules\CuentasCobro\Service\ExtractorMinutaService;
+use App\Modules\CuentasCobro\Service\OcrMinutaService;
+use App\Modules\CuentasCobro\Service\ValidadorExtraccion;
 use App\Http\Admin\CuentasSupervisionController;
 use App\Modules\CuentasCobro\Repository\ReportesCuentasRepository;
 use App\Modules\CuentasCobro\Service\NovedadesContratoService;
@@ -708,6 +714,36 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(CuentasReportesController::class, CuentasReportesController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    // --- Módulo de cuentas de cobro (fase 5: extracción de minutas) ---
+    // Los binarios externos llegan del .env con los valores de este
+    // servidor como respaldo; en producción se ajustan sin tocar código.
+
+    $contenedor->register(ExtraccionMinutaRepository::class, ExtraccionMinutaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ValidadorExtraccion::class, ValidadorExtraccion::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ConversorPdfImagenes::class, ConversorPdfImagenes::class)
+        ->setArguments([
+            $env->texto('PDF_PDFTOPPM', 'C:/laragon/bin/poppler/poppler-24.08.0/Library/bin/pdftoppm.exe'),
+            new Reference(ArchivosCuentas::class),
+        ]);
+
+    $contenedor->register(OcrMinutaService::class, OcrMinutaService::class)
+        ->setArguments([
+            $env->texto('OCR_TESSERACT', 'C:/Program Files/Tesseract-OCR/tesseract.exe'),
+            $env->texto('OCR_TESSDATA', 'C:/laragon/bin/tessdata'),
+            new Reference(ArchivosCuentas::class),
+        ]);
+
+    $contenedor->register(ExtractorMinutaService::class, ExtractorMinutaService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CuentasMinutasController::class, CuentasMinutasController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

@@ -58,6 +58,7 @@ $secciones = [
     'Cuentas de cobro' => [
         'Bandeja de supervisión' => ['/admin/cuentas-cobro/bandeja', 'cuentas.supervisar'],
         'Contratos' => ['/admin/cuentas-cobro/contratos', 'cuentas.administrar'],
+        'Cargar minuta' => ['/admin/cuentas-cobro/minutas', 'cuentas.administrar'],
         'Contratistas' => ['/admin/cuentas-cobro/contratistas', 'cuentas.administrar'],
         'Supervisores' => ['/admin/cuentas-cobro/supervisores', 'cuentas.administrar'],
         'Parámetros' => ['/admin/cuentas-cobro/parametros', 'cuentas.administrar'],

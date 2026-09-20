@@ -15,6 +15,9 @@ enum FuncionIa: string
     case TextoAlternativo = 'texto_alternativo';
     case MetadatosSeo = 'metadatos_seo';
     case BorradorNoticia = 'borrador_noticia';
+    // Fase 5 del módulo de cuentas de cobro: leer la minuta escaneada y
+    // prellenar el formulario del contrato. Sigue siendo solo del panel.
+    case ExtraccionMinuta = 'extraccion_minuta';
 
     public function etiqueta(): string
     {
@@ -24,6 +27,7 @@ enum FuncionIa: string
             self::TextoAlternativo => 'Texto alternativo de imagen',
             self::MetadatosSeo => 'Metadatos SEO',
             self::BorradorNoticia => 'Borrador de noticia',
+            self::ExtraccionMinuta => 'Extracción de minuta de contrato',
         };
     }
 }

@@ -17,6 +17,7 @@ use App\Http\Admin\CampanasController;
 use App\Http\Admin\CategoriasController;
 use App\Http\Admin\CuentasContratistasController;
 use App\Http\Admin\CuentasContratosController;
+use App\Http\Admin\CuentasMinutasController;
 use App\Http\Admin\CuentasParametrosController;
 use App\Http\Admin\CuentasReportesController;
 use App\Http\Admin\CuentasSupervisionController;
@@ -732,6 +733,15 @@ $rutas->add('admin.cc.parametros.plantilla', new Route('/admin/cuentas-cobro/par
 $rutas->add('admin.cc.contratos.novedad', new Route('/admin/cuentas-cobro/contratos/{id}/novedades', $permisoCuentas(CuentasContratosController::class, 'registrarNovedad'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.cuentas.anular', new Route('/admin/cuentas-cobro/cuentas/{id}/anular', $permisoCuentas(CuentasContratosController::class, 'anularCuenta'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.reportes', new Route('/admin/cuentas-cobro/reportes', $permisoCuentas(CuentasReportesController::class, 'index'), methods: ['GET']));
+
+// --- Panel: extracción de minutas (fase 5) ---
+$rutas->add('admin.cc.minutas', new Route('/admin/cuentas-cobro/minutas', $permisoCuentas(CuentasMinutasController::class, 'listado'), methods: ['GET']));
+$rutas->add('admin.cc.minutas.subir', new Route('/admin/cuentas-cobro/minutas', $permisoCuentas(CuentasMinutasController::class, 'subir'), methods: ['POST']));
+$rutas->add('admin.cc.minutas.revision', new Route('/admin/cuentas-cobro/minutas/{id}', $permisoCuentas(CuentasMinutasController::class, 'revision'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.minutas.procesar', new Route('/admin/cuentas-cobro/minutas/{id}/procesar', $permisoCuentas(CuentasMinutasController::class, 'reprocesar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.minutas.ocr', new Route('/admin/cuentas-cobro/minutas/{id}/ocr', $permisoCuentas(CuentasMinutasController::class, 'extraerOcr'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.minutas.imagen', new Route('/admin/cuentas-cobro/minutas/{id}/imagen/{n}', $permisoCuentas(CuentasMinutasController::class, 'imagen'), ['id' => '\d+', 'n' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.minutas.aplicar', new Route('/admin/cuentas-cobro/minutas/{id}/aplicar', $permisoCuentas(CuentasMinutasController::class, 'aplicar'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: bandeja de supervisión de cuentas de cobro (fase 3) ---
 

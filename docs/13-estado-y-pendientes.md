@@ -96,8 +96,22 @@ reportes A8 con CSV (tiempos por supervisor, estados por mes, sin acta,
 cuotas vencidas) y `php bin/consola cuentas:recordatorios` para el cron
 diario (contratista con cuota vencida: día 1 y cada 7; supervisor: a los 3
 días HÁBILES y cada 3). Aceptación en
-`tests/Feature/Http/CuentasNovedadesTest`. Sigue la fase 5 (extracción de
-minutas con IA).
+`tests/Feature/Http/CuentasNovedadesTest`.
+
+**Módulo de cuentas de cobro — fase 5 construida (2026-09-20).** Extracción
+asistida de minutas en Panel → Cuentas de cobro → Cargar minuta: el PDF se
+convierte a imágenes con Poppler (`pdftoppm`, instalado en
+`C:\laragon\bin\poppler`, ruta por `PDF_PDFTOPPM`), las páginas 1–5 van al
+proveedor de IA del panel (el puerto ahora acepta VARIAS imágenes por
+petición; consumo en `ia_usos` como `extraccion_minuta`), el JSON de §10 se
+valida (`ValidadorExtraccion`: suma de cuotas, letras vs número, plazo
+recuadro vs cláusula 5 —el caso 1473—, duplicados…) y la pantalla de
+revisión a dos columnas crea el contrato EN_REVISION auditando qué corrigió
+el revisor. Respaldo OCR con Tesseract 5.4 (`OCR_TESSERACT`,
+`TESSDATA_PREFIX` en `C:\laragon\bin\tessdata` con español) probado contra
+la minuta real del 1407: forma de pago completa, plazo exacto y 11/14
+obligaciones. PENDIENTE: la medición 6/7 con las minutas reales exige
+`IA_CLAVE_ANTHROPIC` en el `.env` (hoy está vacía); el arnés quedó listo.
 
 ## 2. Pendientes técnicos (código por hacer)
 

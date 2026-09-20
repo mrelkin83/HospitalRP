@@ -28,11 +28,11 @@ final readonly class OpenAiProvider implements AiProvider
     {
         $contenido = [];
 
-        if ($peticion->imagen !== null) {
+        foreach ($peticion->todasLasImagenes() as $imagen) {
             $contenido[] = [
                 'type' => 'image_url',
                 'image_url' => [
-                    'url' => sprintf('data:%s;base64,%s', $peticion->imagen->mime, $peticion->imagen->base64),
+                    'url' => sprintf('data:%s;base64,%s', $imagen->mime, $imagen->base64),
                 ],
             ];
         }

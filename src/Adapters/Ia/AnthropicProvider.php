@@ -29,13 +29,13 @@ final readonly class AnthropicProvider implements AiProvider
     {
         $contenido = [];
 
-        if ($peticion->imagen !== null) {
+        foreach ($peticion->todasLasImagenes() as $imagen) {
             $contenido[] = [
                 'type' => 'image',
                 'source' => [
                     'type' => 'base64',
-                    'media_type' => $peticion->imagen->mime,
-                    'data' => $peticion->imagen->base64,
+                    'media_type' => $imagen->mime,
+                    'data' => $imagen->base64,
                 ],
             ];
         }

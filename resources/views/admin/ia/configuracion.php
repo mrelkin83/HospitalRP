@@ -31,9 +31,16 @@ foreach ($funciones as $funcion) {
 <?php if ($activadaConfig && !$activada) { ?>
     <div class="alerta alerta-aviso mt-4" role="alert">
         El asistente está marcado como activo pero el proveedor
-        «<?= $e($proveedores[$proveedor] ?? $proveedor) ?>» no tiene clave de API
-        en el servidor, así que sigue apagado. Pide al administrador técnico
-        configurar la variable de entorno correspondiente.
+        «<?= $e($proveedores[$proveedor] ?? $proveedor) ?>» no tiene clave de API.
+        Guárdela aquí abajo: queda cifrada y no vuelve a mostrarse.
+    </div>
+<?php } ?>
+
+<?php if (!$cifradorListo) { ?>
+    <div class="alerta alerta-error mt-4" role="alert">
+        Falta la llave de cifrado del servidor (APP_CLAVE_CIFRADO en el .env),
+        así que las claves de API no pueden guardarse desde el panel todavía.
+        Es una sola configuración técnica, una sola vez.
     </div>
 <?php } ?>
 
@@ -49,20 +56,73 @@ foreach ($funciones as $funcion) {
             <select class="campo" id="ia-proveedor" name="proveedor">
                 <?php foreach ($proveedores as $codigo => $nombre) { ?>
                     <option value="<?= $e($codigo) ?>" <?= $codigo === $proveedor ? 'selected' : '' ?>>
-                        <?= $e($nombre) ?><?= $claves[$codigo] ? '' : ' — sin clave en el servidor' ?>
+                        <?= $e($nombre) ?><?= $claves[$codigo] ? ' ✓' : ' — sin clave' ?>
                     </option>
                 <?php } ?>
             </select>
         </div>
         <div>
             <label class="etiqueta" for="ia-modelo">Modelo</label>
-            <input class="campo" id="ia-modelo" type="text" name="modelo" required maxlength="80"
-                   value="<?= $e($modelo) ?>">
-            <p class="ayuda-campo">Ejemplo: claude-sonnet-5 (Anthropic) o gpt-4o-mini (OpenAI).</p>
+            <input class="campo" id="ia-modelo" type="text" name="modelo" maxlength="80"
+                   value="<?= $e($modelo) ?>" list="ia-modelos-lista"
+                   placeholder="Vacío = el predeterminado del proveedor">
+            <datalist id="ia-modelos-lista"></datalist>
+            <p class="ayuda-campo">
+                <button type="button" class="enlace" id="ia-cargar-modelos">Cargar modelos disponibles</button>
+                <span id="ia-modelos-nota" aria-live="polite"></span>
+            </p>
+        </div>
+        <div>
+            <label class="etiqueta" for="ia-clave">Clave de API del proveedor elegido</label>
+            <input class="campo" id="ia-clave" type="password" name="clave_api" maxlength="200"
+                   autocomplete="off" placeholder="Vacío = conservar la guardada">
+            <label class="mt-1 flex items-center gap-2 text-sm">
+                <input type="checkbox" name="clave_borrar" value="1"> Borrar la clave guardada
+            </label>
+            <p class="ayuda-campo">Se guarda cifrada en la base y no vuelve a mostrarse.</p>
+        </div>
+        <div>
+            <label class="etiqueta" for="ia-url-base">URL base (opcional)</label>
+            <input class="campo" id="ia-url-base" type="url" name="url_base" maxlength="200"
+                   value="<?= $e((string) $urlBase) ?>" placeholder="https://api.oneprovider.dev">
+            <p class="ayuda-campo">Para pasarelas compatibles con Anthropic (OneProvider) o el
+            proveedor «Personalizado». Vacío = la API oficial.</p>
         </div>
     </div>
     <p class="mt-4"><button type="submit" class="boton boton-primario">Guardar</button></p>
 </form>
+
+<script>
+// «Cargar modelos»: consulta el GET /models del proveedor elegido (con la
+// clave guardada) y llena la lista desplegable del campo Modelo.
+(function () {
+    var boton = document.getElementById('ia-cargar-modelos');
+
+    if (!boton) { return; }
+
+    boton.addEventListener('click', function () {
+        var proveedor = document.getElementById('ia-proveedor').value;
+        var nota = document.getElementById('ia-modelos-nota');
+        nota.textContent = ' Consultando…';
+
+        fetch('/admin/ia/modelos?proveedor=' + encodeURIComponent(proveedor))
+            .then(function (r) { return r.json(); })
+            .then(function (datos) {
+                var lista = document.getElementById('ia-modelos-lista');
+                lista.innerHTML = '';
+                (datos.modelos || []).forEach(function (modelo) {
+                    var opcion = document.createElement('option');
+                    opcion.value = modelo;
+                    lista.appendChild(opcion);
+                });
+                nota.textContent = ' ' + (datos.modelos || []).length + ' modelos ('
+                    + (datos.origen === 'api' ? 'en vivo' : 'lista de referencia') + ').'
+                    + (datos.nota ? ' ' + datos.nota : '');
+            })
+            .catch(function () { nota.textContent = ' No se pudo consultar.'; });
+    });
+})();
+</script>
 
 <section class="mt-8" aria-labelledby="consumo-titulo">
     <h2 id="consumo-titulo" class="text-lg font-semibold texto-titular">Consumo de los últimos 30 días</h2>

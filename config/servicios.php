@@ -24,6 +24,7 @@ use App\Core\Config\Env;
 use App\Core\Database\ConexionFactory;
 use App\Core\Database\ConfigBaseDatos;
 use App\Core\Storage\AlmacenArchivos;
+use App\Core\Support\Cifrador;
 use App\Core\Support\Vistas;
 use App\Http\Admin\AvisosController;
 use App\Http\Admin\PopupsController;
@@ -320,10 +321,15 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
-    // --- IA del panel (Fase 8) ---
+    // --- IA del panel (Fase 8; claves administrables desde el panel) ---
+    // El cifrador guarda los secretos de BD (claves de API) con la llave
+    // maestra del .env: la base sola no revela nada.
+    $contenedor->register(Cifrador::class, Cifrador::class)
+        ->setArguments([$env->texto('APP_CLAVE_CIFRADO', '')]);
+
     $contenedor->register(FabricaAiProvider::class, FabricaProveedorIa::class)
         ->setFactory([FabricaProveedorIa::class, 'desde'])
-        ->setArguments([new Reference(Env::class)]);
+        ->setArguments([new Reference(Env::class), new Reference(Connection::class), new Reference(Cifrador::class)]);
 
     $contenedor->register(IaUsoRepository::class, IaUsoRepository::class)
         ->setAutowired(true);

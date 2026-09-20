@@ -17,6 +17,44 @@ final readonly class ClienteHttpJson
     private const int TIMEOUT_SEGUNDOS = 60;
 
     /**
+     * GET liviano (el listado de modelos de un proveedor).
+     *
+     * @param list<string> $cabeceras
+     * @return array<string, mixed>
+     */
+    public function get(string $proveedor, string $url, array $cabeceras): array
+    {
+        $curl = curl_init($url);
+
+        if ($curl === false) {
+            throw ProveedorIaException::porRed($proveedor, 'curl no disponible');
+        }
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_HTTPHEADER => $cabeceras,
+        ]);
+
+        $respuesta = curl_exec($curl);
+        $codigo = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $errorRed = curl_error($curl);
+        curl_close($curl);
+
+        if (!is_string($respuesta)) {
+            throw ProveedorIaException::porRed($proveedor, $errorRed !== '' ? $errorRed : 'sin respuesta');
+        }
+
+        $datos = json_decode($respuesta, true);
+
+        if (!is_array($datos) || $codigo >= 300) {
+            throw ProveedorIaException::porRespuestaInvalida($proveedor . ' (HTTP ' . $codigo . ')');
+        }
+
+        return $datos;
+    }
+
+    /**
      * @param list<string> $cabeceras
      * @param array<string, mixed> $cuerpo
      * @return array<string, mixed>

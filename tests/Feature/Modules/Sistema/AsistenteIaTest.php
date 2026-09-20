@@ -194,4 +194,9 @@ final class FabricaIaFalsa implements FabricaAiProvider
     {
         return $this->proveedor;
     }
+
+    public function listarModelos(string $proveedor): array
+    {
+        return ['origen' => 'estatico', 'modelos' => [], 'nota' => null];
+    }
 }

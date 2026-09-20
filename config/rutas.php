@@ -827,6 +827,12 @@ $rutas->add('admin.ia.guardar', new Route('/admin/ia', [
     '_permiso' => 'sistema.ia',
 ], methods: ['POST']));
 
+$rutas->add('admin.ia.modelos', new Route('/admin/ia/modelos', [
+    '_controlador' => [IaController::class, 'modelos'],
+    '_acceso' => 'privado',
+    '_permiso' => 'sistema.ia',
+], methods: ['GET']));
+
 $rutas->add('admin.ia.sugerir', new Route('/admin/ia/sugerir', [
     '_controlador' => [IaController::class, 'sugerir'],
     '_acceso' => 'privado',

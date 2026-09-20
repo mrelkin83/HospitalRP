@@ -9,6 +9,7 @@ use App\Core\Audit\AuditoriaService;
 use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
+use App\Core\Support\Cifrador;
 use App\Core\Support\Vistas;
 use App\Modules\Sistema\Entity\FuncionIa;
 use App\Modules\Sistema\Exception\IaDesactivadaException;
@@ -25,10 +26,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * IA del panel: configuración (activada, proveedor, modelo), consumo, y el
- * punto único de sugerencias que usan los formularios. Las claves de API
- * jamás pasan por aquí: viven en el .env del servidor y esta página solo
- * dice si existen.
+ * IA del panel: configuración (activada, proveedor, clave, URL base y
+ * modelo), consumo, y el punto único de sugerencias que usan los
+ * formularios. Las claves de API se administran AQUÍ (patrón del módulo
+ * de IA del proyecto SEPUD): se guardan cifradas en la base y jamás se
+ * vuelven a mostrar; el .env queda solo como respaldo de arranque.
  */
 final readonly class IaController
 {
@@ -43,21 +45,27 @@ final readonly class IaController
         private IaUsoRepository $usos,
         private Connection $conexion,
         private AuditoriaService $auditoria,
+        private Cifrador $cifrador,
     ) {
     }
 
     public function configuracion(Request $peticion): Response
     {
+        $claves = [];
+
+        foreach (array_keys(FabricaAiProvider::PROVEEDORES) as $codigo) {
+            $claves[$codigo] = $this->fabrica->tieneClave($codigo);
+        }
+
         return $this->pagina($this->vistas->render('admin/ia/configuracion', [
             'activada' => $this->asistente->activa(),
             'activadaConfig' => $this->valorConfig('ia.activada') === '1',
             'proveedor' => $this->asistente->proveedor(),
             'modelo' => $this->asistente->modelo(),
+            'urlBase' => $this->valorConfig('ia.url_base'),
+            'cifradorListo' => $this->cifrador->disponible(),
             'proveedores' => FabricaAiProvider::PROVEEDORES,
-            'claves' => [
-                'anthropic' => $this->fabrica->tieneClave('anthropic'),
-                'openai' => $this->fabrica->tieneClave('openai'),
-            ],
+            'claves' => $claves,
             'consumo' => $this->usos->consumoPorFuncion(),
             'recientes' => $this->usos->recientes(10),
             'funciones' => FuncionIa::cases(),
@@ -79,7 +87,7 @@ final readonly class IaController
         $proveedor = $r->getString('proveedor');
         $modelo = trim($r->getString('modelo'));
 
-        if (!isset(FabricaAiProvider::PROVEEDORES[$proveedor]) || $modelo === '') {
+        if (!isset(FabricaAiProvider::PROVEEDORES[$proveedor])) {
             return new RedirectResponse('/admin/ia', Response::HTTP_SEE_OTHER);
         }
 
@@ -87,16 +95,38 @@ final readonly class IaController
         $this->guardarClave('ia.proveedor', $proveedor, 'texto', 'Proveedor de IA');
         $this->guardarClave('ia.modelo', mb_substr($modelo, 0, 80), 'texto', 'Modelo de IA');
 
+        // La URL base: pasarela compatible con Anthropic (OneProvider, por
+        // ejemplo) o el endpoint del proveedor «personalizado».
+        $urlBase = trim($r->getString('url_base'));
+
+        if ($urlBase === '' || preg_match('#^https://[^\s]+$#i', $urlBase) === 1) {
+            $this->guardarClave('ia.url_base', mb_substr($urlBase, 0, 200), 'texto', 'URL base del proveedor de IA', editable: false);
+        }
+
+        // La clave de API del proveedor elegido: se guarda CIFRADA y no se
+        // vuelve a mostrar. Vacía = conservar la actual; la casilla borra.
+        $claveApi = trim($r->getString('clave_api'));
+        $claveCambio = null;
+
+        if ($r->getBoolean('clave_borrar')) {
+            $this->guardarClave('ia.clave_' . $proveedor, '', 'texto', 'Clave de API (cifrada)', editable: false);
+            $claveCambio = 'clave eliminada';
+        } elseif ($claveApi !== '') {
+            $this->guardarClave('ia.clave_' . $proveedor, $this->cifrador->cifrar($claveApi), 'texto', 'Clave de API (cifrada)', editable: false);
+            $claveCambio = 'clave actualizada';
+        }
+
         $actor = Actor::desde($this->sesion, $peticion);
         $this->auditoria->registrar(new RegistroAuditoria(
             accion: AccionAuditoria::Actualizacion,
             entidad: 'configuracion',
             entidadId: 0,
             descripcion: sprintf(
-                'Configuró la IA del panel: %s, proveedor %s, modelo %s',
+                'Configuró la IA del panel: %s, proveedor %s, modelo %s%s',
                 $activada ? 'activada' : 'desactivada',
                 $proveedor,
-                $modelo,
+                $modelo !== '' ? $modelo : '(predeterminado)',
+                $claveCambio !== null ? ', ' . $claveCambio : '',
             ),
             usuarioId: $actor->usuarioId,
             usuarioNombre: $actor->nombre,
@@ -105,6 +135,22 @@ final readonly class IaController
         ));
 
         return new RedirectResponse('/admin/ia?guardado=1', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Los modelos disponibles del proveedor pedido (JSON): en vivo desde
+     * su API cuando hay clave, o la lista de referencia si no. Alimenta el
+     * botón «Cargar modelos» de la pantalla de configuración.
+     */
+    public function modelos(Request $peticion): Response
+    {
+        $proveedor = $peticion->query->getString('proveedor');
+
+        if (!isset(FabricaAiProvider::PROVEEDORES[$proveedor])) {
+            return $this->error('Proveedor no reconocido.', Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse($this->fabrica->listarModelos($proveedor));
     }
 
     /**
@@ -218,13 +264,14 @@ final readonly class IaController
         return ['titulo' => '', 'descripcion' => mb_substr($limpia, 0, 320)];
     }
 
-    private function guardarClave(string $clave, string $valor, string $tipo, string $etiqueta): void
+    /** `editable: false` esconde la fila de la pantalla genérica de Ajustes (los secretos cifrados). */
+    private function guardarClave(string $clave, string $valor, string $tipo, string $etiqueta, bool $editable = true): void
     {
         $this->conexion->executeStatement(
-            'INSERT INTO configuracion (clave, valor, tipo, grupo, etiqueta, actualizado_por)
-             VALUES (?, ?, ?, ?, ?, ?)
+            'INSERT INTO configuracion (clave, valor, tipo, grupo, etiqueta, editable, actualizado_por)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE valor = VALUES(valor), actualizado_por = VALUES(actualizado_por)',
-            [$clave, $valor, $tipo, 'ia', $etiqueta, $this->sesion->usuarioId()],
+            [$clave, $valor, $tipo, 'ia', $etiqueta, $editable ? 1 : 0, $this->sesion->usuarioId()],
         );
     }
 

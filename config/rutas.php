@@ -15,6 +15,10 @@ declare(strict_types=1);
 use App\Http\Admin\AvisosController;
 use App\Http\Admin\CampanasController;
 use App\Http\Admin\CategoriasController;
+use App\Http\Admin\CuentasContratistasController;
+use App\Http\Admin\CuentasContratosController;
+use App\Http\Admin\CuentasParametrosController;
+use App\Http\Admin\CuentasSupervisoresController;
 use App\Http\Admin\FaqController;
 use App\Http\Admin\IaController;
 use App\Http\Admin\LoginController;
@@ -690,6 +694,35 @@ $rutas->add('admin.tipostramite.crear', new Route('/admin/tipos-tramite', $permi
 $rutas->add('admin.tipostramite.guardar', new Route('/admin/tipos-tramite/{id}', $permisoTipos('guardar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tipostramite.campo.crear', new Route('/admin/tipos-tramite/{id}/campos', $permisoTipos('crearCampo'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tipostramite.campo.eliminar', new Route('/admin/tipos-tramite/campos/{id}/eliminar', $permisoTipos('eliminarCampo'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: cuentas de cobro (administración, fase 1 del módulo) ---
+
+$permisoCuentas = static fn (string $controlador, string $metodo): array => [
+    '_controlador' => [$controlador, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'cuentas.administrar',
+];
+
+$rutas->add('admin.cc.contratos', new Route('/admin/cuentas-cobro/contratos', $permisoCuentas(CuentasContratosController::class, 'listado'), methods: ['GET']));
+$rutas->add('admin.cc.contratos.nuevo', new Route('/admin/cuentas-cobro/contratos/nuevo', $permisoCuentas(CuentasContratosController::class, 'formulario'), methods: ['GET']));
+$rutas->add('admin.cc.contratos.crear', new Route('/admin/cuentas-cobro/contratos', $permisoCuentas(CuentasContratosController::class, 'guardar'), methods: ['POST']));
+$rutas->add('admin.cc.contratos.editar', new Route('/admin/cuentas-cobro/contratos/{id}/editar', $permisoCuentas(CuentasContratosController::class, 'formulario'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.contratos.ficha', new Route('/admin/cuentas-cobro/contratos/{id}', $permisoCuentas(CuentasContratosController::class, 'ficha'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.contratos.guardar', new Route('/admin/cuentas-cobro/contratos/{id}', $permisoCuentas(CuentasContratosController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratos.activar', new Route('/admin/cuentas-cobro/contratos/{id}/activar', $permisoCuentas(CuentasContratosController::class, 'activar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratos.acta', new Route('/admin/cuentas-cobro/contratos/{id}/acta', $permisoCuentas(CuentasContratosController::class, 'registrarActa'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratos.imputacion', new Route('/admin/cuentas-cobro/contratos/{id}/imputaciones', $permisoCuentas(CuentasContratosController::class, 'agregarImputacion'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratos.anular', new Route('/admin/cuentas-cobro/contratos/{id}/anular', $permisoCuentas(CuentasContratosController::class, 'anular'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratistas', new Route('/admin/cuentas-cobro/contratistas', $permisoCuentas(CuentasContratistasController::class, 'listado'), methods: ['GET']));
+$rutas->add('admin.cc.contratistas.crear', new Route('/admin/cuentas-cobro/contratistas', $permisoCuentas(CuentasContratistasController::class, 'guardar'), methods: ['POST']));
+$rutas->add('admin.cc.contratistas.guardar', new Route('/admin/cuentas-cobro/contratistas/{id}', $permisoCuentas(CuentasContratistasController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratistas.activo', new Route('/admin/cuentas-cobro/contratistas/{id}/activo', $permisoCuentas(CuentasContratistasController::class, 'cambiarActivo'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.supervisores', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'listado'), methods: ['GET']));
+$rutas->add('admin.cc.supervisores.crear', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), methods: ['POST']));
+$rutas->add('admin.cc.supervisores.guardar', new Route('/admin/cuentas-cobro/supervisores/{id}', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.parametros', new Route('/admin/cuentas-cobro/parametros', $permisoCuentas(CuentasParametrosController::class, 'index'), methods: ['GET']));
+$rutas->add('admin.cc.parametros.anio', new Route('/admin/cuentas-cobro/parametros/anio', $permisoCuentas(CuentasParametrosController::class, 'guardarAnio'), methods: ['POST']));
+$rutas->add('admin.cc.parametros.plantilla', new Route('/admin/cuentas-cobro/parametros/plantillas/{clave}', $permisoCuentas(CuentasParametrosController::class, 'guardarPlantilla'), ['clave' => '[A-Z_]+'], methods: ['POST']));
 
 // --- Panel: políticas ---
 

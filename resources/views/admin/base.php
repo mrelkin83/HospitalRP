@@ -55,6 +55,12 @@ $secciones = [
         'Convocatorias' => ['/admin/convocatorias', 'convocatorias.ver'],
         'Eventos' => ['/admin/eventos', 'eventos.ver'],
     ],
+    'Cuentas de cobro' => [
+        'Contratos' => ['/admin/cuentas-cobro/contratos', 'cuentas.administrar'],
+        'Contratistas' => ['/admin/cuentas-cobro/contratistas', 'cuentas.administrar'],
+        'Supervisores' => ['/admin/cuentas-cobro/supervisores', 'cuentas.administrar'],
+        'Parámetros' => ['/admin/cuentas-cobro/parametros', 'cuentas.administrar'],
+    ],
     'Sistema' => [
         'Ajustes del sitio' => ['/admin/configuracion', 'sistema.configuracion'],
         'Usuarios' => ['/admin/usuarios', 'sistema.usuarios'],

@@ -55,6 +55,16 @@ final readonly class CatalogoPermisos
                 'tramites.configurar' => 'Definir tipos de trámite y sus campos',
             ],
         ],
+        'cuentas' => [
+            'titulo' => 'Cuentas de cobro',
+            'permisos' => [
+                // La administración completa del módulo: contratos,
+                // contratistas, supervisores y parámetros. El permiso del
+                // supervisor (revisar y aprobar cuentas) llegará con su
+                // bandeja en la fase 3 del módulo.
+                'cuentas.administrar' => 'Administrar contratos, contratistas, supervisores y parámetros de cuentas de cobro',
+            ],
+        ],
         'transparencia' => [
             'titulo' => 'Transparencia y datos abiertos',
             'permisos' => [

@@ -50,6 +50,19 @@ Sin remoto git todavía (ver 2.7).
 **Telemedicina no se tocó.** Está en «Nunca — no construir» de CLAUDE.md §7 y
 el propio pedido la situaba «más adelante».
 
+**Módulo de cuentas de cobro — fase 1 terminada (2026-09-20).** Especificación
+en `docs/CLAUDE-modulo-cuentas-de-cobro.md` (fuente de verdad del módulo).
+Construido: 18 tablas `cc_*` (migración `Version20260920130000`, `down()`
+probado), `CalculosCuenta`/`NumeroALetras`/`FechasCuenta` con sus pruebas,
+panel A1/A3–A7 bajo `/admin/cuentas-cobro/*` (permiso `cuentas.administrar`),
+semilla `semillas:cuentas-cobro` con los 8 contratos de muestra. Criterios de
+aceptación de la fase verificados en
+`tests/Unit/Modules/CuentasCobro` y `tests/Feature/Http/CuentasCobroAdminTest`.
+OJO: el módulo contradice el «Fuera de v1: portal del contratista» de
+CLAUDE.md §7 — se construyó por orden expresa del 2026-09-20; falta actualizar
+esa sección. Siguen las fases 2 (portal del contratista + PDF), 3 (supervisor
+y paquete), 4 (novedades y reportes) y 5 (extracción de minutas con IA).
+
 ## 2. Pendientes técnicos (código por hacer)
 
 Ordenados por importancia:

@@ -29,6 +29,10 @@ use App\Http\Admin\AvisosController;
 use App\Http\Admin\PopupsController;
 use App\Http\Admin\CampanasController;
 use App\Http\Admin\CategoriasController;
+use App\Http\Admin\CuentasContratistasController;
+use App\Http\Admin\CuentasContratosController;
+use App\Http\Admin\CuentasParametrosController;
+use App\Http\Admin\CuentasSupervisoresController;
 use App\Http\Admin\FaqController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
@@ -78,6 +82,10 @@ use App\Modules\Convocatorias\Repository\ConvocatoriaRepository;
 use App\Modules\Encuestas\Repository\EncuestaRepository;
 use App\Modules\Indicadores\Repository\IndicadorRepository;
 use App\Modules\Contenido\Repository\HeroRepository;
+use App\Modules\CuentasCobro\Repository\ContratistaRepository;
+use App\Modules\CuentasCobro\Repository\ContratoRepository;
+use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
+use App\Modules\CuentasCobro\Repository\SupervisorRepository;
 use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Directorio\Repository\ServidorPublicoRepository;
 use App\Modules\Sistema\Repository\MenuRepository;
@@ -606,6 +614,36 @@ return static function (Env $env): ContainerBuilder {
         ->setPublic(true);
 
     $contenedor->register(MenusController::class, MenusController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    // --- Módulo de cuentas de cobro (fase 1) ---
+
+    $contenedor->register(ContratistaRepository::class, ContratistaRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(SupervisorRepository::class, SupervisorRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ContratoRepository::class, ContratoRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ParametrosCuentasRepository::class, ParametrosCuentasRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CuentasContratosController::class, CuentasContratosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasContratistasController::class, CuentasContratistasController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasSupervisoresController::class, CuentasSupervisoresController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasParametrosController::class, CuentasParametrosController::class)
         ->setAutowired(true)
         ->setPublic(true);
 

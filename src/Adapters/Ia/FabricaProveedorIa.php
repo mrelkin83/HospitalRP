@@ -42,21 +42,36 @@ final readonly class FabricaProveedorIa implements FabricaAiProvider
     ];
 
     /**
+     * Proveedores cuyo listado de modelos es PÚBLICO: se consulta en vivo
+     * aunque todavía no haya clave guardada.
+     *
+     * @var list<string>
+     */
+    public const array LISTADO_PUBLICO = ['openrouter'];
+
+    /**
      * Catálogo estático de respaldo cuando el GET /models no es posible.
+     * Es una foto de referencia, no la verdad: la lista completa y al día
+     * siempre la da el listado en vivo con la clave guardada.
      *
      * @var array<string, list<string>>
      */
     public const array MODELOS_CONOCIDOS = [
-        'anthropic' => ['claude-opus-5', 'claude-sonnet-5', 'claude-haiku-4-5'],
-        'openai' => ['gpt-5', 'gpt-5-mini', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini'],
+        'anthropic' => ['claude-opus-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6',
+            'claude-sonnet-5', 'claude-sonnet-4-6', 'claude-haiku-4-5'],
+        'openai' => ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano',
+            'gpt-4o', 'gpt-4o-mini', 'o3', 'o4-mini'],
         'deepseek' => ['deepseek-chat', 'deepseek-reasoner'],
-        'kimi' => ['kimi-k2-0905-preview', 'kimi-k2-turbo-preview'],
-        'glm' => ['glm-4.6', 'glm-4.5', 'glm-4.5-air'],
-        'gemini' => ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
-        'openrouter' => ['openai/gpt-4o-mini', 'anthropic/claude-sonnet-4.6', 'google/gemini-2.5-flash'],
-        'groq' => ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
-        'mistral' => ['mistral-large-latest', 'mistral-small-latest'],
-        'xai' => ['grok-4', 'grok-3', 'grok-3-mini'],
+        'kimi' => ['kimi-k2-0905-preview', 'kimi-k2-turbo-preview', 'moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
+        'glm' => ['glm-4.6', 'glm-4.5', 'glm-4.5-air', 'glm-4.5-flash', 'glm-4-plus'],
+        'gemini' => ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'],
+        'openrouter' => ['openai/gpt-4o-mini', 'anthropic/claude-sonnet-4.6', 'google/gemini-2.5-flash',
+            'deepseek/deepseek-chat', 'meta-llama/llama-3.3-70b-instruct'],
+        'groq' => ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'deepseek-r1-distill-llama-70b',
+            'qwen-2.5-72b-instruct', 'gemma2-9b-it'],
+        'mistral' => ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest',
+            'ministral-8b-latest', 'ministral-3b-latest', 'codestral-latest', 'pixtral-large-latest'],
+        'xai' => ['grok-4', 'grok-4-fast', 'grok-3', 'grok-3-mini'],
         'personalizado' => [],
     ];
 
@@ -134,8 +149,11 @@ final readonly class FabricaProveedorIa implements FabricaAiProvider
         $respaldo = self::MODELOS_CONOCIDOS[$proveedor] ?? [];
         $clave = $this->claveDe($proveedor);
 
-        if ($clave === '') {
-            return ['origen' => 'estatico', 'modelos' => $respaldo, 'nota' => 'Sin clave guardada: lista de referencia.'];
+        // Sin clave solo se puede en vivo donde el listado es público
+        // (OpenRouter); para los demás, la lista de referencia y el aviso
+        // de que la completa llega al guardar la clave.
+        if ($clave === '' && !in_array($proveedor, self::LISTADO_PUBLICO, true)) {
+            return ['origen' => 'estatico', 'modelos' => $respaldo, 'nota' => 'Lista de referencia: guarde la clave del proveedor en esta pantalla para ver su catálogo completo y al día.'];
         }
 
         try {
@@ -228,7 +246,7 @@ final readonly class FabricaProveedorIa implements FabricaAiProvider
             $datos = $this->http->get(
                 FabricaAiProvider::PROVEEDORES[$proveedor],
                 $urlModelos,
-                ['Authorization: Bearer ' . $clave],
+                $clave !== '' ? ['Authorization: Bearer ' . $clave] : [],
             );
         }
 

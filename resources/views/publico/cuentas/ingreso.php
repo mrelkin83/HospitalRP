@@ -1,40 +1,55 @@
 <?php
 /**
- * P0 — Ingreso: cédula + número de contrato. Si es el primer ingreso y no
- * hay a dónde enviar el código, se pide además la fecha de suscripción.
- * Espera: $error, $primeraVez, $tokenCsrf.
+ * P0 — Ingreso con contraseña. Un selector deja entrar por cédula O por
+ * número de contrato; el OTP de seis dígitos se retiró.
+ * Espera: $error, $mensaje, $tokenCsrf.
  */
 ob_start(); ?>
 
 <?php if ($error !== null) { ?>
     <div class="alerta-error" role="alert"><?= $e($error) ?></div>
 <?php } ?>
+<?php if ($mensaje !== null) { ?>
+    <div class="alerta-exito" role="status"><?= $e($mensaje) ?></div>
+<?php } ?>
 
 <form class="tarjeta" method="post" action="/cuentas/ingreso">
     <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
 
-    <label for="cedula">Número de cédula</label>
-    <input id="cedula" name="cedula" type="text" inputmode="numeric" autocomplete="off"
-           required pattern="[0-9.\s]{5,20}" aria-describedby="ayuda-cedula">
-    <span class="ayuda" id="ayuda-cedula">Solo los números, sin puntos.</span>
+    <fieldset>
+        <legend>¿Con qué dato quiere entrar?</legend>
+        <label class="opcion">
+            <input type="radio" name="modo" value="cedula" checked>
+            Número de cédula
+        </label>
+        <label class="opcion">
+            <input type="radio" name="modo" value="contrato">
+            Número de contrato
+        </label>
+    </fieldset>
 
-    <label for="contrato">Número de contrato</label>
-    <input id="contrato" name="contrato" type="text" autocomplete="off" required
-           aria-describedby="ayuda-contrato">
-    <span class="ayuda" id="ayuda-contrato">Está en la primera página de su contrato. Ejemplo: 1407-2026.</span>
+    <label for="identificador">Cédula o número de contrato</label>
+    <input id="identificador" name="identificador" type="text" autocomplete="username"
+           required aria-describedby="ayuda-identificador">
+    <span class="ayuda" id="ayuda-identificador">
+        La cédula va solo con números. El número de contrato está en la primera
+        página de su copia; ejemplo: 1407-2026.
+    </span>
 
-    <?php if ($primeraVez) { ?>
-        <label for="fecha-suscripcion">Fecha de suscripción del contrato</label>
-        <input id="fecha-suscripcion" name="fecha_suscripcion" type="date" required
-               aria-describedby="ayuda-fecha">
-        <span class="ayuda" id="ayuda-fecha">Como es su primer ingreso, confirme la fecha que aparece en su contrato.</span>
-    <?php } ?>
+    <label for="contrasena">Contraseña</label>
+    <input id="contrasena" name="contrasena" type="password" autocomplete="current-password"
+           required aria-describedby="ayuda-contrasena">
+    <span class="ayuda" id="ayuda-contrasena">
+        La que usted creó. Si la olvidó, pídala restablecer en la oficina de
+        Contratación del hospital.
+    </span>
 
-    <button class="boton" type="submit">Continuar</button>
+    <button class="boton" type="submit">Entrar</button>
 </form>
 
 <p class="ayuda">
-    Le enviaremos un código de 6 números para confirmar que es usted.
+    ¿Primera vez aquí? <a href="/cuentas/crear-contrasena">Cree su contraseña</a>
+    con la fecha de suscripción de su contrato.
     Este portal es solo para contratistas de prestación de servicios del hospital.
 </p>
 

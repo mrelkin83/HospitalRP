@@ -248,14 +248,30 @@ final readonly class GeneradorDocumentosCuenta
      */
     private function obligaciones(int $cuentaId): array
     {
+        // LEFT JOIN: las actividades manuales (contratos sin minuta legible)
+        // no tienen obligación de origen; su título hace de texto y se
+        // numeran a continuación de las que sí la tienen.
         $filas = $this->conexion->fetchAllAssociative(
-            'SELECT o.orden, o.texto, a.descripcion_ejecucion, a.cumplimiento
+            'SELECT o.orden, COALESCE(o.texto, a.titulo_manual) AS texto,
+                    a.descripcion_ejecucion, a.cumplimiento
                FROM cc_cuenta_actividades a
-               JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
+               LEFT JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
               WHERE a.cuenta_id = ?
-              ORDER BY o.orden',
+              ORDER BY COALESCE(o.orden, 100000), a.id',
             [$cuentaId],
         );
+
+        $siguiente = 0;
+
+        foreach ($filas as $i => $fila) {
+            $siguiente = max($siguiente, (int) ($fila['orden'] ?? 0));
+        }
+
+        foreach ($filas as $i => $fila) {
+            if ($fila['orden'] === null) {
+                $filas[$i]['orden'] = ++$siguiente;
+            }
+        }
 
         return array_map(static fn (array $f): array => [
             'orden' => (int) $f['orden'],

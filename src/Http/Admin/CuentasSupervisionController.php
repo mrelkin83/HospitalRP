@@ -65,7 +65,9 @@ final readonly class CuentasSupervisionController
             'devueltas' => ['DEVUELTA'],
             'aprobadas' => ['APROBADA', 'ENTREGADA_FINANCIERA'],
             'todas' => null,
-            default => ['ENVIADA'],
+            // Pendientes de verdad: las que ya pasaron la revisión previa.
+            // Las ENVIADA siguen donde los revisores.
+            default => ['REVISADA'],
         };
 
         $error = $this->pantalla->sacarDeLaSesion('cc_error');

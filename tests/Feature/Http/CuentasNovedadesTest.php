@@ -156,9 +156,9 @@ final class CuentasNovedadesTest extends TestCase
         foreach ([
             'cc_descarga_tokens', 'cc_cuenta_firmas', 'cc_cuenta_historial', 'cc_cuenta_adjuntos',
             'cc_cuenta_seguridad_social', 'cc_cuenta_actividades', 'cc_cuentas',
-            'cc_extracciones', 'cc_otp', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
+            'cc_extracciones', 'cc_ingreso_intentos', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
             'cc_contrato_imputaciones', 'cc_contrato_novedades', 'cc_contratos',
-            'cc_supervisores', 'cc_contratistas',
+            'cc_supervisores', 'cc_revisores', 'cc_contratistas',
         ] as $tabla) {
             self::$conexion->executeStatement('DELETE FROM ' . $tabla);
         }

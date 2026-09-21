@@ -199,6 +199,35 @@ final readonly class CuentaRepository
         );
     }
 
+    /**
+     * La bandeja compartida de los revisores: TODAS las cuentas del estado
+     * pedido, sin importar el supervisor. Los cuatro revisores ven la misma
+     * cola y cualquiera toma cualquier cuenta.
+     *
+     * @param ?list<string> $estados Filtro de pestaña; nulo = todas.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function bandejaDeRevision(?array $estados = null): array
+    {
+        $sql = "SELECT c.*, k.numero AS numero_contrato, t.nombre_completo AS contratista_nombre,
+                       DATEDIFF(NOW(), c.enviada_en) AS dias_en_espera
+                  FROM cc_cuentas c
+                  JOIN cc_contratos k ON k.id = c.contrato_id
+                  JOIN cc_contratistas t ON t.id = k.contratista_id";
+        $parametros = [];
+
+        if ($estados !== null && $estados !== []) {
+            $sql .= ' WHERE c.estado IN (' . implode(', ', array_fill(0, count($estados), '?')) . ')';
+            array_push($parametros, ...$estados);
+        }
+
+        return $this->conexion->fetchAllAssociative(
+            $sql . ' ORDER BY c.enviada_en IS NULL, c.enviada_en, c.id',
+            $parametros,
+        );
+    }
+
     /** @return ?array<string, mixed> Un adjunto con la cuenta y el contrato a los que pertenece. */
     public function adjuntoPorId(int $adjuntoId): ?array
     {
@@ -218,12 +247,48 @@ final readonly class CuentaRepository
     public function actividades(int $cuentaId): array
     {
         return $this->conexion->fetchAllAssociative(
-            'SELECT a.id, a.obligacion_id, a.descripcion_ejecucion, a.cumplimiento, o.orden, o.texto
+            'SELECT a.id, a.obligacion_id, a.titulo_manual, a.descripcion_ejecucion, a.cumplimiento,
+                    o.orden, COALESCE(o.texto, a.titulo_manual) AS texto
                FROM cc_cuenta_actividades a
-               JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
+               LEFT JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
               WHERE a.cuenta_id = ?
-              ORDER BY o.orden',
+              ORDER BY COALESCE(o.orden, 100000), a.id',
             [$cuentaId],
+        );
+    }
+
+    /**
+     * Actividad escrita a mano: para contratos sin minuta (o con una
+     * ilegible para el OCR) que no tienen obligaciones cargadas.
+     */
+    public function crearActividadManual(int $cuentaId, string $titulo, ?string $descripcion): int
+    {
+        $this->conexion->insert('cc_cuenta_actividades', [
+            'cuenta_id' => $cuentaId,
+            'obligacion_id' => null,
+            'titulo_manual' => mb_substr($titulo, 0, 300),
+            'descripcion_ejecucion' => $descripcion,
+        ]);
+
+        return (int) $this->conexion->lastInsertId();
+    }
+
+    public function actualizarActividadManual(int $cuentaId, int $actividadId, string $titulo, ?string $descripcion): void
+    {
+        $this->conexion->executeStatement(
+            'UPDATE cc_cuenta_actividades
+                SET titulo_manual = ?, descripcion_ejecucion = ?
+              WHERE id = ? AND cuenta_id = ? AND obligacion_id IS NULL',
+            [mb_substr($titulo, 0, 300), $descripcion, $actividadId, $cuentaId],
+        );
+    }
+
+    public function eliminarActividadManual(int $cuentaId, int $actividadId): void
+    {
+        $this->conexion->executeStatement(
+            'DELETE FROM cc_cuenta_actividades
+              WHERE id = ? AND cuenta_id = ? AND obligacion_id IS NULL',
+            [$actividadId, $cuentaId],
         );
     }
 

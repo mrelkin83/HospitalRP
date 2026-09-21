@@ -101,6 +101,20 @@ final class SembrarRolesCommand extends Command
                 'sistema.dependencias',
             ],
         ],
+        'revisor-cuentas' => [
+            'nombre' => 'Revisor de cuentas de cobro',
+            'descripcion' => 'Solo la bandeja de revisión previa: verifica y firma las cuentas enviadas antes de que lleguen al supervisor. No ve nada más del panel.',
+            'permisos' => [
+                'cuentas.revisar',
+            ],
+        ],
+        'supervisor-cuentas' => [
+            'nombre' => 'Supervisor de cuentas de cobro',
+            'descripcion' => 'Solo la bandeja de supervisión: aprueba con su firma o devuelve las cuentas de sus contratos. No ve nada más del panel.',
+            'permisos' => [
+                'cuentas.supervisar',
+            ],
+        ],
         'control-interno' => [
             'nombre' => 'Control interno (solo lectura)',
             'descripcion' => 'Ve el panel sin poder modificar nada, y consulta el registro de auditoría.',

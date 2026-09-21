@@ -21,6 +21,8 @@ use App\Http\Admin\CuentasMinutasController;
 use App\Http\Admin\CuentasParametrosController;
 use App\Http\Admin\CuentasReportesController;
 use App\Http\Admin\CuentasSupervisionController;
+use App\Http\Admin\CuentasRevisionController;
+use App\Http\Admin\CuentasRevisoresController;
 use App\Http\Admin\CuentasSupervisoresController;
 use App\Http\Admin\FaqController;
 use App\Http\Admin\IaController;
@@ -723,6 +725,7 @@ $rutas->add('admin.cc.contratistas', new Route('/admin/cuentas-cobro/contratista
 $rutas->add('admin.cc.contratistas.crear', new Route('/admin/cuentas-cobro/contratistas', $permisoCuentas(CuentasContratistasController::class, 'guardar'), methods: ['POST']));
 $rutas->add('admin.cc.contratistas.guardar', new Route('/admin/cuentas-cobro/contratistas/{id}', $permisoCuentas(CuentasContratistasController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.contratistas.activo', new Route('/admin/cuentas-cobro/contratistas/{id}/activo', $permisoCuentas(CuentasContratistasController::class, 'cambiarActivo'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratistas.password', new Route('/admin/cuentas-cobro/contratistas/{id}/restablecer-contrasena', $permisoCuentas(CuentasContratistasController::class, 'restablecerPassword'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.supervisores', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'listado'), methods: ['GET']));
 $rutas->add('admin.cc.supervisores.crear', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), methods: ['POST']));
 $rutas->add('admin.cc.supervisores.guardar', new Route('/admin/cuentas-cobro/supervisores/{id}', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
@@ -739,6 +742,8 @@ $rutas->add('admin.cc.minutas', new Route('/admin/cuentas-cobro/minutas', $permi
 $rutas->add('admin.cc.minutas.subir', new Route('/admin/cuentas-cobro/minutas', $permisoCuentas(CuentasMinutasController::class, 'subir'), methods: ['POST']));
 $rutas->add('admin.cc.minutas.revision', new Route('/admin/cuentas-cobro/minutas/{id}', $permisoCuentas(CuentasMinutasController::class, 'revision'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.minutas.procesar', new Route('/admin/cuentas-cobro/minutas/{id}/procesar', $permisoCuentas(CuentasMinutasController::class, 'reprocesar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.minutas.ahora', new Route('/admin/cuentas-cobro/minutas/{id}/ahora', $permisoCuentas(CuentasMinutasController::class, 'procesarAhora'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.minutas.soltar', new Route('/admin/cuentas-cobro/minutas/{id}/soltar', $permisoCuentas(CuentasMinutasController::class, 'soltar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.minutas.ocr', new Route('/admin/cuentas-cobro/minutas/{id}/ocr', $permisoCuentas(CuentasMinutasController::class, 'extraerOcr'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.minutas.imagen', new Route('/admin/cuentas-cobro/minutas/{id}/imagen/{n}', $permisoCuentas(CuentasMinutasController::class, 'imagen'), ['id' => '\d+', 'n' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.minutas.aplicar', new Route('/admin/cuentas-cobro/minutas/{id}/aplicar', $permisoCuentas(CuentasMinutasController::class, 'aplicar'), ['id' => '\d+'], methods: ['POST']));
@@ -762,6 +767,26 @@ $rutas->add('admin.cc.bandeja.descargar', new Route('/admin/cuentas-cobro/bandej
 $rutas->add('admin.cc.adjunto', new Route('/admin/cuentas-cobro/adjuntos/{id}', $permisoSupervision('adjunto'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.miscontratos', new Route('/admin/cuentas-cobro/mis-contratos', $permisoSupervision('misContratos'), methods: ['GET']));
 $rutas->add('admin.cc.miscontratos.acta', new Route('/admin/cuentas-cobro/mis-contratos/{id}/acta', $permisoSupervision('registrarActa'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: bandeja de revisión previa (equipo revisor) y su administración ---
+
+$permisoRevision = static fn (string $metodo): array => [
+    '_controlador' => [CuentasRevisionController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'cuentas.revisar',
+];
+
+$rutas->add('admin.cc.rev', new Route('/admin/cuentas-cobro/revision', $permisoRevision('bandeja'), methods: ['GET']));
+$rutas->add('admin.cc.rev.firma', new Route('/admin/cuentas-cobro/revision/firma', $permisoRevision('guardarMiFirma'), methods: ['POST']));
+$rutas->add('admin.cc.rev.adjunto', new Route('/admin/cuentas-cobro/revision/adjunto/{id}', $permisoRevision('adjunto'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.rev.detalle', new Route('/admin/cuentas-cobro/revision/{id}', $permisoRevision('detalle'), ['id' => '\d+'], methods: ['GET']));
+$rutas->add('admin.cc.rev.revisar', new Route('/admin/cuentas-cobro/revision/{id}/revisar', $permisoRevision('marcarRevisada'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.rev.devolver', new Route('/admin/cuentas-cobro/revision/{id}/devolver', $permisoRevision('devolver'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.rev.descargar', new Route('/admin/cuentas-cobro/revision/{id}/descargar/{documento}', $permisoRevision('descargar'), ['id' => '\d+', 'documento' => 'cuenta|informe'], methods: ['GET']));
+
+$rutas->add('admin.cc.revisores', new Route('/admin/cuentas-cobro/revisores', $permisoCuentas(CuentasRevisoresController::class, 'listado'), methods: ['GET']));
+$rutas->add('admin.cc.revisores.crear', new Route('/admin/cuentas-cobro/revisores', $permisoCuentas(CuentasRevisoresController::class, 'guardar'), methods: ['POST']));
+$rutas->add('admin.cc.revisores.guardar', new Route('/admin/cuentas-cobro/revisores/{id}', $permisoCuentas(CuentasRevisoresController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: políticas ---
 
@@ -1141,8 +1166,9 @@ $rutaCuentas = static fn (string $controlador, string $metodo): array => [
 ];
 
 $rutas->add('cuentas.ingreso', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'ingreso'), methods: ['GET']));
-$rutas->add('cuentas.ingreso.codigo', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'solicitarCodigo'), methods: ['POST']));
-$rutas->add('cuentas.codigo', new Route('/cuentas/codigo', $rutaCuentas(CuentasPortalController::class, 'verificarCodigo'), methods: ['POST']));
+$rutas->add('cuentas.entrar', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'entrar'), methods: ['POST']));
+$rutas->add('cuentas.crear', new Route('/cuentas/crear-contrasena', $rutaCuentas(CuentasPortalController::class, 'crearPasswordFormulario'), methods: ['GET']));
+$rutas->add('cuentas.crear.guardar', new Route('/cuentas/crear-contrasena', $rutaCuentas(CuentasPortalController::class, 'crearPassword'), methods: ['POST']));
 $rutas->add('cuentas.salir', new Route('/cuentas/salir', $rutaCuentas(CuentasPortalController::class, 'salir'), methods: ['POST']));
 $rutas->add('cuentas.inicio', new Route('/cuentas/inicio', $rutaCuentas(CuentasPortalController::class, 'inicio'), methods: ['GET']));
 $rutas->add('cuentas.misdatos', new Route('/cuentas/mis-datos', $rutaCuentas(CuentasPortalController::class, 'misDatos'), methods: ['GET']));

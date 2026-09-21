@@ -133,6 +133,36 @@ final readonly class CuentasContratistasController
         return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
     }
 
+    /**
+     * Borra la contraseña del contratista para que cree una nueva con la
+     * fecha de su contrato (el restablecimiento pasa por esta oficina).
+     */
+    public function restablecerPassword(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $contratista = $this->contratistas->porId($id);
+
+        if ($contratista === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $this->contratistas->actualizar($id, ['password_hash' => null]);
+        $this->pantalla->auditar(
+            $peticion,
+            AccionAuditoria::Actualizacion,
+            'cc_contratista',
+            $id,
+            'Contraseña del portal restablecida para el contratista ' . $contratista['numero_documento'],
+        );
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', 'Contraseña restablecida: la persona puede crear una nueva en el portal con la fecha de su contrato.');
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
     private function texto(string $valor, int $maximo): ?string
     {
         $limpio = trim($valor);

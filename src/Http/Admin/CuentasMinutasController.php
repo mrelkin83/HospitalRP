@@ -15,6 +15,7 @@ use App\Modules\CuentasCobro\Service\ArchivosCuentas;
 use App\Modules\CuentasCobro\Service\ExtractorMinutaService;
 use App\Modules\CuentasCobro\Service\NumeroALetras;
 use App\Modules\CuentasCobro\Service\OcrMinutaService;
+use App\Modules\CuentasCobro\Service\ValidadorExtraccion;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +33,15 @@ final readonly class CuentasMinutasController
 {
     private const string TITULO = 'Cuentas de cobro — Cargar minuta';
     private const string RUTA = '/admin/cuentas-cobro/minutas';
+
+    /**
+     * Tope de archivos por lote, acordado con el hospital.
+     *
+     * No es una limitación técnica sino de atención: veinte es lo que una
+     * persona revisa sin perderle el hilo al lote. La carga de los 1.500
+     * no pasa por aquí, va por consola.
+     */
+    private const int MAXIMO_POR_LOTE = 20;
 
     public function __construct(
         private PantallaAdmin $pantalla,
@@ -51,8 +61,17 @@ final readonly class CuentasMinutasController
         $error = $this->pantalla->sacarDeLaSesion('cc_error');
         $mensaje = $this->pantalla->sacarDeLaSesion('cc_mensaje');
 
+        $estado = $peticion->query->getString('estado');
+        $estado = in_array($estado, ['PENDIENTE', 'PROCESANDO', 'LISTA', 'ERROR', 'APLICADA'], true) ? $estado : null;
+        $conteos = $this->extracciones->conteoPorEstado();
+
         return $this->pantalla->pagina(self::TITULO, $this->vistas->render('admin/cuentas/minutas-listado', [
-            'extracciones' => $this->extracciones->recientes(),
+            'extracciones' => $this->extracciones->bandeja($estado),
+            'conteos' => $conteos,
+            'enCola' => ($conteos['PENDIENTE'] ?? 0) + ($conteos['PROCESANDO'] ?? 0),
+            'estadoFiltro' => $estado,
+            'maximoPorLote' => self::MAXIMO_POR_LOTE,
+            'usuarioId' => $this->pantalla->usuarioId() ?? 0,
             'iaDisponible' => $this->extractor->iaDisponible(),
             'ocrDisponible' => $this->ocr->disponible(),
             'mensaje' => is_string($mensaje) ? $mensaje : null,
@@ -61,34 +80,97 @@ final readonly class CuentasMinutasController
         ]));
     }
 
-    /** Subir el PDF crea la extracción y la procesa de una vez. */
+    /**
+     * Subir encola: valida los PDF, los guarda y los deja PENDIENTES.
+     *
+     * Ya no se extrae dentro de la petición. Con un archivo la espera era
+     * tolerable; con veinte es una pestaña abierta veinte minutos, y con
+     * los 1.500 de la carga inicial, veinticinco horas. El comando
+     * `cuentas:extraer-minutas` hace el trabajo por detrás.
+     */
     public function subir(Request $peticion): Response
     {
         if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
             return $rechazo;
         }
 
-        $minuta = $peticion->files->get('minuta');
+        // El campo llega como lista (minuta[]), pero un cliente viejo puede
+        // mandar un solo archivo suelto; el cast (array) sobre un objeto
+        // esparce sus propiedades, así que se envuelve a mano.
+        $crudo = $peticion->files->get('minuta');
+        /** @var list<UploadedFile> $archivos */
+        $archivos = array_values(array_filter(
+            is_array($crudo) ? $crudo : [$crudo],
+            static fn (mixed $archivo): bool => $archivo instanceof UploadedFile,
+        ));
 
-        if (!$minuta instanceof UploadedFile) {
-            return $this->volverConError(self::RUTA, 'Seleccione el PDF de la minuta.');
+        if ($archivos === []) {
+            return $this->volverConError(self::RUTA, 'Seleccione al menos un PDF de minuta.');
         }
 
-        if ($minuta->getMimeType() !== 'application/pdf') {
-            return $this->volverConError(self::RUTA, 'La minuta debe ser un PDF (el escaneado de la Oficina Jurídica).');
+        if (count($archivos) > self::MAXIMO_POR_LOTE) {
+            return $this->volverConError(self::RUTA, sprintf(
+                'Máximo %d minutas por lote; seleccionó %d. Súbalas en varias tandas.',
+                self::MAXIMO_POR_LOTE,
+                count($archivos),
+            ));
         }
 
-        try {
-            $ruta = $this->archivos->guardar($minuta, 'minutas');
-        } catch (\InvalidArgumentException $e) {
-            return $this->volverConError(self::RUTA, $e->getMessage());
+        $encoladas = 0;
+        $rechazadas = [];
+
+        foreach ($archivos as $minuta) {
+            $nombre = $minuta->getClientOriginalName();
+
+            if ($minuta->getMimeType() !== 'application/pdf') {
+                $rechazadas[] = $nombre . ' (no es un PDF)';
+
+                continue;
+            }
+
+            // Un archivo malo no cancela el lote: se anota cuál y los
+            // demás entran. Rechazar veinte por uno sería castigar al
+            // funcionario por el escáner.
+            try {
+                $ruta = $this->archivos->guardar($minuta, 'minutas');
+            } catch (\InvalidArgumentException $e) {
+                $rechazadas[] = $nombre . ' (' . $e->getMessage() . ')';
+
+                continue;
+            }
+
+            $id = $this->extracciones->crear($ruta, $this->pantalla->usuarioId() ?? 0);
+            $this->pantalla->auditar($peticion, AccionAuditoria::Creacion, 'cc_extraccion', $id, 'Minuta encolada para extracción');
+            $encoladas++;
         }
 
-        $id = $this->extracciones->crear($ruta, $this->pantalla->usuarioId() ?? 0);
-        $this->pantalla->auditar($peticion, AccionAuditoria::Creacion, 'cc_extraccion', $id, 'Minuta subida para extracción');
+        if ($rechazadas !== []) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'No se pudieron encolar: ' . implode('; ', $rechazadas));
+        }
 
-        // La extracción puede tardar (5 imágenes al proveedor): se avisa
-        // al PHP que no corte a mitad de camino.
+        if ($encoladas > 0) {
+            $this->pantalla->guardarEnLaSesion('cc_mensaje', sprintf(
+                '%d minuta(s) en cola. La extracción corre por detrás; esta pantalla se actualiza sola.',
+                $encoladas,
+            ));
+        }
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Procesar una sola, ahora mismo, sin esperar a la cola.
+     *
+     * Es la vía del día a día —llega un contrato suelto y se quiere ver
+     * en el momento—, y la que usa quien no tiene la tarea programada.
+     */
+    public function procesarAhora(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
         set_time_limit(300);
         $resultado = $this->extractor->procesar($id, $this->pantalla->usuarioId());
         $this->pantalla->guardarEnLaSesion($resultado['ok'] ? 'cc_mensaje' : 'cc_error', $resultado['mensaje']);
@@ -164,9 +246,22 @@ final readonly class CuentasMinutasController
 
         $error = $this->pantalla->sacarDeLaSesion('cc_error');
         $mensaje = $this->pantalla->sacarDeLaSesion('cc_mensaje');
+        $usuarioId = $this->pantalla->usuarioId() ?? 0;
+
+        // Abrirla es tomarla: con cuatro personas sobre la misma bandeja,
+        // pedirles que además se acuerden de pulsar «tomar» es pedirles
+        // que dos revisen la misma minuta.
+        if ($extraccion['asignado_a'] === null && $usuarioId > 0) {
+            $this->extracciones->asignar($id, $usuarioId);
+            $extraccion['asignado_a'] = $usuarioId;
+        }
+
+        $deOtro = $extraccion['asignado_a'] !== null && (int) $extraccion['asignado_a'] !== $usuarioId;
 
         return $this->pantalla->pagina(self::TITULO, $this->vistas->render('admin/cuentas/minuta-revision', [
             'extraccion' => $extraccion,
+            'deOtro' => $deOtro,
+            'tomadaPor' => $deOtro ? (string) ($extraccion['asignada_a_nombre'] ?? 'otro revisor') : null,
             'resultado' => ExtraccionMinutaRepository::resultado($extraccion),
             'alertas' => ExtraccionMinutaRepository::alertas($extraccion),
             'paginas' => count($this->imagenesVisor($id)),
@@ -177,6 +272,19 @@ final readonly class CuentasMinutasController
             'error' => is_string($error) ? $error : null,
             'tokenCsrf' => $this->pantalla->tokenCsrf(),
         ]));
+    }
+
+    /** Devolver la extracción a la bandeja para que la tome otro. */
+    public function soltar(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $this->extracciones->soltar($peticion->attributes->getInt('id'), $this->pantalla->usuarioId() ?? 0);
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', 'La minuta volvió a la bandeja.');
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
     }
 
     /** Sirve una página escaneada del visor (archivo privado). */
@@ -219,6 +327,15 @@ final readonly class CuentasMinutasController
             return $this->volverConError(self::RUTA . '/' . $id, 'Esta extracción ya se aplicó a un contrato.');
         }
 
+        $usuarioId = $this->pantalla->usuarioId() ?? 0;
+
+        if ($extraccion['asignado_a'] !== null && (int) $extraccion['asignado_a'] !== $usuarioId) {
+            return $this->volverConError(self::RUTA . '/' . $id, sprintf(
+                'Esta minuta la tiene tomada %s. Pídale que la suelte antes de aplicarla.',
+                (string) ($extraccion['asignada_a_nombre'] ?? 'otro revisor'),
+            ));
+        }
+
         $r = $peticion->request;
         $volverA = self::RUTA . '/' . $id;
 
@@ -249,6 +366,16 @@ final readonly class CuentasMinutasController
 
         if ($numero === '' || $valorTotal <= 0 || $fecha === '' || $objeto === '') {
             return $this->volverConError($volverA, 'Faltan datos del contrato: número, fecha, objeto o valor.');
+        }
+
+        // Solo prestación de servicios: una compraventa o un suministro no
+        // entra al módulo ni corrigiendo el formulario a mano.
+        $tipoContrato = trim($r->getString('tipo_contrato'));
+
+        if (!ValidadorExtraccion::esPrestacionDeServicios(['tipo_contrato' => $tipoContrato, 'objeto' => $objeto])) {
+            return $this->volverConError($volverA, 'Este documento no es un contrato de prestación de servicios'
+                . ($tipoContrato !== '' ? " (dice: «{$tipoContrato}»)" : '')
+                . '. Solo se cargan contratos de prestación de servicios, servicios profesionales o de apoyo a la gestión.');
         }
 
         if ($this->contratos->porNumero($numero) !== null) {
@@ -286,7 +413,13 @@ final readonly class CuentasMinutasController
         $this->contratos->reemplazarObligaciones($contratoId, $this->lineas($r->getString('obligaciones_sgic')), 'SGIC');
         $this->guardarCdps($contratoId, $r->all());
 
-        $this->extracciones->actualizar($id, ['estado' => 'APLICADA', 'contrato_id' => $contratoId]);
+        $this->extracciones->actualizar($id, ['estado' => 'APLICADA', 'contrato_id' => $contratoId, 'asignado_a' => null]);
+
+        // Las páginas convertidas ya cumplieron: el contrato quedó
+        // creado y la minuta original se conserva. Son ~1,3 MB por
+        // extracción que, multiplicados por 1.500, nadie volvería a
+        // mirar jamás.
+        $this->purgarImagenes($id);
         $this->pantalla->auditar(
             $peticion,
             AccionAuditoria::Creacion,
@@ -303,6 +436,18 @@ final readonly class CuentasMinutasController
     // ------------------------------------------------------------------
     // Ayudas
     // ------------------------------------------------------------------
+
+    /** Borra las páginas convertidas de una extracción ya aplicada. */
+    private function purgarImagenes(int $extraccionId): void
+    {
+        $carpeta = $this->archivos->rutaAbsoluta('extracciones-' . $extraccionId);
+
+        foreach (glob($carpeta . '/*.png') ?: [] as $imagen) {
+            @unlink($imagen);
+        }
+
+        @rmdir($carpeta);
+    }
 
     /** @return list<string> Rutas relativas de las imágenes del visor. */
     private function imagenesVisor(int $extraccionId): array

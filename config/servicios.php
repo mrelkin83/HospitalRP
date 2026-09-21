@@ -88,10 +88,10 @@ use App\Modules\CuentasCobro\Repository\ContratoRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
 use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Repository\SupervisorRepository;
+use App\Modules\CuentasCobro\Repository\RevisorRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
 use App\Modules\CuentasCobro\Service\EnvioCuentaService;
 use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
-use App\Modules\CuentasCobro\Service\OtpService;
 use App\Modules\CuentasCobro\Service\SesionContratista;
 use App\Http\Admin\CuentasMinutasController;
 use App\Http\Admin\CuentasReportesController;
@@ -100,7 +100,11 @@ use App\Modules\CuentasCobro\Service\ConversorPdfImagenes;
 use App\Modules\CuentasCobro\Service\ExtractorMinutaService;
 use App\Modules\CuentasCobro\Service\OcrMinutaService;
 use App\Modules\CuentasCobro\Service\ValidadorExtraccion;
+use App\Modules\CuentasCobro\Service\TextoPdfMinutaService;
 use App\Http\Admin\CuentasSupervisionController;
+use App\Http\Admin\CuentasRevisionController;
+use App\Http\Admin\CuentasRevisoresController;
+use App\Modules\CuentasCobro\Service\RevisionCuentaService;
 use App\Modules\CuentasCobro\Repository\ReportesCuentasRepository;
 use App\Modules\CuentasCobro\Service\NovedadesContratoService;
 use App\Http\Web\CuentasDescargaController;
@@ -652,6 +656,9 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(SupervisorRepository::class, SupervisorRepository::class)
         ->setAutowired(true);
 
+    $contenedor->register(RevisorRepository::class, RevisorRepository::class)
+        ->setAutowired(true);
+
     $contenedor->register(ContratoRepository::class, ContratoRepository::class)
         ->setAutowired(true);
 
@@ -683,8 +690,6 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
-    $contenedor->register(OtpService::class, OtpService::class)
-        ->setAutowired(true);
 
     // Los archivos del módulo viven fuera del document root y aparte de la
     // mediateca pública: son datos personales servidos con permiso.
@@ -710,6 +715,17 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(CuentasSupervisionController::class, CuentasSupervisionController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(RevisionCuentaService::class, RevisionCuentaService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CuentasRevisionController::class, CuentasRevisionController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(CuentasRevisoresController::class, CuentasRevisoresController::class)
         ->setAutowired(true)
         ->setPublic(true);
 
@@ -743,6 +759,12 @@ return static function (Env $env): ContainerBuilder {
         ->setArguments([
             $env->texto('OCR_TESSERACT', 'C:/Program Files/Tesseract-OCR/tesseract.exe'),
             $env->texto('OCR_TESSDATA', 'C:/laragon/bin/tessdata'),
+            new Reference(ArchivosCuentas::class),
+        ]);
+
+    $contenedor->register(TextoPdfMinutaService::class, TextoPdfMinutaService::class)
+        ->setArguments([
+            $env->texto('PDF_PDFTOTEXT', 'C:/laragon/bin/poppler/poppler-24.08.0/Library/bin/pdftotext.exe'),
             new Reference(ArchivosCuentas::class),
         ]);
 

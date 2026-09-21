@@ -64,7 +64,8 @@ esa sección.
 
 **Módulo de cuentas de cobro — fase 2 terminada (2026-09-20).** Portal del
 contratista en `/cuentas/*`: ingreso con cédula + contrato + OTP por correo
-(WhatsApp/SMS quedan detrás del puerto sin implementación), «Mis datos» en 3
+(sustituido el 2026-09-20 por contraseña propia; ver los seis ajustes de
+flujo más abajo), «Mis datos» en 3
 pantallas con firma subida o dibujada y evidencia de habeas data, flujo P2–P6
 con autoguardado, aportes PILA sugeridos, PDF reales con Dompdf (GF-FR-002 e
 informe de actividades), radicado `CC-{año}-{sec}` (reusa
@@ -112,6 +113,55 @@ el revisor. Respaldo OCR con Tesseract 5.4 (`OCR_TESSERACT`,
 la minuta real del 1407: forma de pago completa, plazo exacto y 11/14
 obligaciones. PENDIENTE: la medición 6/7 con las minutas reales exige
 `IA_CLAVE_ANTHROPIC` en el `.env` (hoy está vacía); el arnés quedó listo.
+
+**Módulo de cuentas de cobro — fase 6 planificada (2026-09-20).** Desglose en
+`docs/17-cuentas-de-cobro-fase-6-desglose.md`. Sale de una revisión de la
+puesta en marcha real: 1.500 contratos vigentes, ya escaneados, cuatro
+revisores y 4 TB de disco. Tres bloques: (A) cola de extracción con carga de
+hasta 20 minutas por lote y comando de consola reanudable, (B) producto
+asociado y evidencia por actividad —hoy el supervisor certifica cada
+obligación contra texto libre, sin entregable ni soporte—, y (C) el
+procedimiento de la carga masiva (≈US$ 165 en extracción con Sonnet 5, dos
+noches de proceso, una a semana y media de revisión entre los cuatro). Los
+datos de prueba del módulo se borraron ese mismo día: la base queda limpia
+para la carga real y `semillas:cuentas-cobro` los repone si hacen falta.
+
+**Módulo de cuentas de cobro — seis ajustes de flujo (2026-09-20).** Pedidos
+tras probar el módulo con el proceso real del hospital:
+
+1. **Ingreso con contraseña, sin OTP.** El portal ya no manda códigos de seis
+   dígitos: cada contratista entra con su contraseña, identificándose por
+   cédula O por número de contrato (selector en `/cuentas/ingreso`). La
+   contraseña se crea en `/cuentas/crear-contrasena` confirmando la fecha de
+   suscripción del contrato; si se olvida, Contratación la restablece desde
+   la ficha del contratista (A4) y también existe bloqueo por conexión (10
+   intentos fallidos por hora, tabla `cc_ingreso_intentos`). La tabla
+   `cc_otp` y `OtpService` se eliminaron (migración `20260920220000`).
+2. **Solo prestación de servicios.** Los lotes escaneados traen compraventas
+   mezcladas: la consigna de la IA transcribe el tipo tal cual, el validador
+   lo alerta y `aplicar` lo bloquea (`ValidadorExtraccion::esPrestacionDeServicios`,
+   veta compraventa/suministro/arrendamiento/obra).
+3. **Actividades manuales.** Si el contrato no existe en digital o el OCR no
+   pudo con él (sin obligaciones cargadas), el paso 2 del portal pasa a modo
+   manual: la persona escribe sus actividades (título + descripción), que
+   viven en `cc_cuenta_actividades` con `obligacion_id` nulo y `titulo_manual`,
+   y salen numeradas en los PDF.
+4. **Revisión previa con cuatro revisores.** Flujo nuevo:
+   BORRADOR → ENVIADA → **REVISADA** → APROBADA. La cuenta enviada avisa a los
+   revisores activos (`cc_revisores`); comparten una sola bandeja
+   (Panel → Cuentas de cobro → Bandeja de revisión, permiso `cuentas.revisar`),
+   verifican, **firman la revisión** (evidencia en `cc_cuenta_firmas`,
+   documento `REVISION`) o devuelven con motivo. El supervisor solo puede
+   aprobar cuentas REVISADAS y su pestaña «pendientes» muestra esas.
+   Recordatorios: revisores a los 3 días hábiles de ENVIADA; supervisor a los
+   3 de REVISADA.
+5. **Firma del revisor.** Cada revisor sube su firma desde su bandeja (igual
+   que el supervisor); sin firma no puede marcar revisado.
+6. **Paneles acotados por rol.** Roles sembrados «Revisor de cuentas de cobro»
+   (solo `cuentas.revisar`) y «Supervisor de cuentas de cobro» (solo
+   `cuentas.supervisar`): quien solo revisa o solo supervisa ve únicamente su
+   bandeja en el menú. Los revisores se vinculan en Panel → Cuentas de cobro →
+   Revisores (pantalla del administrador).
 
 ## 2. Pendientes técnicos (código por hacer)
 
@@ -422,7 +472,10 @@ selector compartido, no un parche del héroe.
   Matar servidores previos: un proceso viejo retiene el puerto.
 - BD dev `hrpl`, tests `hrpl_pruebas` (phpunit migra sola). Mailpit captura
   el correo (`:8025`).
-- Admin local: `elkin985@gmail.com` / `CambiarYa2026!`.
+- Admin local: `elkin985@gmail.com`. La contraseña se restableció el
+  2026-09-20 y no se anota aquí; si se pierde,
+  `php bin/consola usuarios:restablecer-pass --correo=…` emite una temporal
+  y desbloquea la cuenta.
 - MySQL 8: no repetir `MATCH` con aritmética en `ORDER BY` (error 1690);
   el FULLTEXT no hace stemming en español (por eso el buscador usa
   prefijos booleanos).

@@ -9,9 +9,8 @@ use App\Core\Config\Env;
 use App\Http\Kernel;
 use App\Http\Web\CuentasNuevaController;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
-use App\Modules\CuentasCobro\Service\OtpService;
+use App\Core\Auth\HasherPassword;
 use App\Modules\CuentasCobro\Service\SesionContratista;
-use App\Ports\NotificadorCorreo;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -180,9 +179,9 @@ final class CuentasPortalTest extends TestCase
         foreach ([
             'cc_descarga_tokens', 'cc_cuenta_firmas', 'cc_cuenta_historial', 'cc_cuenta_adjuntos',
             'cc_cuenta_seguridad_social', 'cc_cuenta_actividades', 'cc_cuentas',
-            'cc_extracciones', 'cc_otp', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
+            'cc_extracciones', 'cc_ingreso_intentos', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
             'cc_contrato_imputaciones', 'cc_contrato_novedades', 'cc_contratos',
-            'cc_supervisores', 'cc_contratistas',
+            'cc_supervisores', 'cc_revisores', 'cc_contratistas',
         ] as $tabla) {
             self::$conexion->executeStatement('DELETE FROM ' . $tabla);
         }
@@ -307,35 +306,42 @@ final class CuentasPortalTest extends TestCase
         self::assertSame('/cuentas/nueva/2', $respuesta->headers->get('Location'), 'Con vacías y sin confirmar debía devolverse al paso 2.');
     }
 
-    /** El OTP sirve una sola vez y el reenvío tiene tope por hora (§9). */
-    public function testOtpDeUnSoloUsoYConTope(): void
+    /** El ingreso es con contraseña propia, por cédula o por contrato (§9). */
+    public function testIngresoConContrasenaPorCedulaOContrato(): void
     {
-        $capturado = new class implements NotificadorCorreo {
-            public string $cuerpo = '';
+        $hasher = new HasherPassword();
+        self::$conexion->update('cc_contratistas', ['password_hash' => $hasher->hash('clave-segura')], ['id' => $this->contratistaId]);
 
-            public function enviar(string $destinatario, string $asunto, string $textoPlano): void
-            {
-                $this->cuerpo = $textoPlano;
-            }
-        };
+        // Contraseña equivocada: de vuelta al ingreso y el intento queda anotado.
+        $mala = $this->post('/cuentas/ingreso', ['modo' => 'cedula', 'identificador' => '1188888801', 'contrasena' => 'no-es-esa']);
+        self::assertSame('/cuentas/ingreso', $mala->headers->get('Location'));
+        self::assertSame(1, (int) self::$conexion->fetchOne('SELECT COUNT(*) FROM cc_ingreso_intentos'));
 
-        $otp = new OtpService(self::$conexion, $capturado);
-        $contratista = self::$conexion->fetchAssociative('SELECT * FROM cc_contratistas WHERE id = ?', [$this->contratistaId]);
-        self::assertNotFalse($contratista);
+        // Por cédula.
+        $porCedula = $this->post('/cuentas/ingreso', ['modo' => 'cedula', 'identificador' => '1188888801', 'contrasena' => 'clave-segura']);
+        self::assertContains($porCedula->headers->get('Location'), ['/cuentas/inicio', '/cuentas/mis-datos']);
 
-        $resultado = $otp->enviar($contratista, '127.0.0.1');
-        self::assertTrue($resultado['ok']);
-        self::assertSame(1, preg_match('/(\d{6})/', $capturado->cuerpo, $m), 'El correo no traía el código.');
+        // Por número de contrato.
+        $porContrato = $this->post('/cuentas/ingreso', ['modo' => 'contrato', 'identificador' => '1407-2026', 'contrasena' => 'clave-segura']);
+        self::assertContains($porContrato->headers->get('Location'), ['/cuentas/inicio', '/cuentas/mis-datos']);
+    }
 
-        self::assertTrue($otp->verificar($this->contratistaId, $m[1]));
-        self::assertFalse($otp->verificar($this->contratistaId, $m[1]), 'El código sirvió dos veces.');
+    /** Sin contraseña todavía, se crea confirmando la fecha del contrato (§9). */
+    public function testCrearContrasenaConFechaDelContrato(): void
+    {
+        self::$conexion->update('cc_contratistas', ['password_hash' => null], ['id' => $this->contratistaId]);
 
-        // Tope: ya se envió 1; los siguientes 4 pasan y el sexto no.
-        for ($i = 0; $i < 4; $i++) {
-            self::assertTrue($otp->enviar($contratista, '127.0.0.1')['ok']);
-        }
+        $base = ['modo' => 'contrato', 'identificador' => '1407-2026', 'contrasena' => 'clave-segura', 'contrasena_confirmacion' => 'clave-segura'];
 
-        self::assertFalse($otp->enviar($contratista, '127.0.0.1')['ok'], 'El sexto código de la hora debía rechazarse.');
+        // Con la fecha equivocada no se crea nada.
+        $mal = $this->post('/cuentas/crear-contrasena', $base + ['fecha_suscripcion' => '2000-01-01']);
+        self::assertSame('/cuentas/crear-contrasena', $mal->headers->get('Location'));
+        self::assertEmpty(self::$conexion->fetchOne('SELECT password_hash FROM cc_contratistas WHERE id = ?', [$this->contratistaId]));
+
+        // Con la fecha del contrato sí, y deja la sesión abierta.
+        $bien = $this->post('/cuentas/crear-contrasena', $base + ['fecha_suscripcion' => '2026-08-01']);
+        self::assertContains($bien->headers->get('Location'), ['/cuentas/inicio', '/cuentas/mis-datos']);
+        self::assertNotEmpty(self::$conexion->fetchOne('SELECT password_hash FROM cc_contratistas WHERE id = ?', [$this->contratistaId]));
     }
 
     // ------------------------------------------------------------------
@@ -397,5 +403,40 @@ final class CuentasPortalTest extends TestCase
             ['HTTP_X-Token-CSRF' => $sesion->tokenCsrf(), 'CONTENT_TYPE' => 'application/json'],
             (string) json_encode($datos),
         ));
+    }
+
+    /**
+     * Contrato sin obligaciones cargadas (la minuta no existe o el OCR no
+     * pudo con ella): el paso 2 pasa a modo manual y las actividades las
+     * escribe la persona.
+     */
+    public function testActividadesManualesCuandoNoHayObligaciones(): void
+    {
+        self::$conexion->executeStatement('DELETE FROM cc_contrato_obligaciones WHERE contrato_id = ?', [$this->contratoId]);
+
+        $this->post('/cuentas/nueva/1', []);
+        $cuentaId = (int) self::$conexion->fetchOne('SELECT id FROM cc_cuentas WHERE contrato_id = ?', [$this->contratoId]);
+        self::assertSame(0, (int) self::$conexion->fetchOne('SELECT COUNT(*) FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]));
+
+        $paso2 = $this->kernel->manejar(Request::create('/cuentas/nueva/2'));
+        self::assertStringContainsString('escriben aquí a mano', (string) $paso2->getContent());
+
+        // Continuar sin escribir nada exige al menos una actividad.
+        $vacio = $this->post('/cuentas/nueva/2', []);
+        self::assertSame('/cuentas/nueva/2', $vacio->headers->get('Location'));
+
+        $r = $this->post('/cuentas/nueva/2', [
+            'nueva_actividad' => [
+                ['titulo' => 'Apoyar la radicación de cuentas en el área de facturación.', 'descripcion' => 'Radiqué ciento veinte cuentas del periodo sin devoluciones.'],
+                ['titulo' => '', 'descripcion' => ''],
+            ],
+        ]);
+        self::assertSame('/cuentas/nueva/3', $r->headers->get('Location'));
+
+        $fila = self::$conexion->fetchAssociative('SELECT * FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]);
+        self::assertNotFalse($fila);
+        self::assertNull($fila['obligacion_id'], 'La actividad manual no debe apuntar a ninguna obligación.');
+        self::assertStringContainsString('radicación', (string) $fila['titulo_manual']);
+        self::assertSame(1, (int) self::$conexion->fetchOne('SELECT COUNT(*) FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]), 'La fila con título vacío no debía crearse.');
     }
 }

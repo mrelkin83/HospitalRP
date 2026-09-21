@@ -108,37 +108,52 @@ final readonly class EnvioCuentaService
             $rutas + ['radicado' => $radicado, 'enviada_en' => $ahora],
         );
 
-        $this->avisarAlSupervisor($cuenta, $contratista, $radicado);
+        $this->avisarALosRevisores($cuenta, $contratista, $radicado);
 
         return ['ok' => true, 'mensaje' => $radicado];
     }
 
-    /** El aviso al supervisor no rompe el envío si el correo está caído. */
-    private function avisarAlSupervisor(array $cuenta, array $contratista, string $radicado): void
+    /**
+     * La cuenta enviada llega primero al equipo de revisores (ENVIADA →
+     * REVISADA → APROBADA). Si aún no hay revisores activos, el aviso cae
+     * al supervisor para que la cuenta no se quede huérfana. Un correo
+     * caído no rompe el envío.
+     *
+     * @param array<string, mixed> $cuenta
+     * @param array<string, mixed> $contratista
+     */
+    private function avisarALosRevisores(array $cuenta, array $contratista, string $radicado): void
     {
-        $destinatario = $this->conexion->fetchOne(
-            'SELECT u.correo FROM cc_contratos k
-               JOIN cc_supervisores s ON s.id = k.supervisor_id
-               JOIN usuarios u ON u.id = s.usuario_id
-              WHERE k.id = ?',
-            [(int) $cuenta['contrato_id']],
-        );
+        $destinatarios = array_filter(array_map(strval(...), $this->conexion->fetchFirstColumn(
+            'SELECT u.correo FROM cc_revisores r
+               JOIN usuarios u ON u.id = r.usuario_id
+              WHERE r.activo = 1 AND u.correo IS NOT NULL',
+        )));
 
-        if (!is_string($destinatario) || $destinatario === '') {
-            return;
+        if ($destinatarios === []) {
+            $supervisor = $this->conexion->fetchOne(
+                'SELECT u.correo FROM cc_contratos k
+                   JOIN cc_supervisores s ON s.id = k.supervisor_id
+                   JOIN usuarios u ON u.id = s.usuario_id
+                  WHERE k.id = ?',
+                [(int) $cuenta['contrato_id']],
+            );
+            $destinatarios = is_string($supervisor) && $supervisor !== '' ? [$supervisor] : [];
         }
 
-        try {
-            $this->correo->enviar(
-                $destinatario,
-                'Cuenta de cobro ' . $radicado . ' pendiente de revisión',
-                'El contratista ' . $contratista['nombre_completo'] . ' envió la cuenta de cobro N° '
-                . (int) $cuenta['consecutivo'] . " (radicado {$radicado}).\n\n"
-                . "Revísela en el panel: Cuentas de cobro.\n\n"
-                . 'E.S.E. Hospital Rosario Pumarejo de López',
-            );
-        } catch (\Throwable) {
-            // El envío de la cuenta ya quedó en firme; el correo caído no lo revierte.
+        foreach ($destinatarios as $destinatario) {
+            try {
+                $this->correo->enviar(
+                    $destinatario,
+                    'Cuenta de cobro ' . $radicado . ' pendiente de revisión',
+                    'El contratista ' . $contratista['nombre_completo'] . ' envió la cuenta de cobro N° '
+                    . (int) $cuenta['consecutivo'] . " (radicado {$radicado}).\n\n"
+                    . "Revísela en el panel: Cuentas de cobro → Bandeja de revisión.\n\n"
+                    . 'E.S.E. Hospital Rosario Pumarejo de López',
+                );
+            } catch (\Throwable) {
+                // El envío de la cuenta ya quedó en firme; el correo caído no lo revierte.
+            }
         }
     }
 }

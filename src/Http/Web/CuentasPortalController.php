@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Web;
 
+use App\Core\Auth\HasherPassword;
 use App\Core\Support\Vistas;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
-use App\Modules\CuentasCobro\Service\OtpService;
 use App\Modules\CuentasCobro\Service\SesionContratista;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -32,7 +32,7 @@ final readonly class CuentasPortalController
         private SesionContratista $sesion,
         private ContratistaRepository $contratistas,
         private CuentaRepository $cuentas,
-        private OtpService $otp,
+        private HasherPassword $hasher,
         private ArchivosCuentas $archivos,
         private Connection $conexion,
     ) {
@@ -50,11 +50,15 @@ final readonly class CuentasPortalController
 
         return $this->pagina('publico/cuentas/ingreso', [
             'error' => $this->flash('cc_error'),
-            'primeraVez' => $this->flash('cc_primera_vez') === '1',
+            'mensaje' => $this->flash('cc_mensaje'),
         ]);
     }
 
-    public function solicitarCodigo(Request $peticion): Response
+    /**
+     * Entrar con cédula O número de contrato, más la contraseña propia
+     * (el OTP de seis dígitos se retiró: dificultaba el proceso).
+     */
+    public function entrar(Request $peticion): Response
     {
         if (($rechazo = $this->rechazoCsrf($peticion)) !== null) {
             return $rechazo;
@@ -62,84 +66,107 @@ final readonly class CuentasPortalController
 
         $ip = (string) $peticion->getClientIp();
 
-        if ($this->otp->ipBloqueada($ip)) {
+        if ($this->ipBloqueada($ip)) {
             return $this->volverConError('/cuentas/ingreso', 'Demasiados intentos desde esta conexión. Espere una hora e inténtelo de nuevo.');
         }
 
-        $par = $this->buscarContratoActivo($peticion);
+        $par = $this->buscarPorIdentificador(
+            $peticion->request->getString('modo'),
+            $peticion->request->getString('identificador'),
+        );
 
         if ($par === null) {
-            return $this->volverConError('/cuentas/ingreso', 'No encontramos un contrato activo con esos datos. Revise el número de contrato en su copia o comuníquese con la oficina de Contratación del hospital.');
+            $this->registrarIntentoFallido($ip);
+
+            return $this->volverConError('/cuentas/ingreso', 'No encontramos un contrato activo con ese dato. Revise su copia del contrato o comuníquese con la oficina de Contratación del hospital.');
         }
 
         [$contratista, $contrato] = $par;
 
-        // Primer ingreso de un contrato recién activado: sin celular ni
-        // correo no hay a dónde enviar el código. Se le permite entrar con
-        // la fecha de suscripción, que está en su copia del contrato.
-        if (trim((string) ($contratista['correo'] ?? '')) === '' && trim((string) ($contratista['celular'] ?? '')) === '') {
-            $fecha = trim($peticion->request->getString('fecha_suscripcion'));
+        if ($contratista['password_hash'] === null || $contratista['password_hash'] === '') {
+            $this->guardarFlash('cc_mensaje', 'Todavía no tiene contraseña. Créela aquí con la fecha de su contrato.');
 
-            if ($fecha === '') {
-                $this->guardarFlash('cc_primera_vez', '1');
-
-                return $this->volverConError('/cuentas/ingreso', 'Como es su primer ingreso, escriba también la fecha de suscripción que aparece en su contrato.');
-            }
-
-            if ($fecha !== (string) $contrato['fecha_suscripcion']) {
-                $this->guardarFlash('cc_primera_vez', '1');
-
-                return $this->volverConError('/cuentas/ingreso', 'La fecha no coincide con la del contrato. Revísela en su copia.');
-            }
-
-            $this->sesion->abrir((int) $contratista['id'], (int) $contrato['id']);
-
-            return new RedirectResponse('/cuentas/mis-datos', Response::HTTP_SEE_OTHER);
+            return new RedirectResponse('/cuentas/crear-contrasena', Response::HTTP_SEE_OTHER);
         }
 
-        $resultado = $this->otp->enviar($contratista, $ip);
+        if (!$this->hasher->verificar($peticion->request->getString('contrasena'), (string) $contratista['password_hash'])) {
+            $this->registrarIntentoFallido($ip, (int) $contratista['id']);
 
-        if (!$resultado['ok']) {
-            return $this->volverConError('/cuentas/ingreso', $resultado['mensaje']);
+            return $this->volverConError('/cuentas/ingreso', 'La contraseña no coincide. Si la olvidó, pida a la oficina de Contratación que se la restablezca.');
         }
 
-        $this->sesion->recordarPendiente((int) $contratista['id'], (int) $contrato['id']);
+        $this->sesion->abrir((int) $contratista['id'], (int) $contrato['id']);
 
-        return $this->pagina('publico/cuentas/codigo', [
-            'mensaje' => $resultado['mensaje'],
-            'error' => null,
+        return new RedirectResponse(
+            (int) $contratista['datos_completos'] === 1 ? '/cuentas/inicio' : '/cuentas/mis-datos',
+            Response::HTTP_SEE_OTHER,
+        );
+    }
+
+    /** Crear (o volver a crear, tras un restablecimiento) la contraseña. */
+    public function crearPasswordFormulario(Request $peticion): Response
+    {
+        return $this->pagina('publico/cuentas/crear-contrasena', [
+            'error' => $this->flash('cc_error'),
+            'mensaje' => $this->flash('cc_mensaje'),
         ]);
     }
 
-    public function verificarCodigo(Request $peticion): Response
+    public function crearPassword(Request $peticion): Response
     {
         if (($rechazo = $this->rechazoCsrf($peticion)) !== null) {
             return $rechazo;
         }
 
-        $pendiente = $this->sesion->pendiente();
+        $ip = (string) $peticion->getClientIp();
 
-        if ($pendiente === null) {
-            return $this->volverConError('/cuentas/ingreso', 'Su código venció. Pida uno nuevo.');
+        if ($this->ipBloqueada($ip)) {
+            return $this->volverConError('/cuentas/crear-contrasena', 'Demasiados intentos desde esta conexión. Espere una hora.');
         }
 
-        [$contratistaId, $contratoId] = $pendiente;
+        $r = $peticion->request;
+        $par = $this->buscarPorIdentificador($r->getString('modo'), $r->getString('identificador'));
+        $volverA = '/cuentas/crear-contrasena';
 
-        if (!$this->otp->verificar($contratistaId, trim($peticion->request->getString('codigo')))) {
-            return $this->pagina('publico/cuentas/codigo', [
-                'mensaje' => null,
-                'error' => 'El código no coincide o ya venció. Revíselo o pida uno nuevo.',
-            ]);
+        if ($par === null) {
+            $this->registrarIntentoFallido($ip);
+
+            return $this->volverConError($volverA, 'No encontramos un contrato activo con ese dato.');
         }
 
-        $this->sesion->abrir($contratistaId, $contratoId);
-        $contratista = $this->contratistas->porId($contratistaId);
+        [$contratista, $contrato] = $par;
 
-        $destino = ($contratista !== null && (int) $contratista['datos_completos'] === 1)
-            ? '/cuentas/inicio'
-            : '/cuentas/mis-datos';
+        if ($contratista['password_hash'] !== null && $contratista['password_hash'] !== '') {
+            return $this->volverConError('/cuentas/ingreso', 'Usted ya tiene contraseña. Si la olvidó, pida a la oficina de Contratación que se la restablezca.');
+        }
 
-        return new RedirectResponse($destino, Response::HTTP_SEE_OTHER);
+        // La verificación de identidad: la fecha de suscripción, que está
+        // en su copia del contrato (y no es pública como el número).
+        if (trim($r->getString('fecha_suscripcion')) !== (string) $contrato['fecha_suscripcion']) {
+            $this->registrarIntentoFallido($ip, (int) $contratista['id']);
+
+            return $this->volverConError($volverA, 'La fecha no coincide con la del contrato. Revísela en su copia.');
+        }
+
+        $contrasena = $r->getString('contrasena');
+
+        if (mb_strlen($contrasena) < 8) {
+            return $this->volverConError($volverA, 'La contraseña debe tener al menos 8 caracteres. Puede ser una frase fácil de recordar.');
+        }
+
+        if ($contrasena !== $r->getString('contrasena_confirmacion')) {
+            return $this->volverConError($volverA, 'Las dos contraseñas no coinciden. Escríbalas de nuevo.');
+        }
+
+        $this->contratistas->actualizar((int) $contratista['id'], [
+            'password_hash' => $this->hasher->hash($contrasena),
+        ]);
+        $this->sesion->abrir((int) $contratista['id'], (int) $contrato['id']);
+
+        return new RedirectResponse(
+            (int) $contratista['datos_completos'] === 1 ? '/cuentas/inicio' : '/cuentas/mis-datos',
+            Response::HTTP_SEE_OTHER,
+        );
     }
 
     public function salir(Request $peticion): Response
@@ -383,14 +410,41 @@ final readonly class CuentasPortalController
 
         return [$contratista, $contrato];
     }
-
-    /** @return ?array{0: array<string, mixed>, 1: array<string, mixed>} */
-    private function buscarContratoActivo(Request $peticion): ?array
+    /**
+     * Encuentra al contratista y su contrato ACTIVO a partir de UNO de los
+     * dos identificadores que ofrece el selector del ingreso.
+     *
+     * @return ?array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function buscarPorIdentificador(string $modo, string $identificador): ?array
     {
-        $cedula = preg_replace('/\D/', '', $peticion->request->getString('cedula')) ?? '';
-        $numeroContrato = trim($peticion->request->getString('contrato'));
+        $identificador = trim($identificador);
 
-        if ($cedula === '' || $numeroContrato === '') {
+        if ($identificador === '') {
+            return null;
+        }
+
+        if ($modo === 'contrato') {
+            $contrato = $this->conexion->fetchAssociative(
+                "SELECT * FROM cc_contratos WHERE numero = ? AND estado = 'ACTIVO'",
+                [$identificador],
+            );
+
+            if ($contrato === false) {
+                return null;
+            }
+
+            $contratista = $this->contratistas->porId((int) $contrato['contratista_id']);
+
+            return ($contratista === null || (int) $contratista['activo'] !== 1)
+                ? null
+                : [$contratista, $contrato];
+        }
+
+        // Por defecto, cédula: solo dígitos, como se guarda el documento.
+        $cedula = preg_replace('/\D/', '', $identificador) ?? '';
+
+        if ($cedula === '') {
             return null;
         }
 
@@ -400,12 +454,34 @@ final readonly class CuentasPortalController
             return null;
         }
 
+        // El contrato ACTIVO más reciente del contratista.
         $contrato = $this->conexion->fetchAssociative(
-            "SELECT * FROM cc_contratos WHERE numero = ? AND contratista_id = ? AND estado = 'ACTIVO'",
-            [$numeroContrato, (int) $contratista['id']],
+            "SELECT * FROM cc_contratos WHERE contratista_id = ? AND estado = 'ACTIVO'
+             ORDER BY fecha_suscripcion DESC, id DESC LIMIT 1",
+            [(int) $contratista['id']],
         );
 
         return $contrato === false ? null : [$contratista, $contrato];
+    }
+
+    /** Diez intentos fallidos por conexión en una hora y se cierra la puerta. */
+    private function ipBloqueada(string $ip): bool
+    {
+        $cuantos = (int) $this->conexion->fetchOne(
+            'SELECT COUNT(*) FROM cc_ingreso_intentos
+             WHERE ip = ? AND creado_en > DATE_SUB(NOW(), INTERVAL 1 HOUR)',
+            [$ip],
+        );
+
+        return $cuantos >= 10;
+    }
+
+    private function registrarIntentoFallido(string $ip, ?int $contratistaId = null): void
+    {
+        $this->conexion->insert('cc_ingreso_intentos', [
+            'contratista_id' => $contratistaId,
+            'ip' => $ip,
+        ]);
     }
 
     /** @param array<string, mixed> $datos */

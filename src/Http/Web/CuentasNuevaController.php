@@ -174,15 +174,31 @@ final readonly class CuentasNuevaController
         }
 
         [, $contrato, $cuenta] = $contexto;
+        $actividades = $this->cuentas->actividades((int) $cuenta['id']);
 
         return $this->pagina('publico/cuentas/paso2', [
             'contrato' => $contrato,
             'cuenta' => $cuenta,
-            'actividades' => $this->cuentas->actividades((int) $cuenta['id']),
+            'actividades' => $actividades,
+            // Sin obligaciones cargadas (minuta inexistente o ilegible para
+            // el OCR), las actividades se escriben a mano.
+            'modoManual' => $this->esModoManual($actividades),
             'periodoTexto' => $this->periodoTexto($cuenta),
             'error' => $this->flash('cc_error'),
             'mensaje' => $this->flash('cc_mensaje'),
         ]);
+    }
+
+    /** @param list<array<string, mixed>> $actividades */
+    private function esModoManual(array $actividades): bool
+    {
+        foreach ($actividades as $actividad) {
+            if ($actividad['obligacion_id'] !== null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function guardarPaso2(Request $peticion): Response
@@ -199,6 +215,11 @@ final readonly class CuentasNuevaController
 
         [, , $cuenta] = $contexto;
         $cuentaId = (int) $cuenta['id'];
+
+        if ($this->esModoManual($this->cuentas->actividades($cuentaId))) {
+            return $this->guardarPaso2Manual($peticion, $cuentaId);
+        }
+
         $textos = $peticion->request->all()['actividad'] ?? [];
         $vacias = [];
 
@@ -219,6 +240,81 @@ final readonly class CuentasNuevaController
         // conciencia: el supervisor lo verá (§7.1 P3).
         if ($vacias !== [] && !$peticion->request->getBoolean('continuar_con_vacias')) {
             $this->guardarFlash('cc_error', 'Dejó sin descripción la obligación ' . implode(', la ', $vacias) . '. Si de verdad no hizo nada frente a ella este periodo, marque la casilla de abajo y continúe.');
+            $this->guardarFlash('cc_confirmar_vacias', '1');
+
+            return new RedirectResponse('/cuentas/nueva/2', Response::HTTP_SEE_OTHER);
+        }
+
+        return new RedirectResponse('/cuentas/nueva/3', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * El paso 2 sin obligaciones: las actividades las escribe la persona.
+     * Fila con título vacío = quitarla; filas nuevas con título = crearlas.
+     */
+    private function guardarPaso2Manual(Request $peticion, int $cuentaId): Response
+    {
+        $r = $peticion->request->all();
+        $existentes = is_array($r['actividad_manual'] ?? null) ? $r['actividad_manual'] : [];
+        $nuevas = is_array($r['nueva_actividad'] ?? null) ? $r['nueva_actividad'] : [];
+
+        foreach ($this->cuentas->actividades($cuentaId) as $actividad) {
+            $id = (int) $actividad['id'];
+            $fila = $existentes[$id] ?? null;
+
+            if (!is_array($fila)) {
+                continue;
+            }
+
+            $titulo = trim((string) ($fila['titulo'] ?? ''));
+
+            if ($titulo === '') {
+                $this->cuentas->eliminarActividadManual($cuentaId, $id);
+
+                continue;
+            }
+
+            $descripcion = trim((string) ($fila['descripcion'] ?? ''));
+            $this->cuentas->actualizarActividadManual($cuentaId, $id, $titulo, $descripcion === '' ? null : mb_substr($descripcion, 0, 5000));
+        }
+
+        foreach ($nuevas as $fila) {
+            if (!is_array($fila)) {
+                continue;
+            }
+
+            $titulo = trim((string) ($fila['titulo'] ?? ''));
+
+            if ($titulo === '') {
+                continue;
+            }
+
+            $descripcion = trim((string) ($fila['descripcion'] ?? ''));
+            $this->cuentas->crearActividadManual($cuentaId, $titulo, $descripcion === '' ? null : mb_substr($descripcion, 0, 5000));
+        }
+
+        $quedan = $this->cuentas->actividades($cuentaId);
+
+        if ($quedan === []) {
+            return $this->volverConError('/cuentas/nueva/2', 'Agregue al menos una actividad. Este contrato no tiene obligaciones cargadas, así que aquí se escriben a mano: qué se comprometió a hacer y qué hizo este periodo.');
+        }
+
+        $vacias = [];
+
+        foreach ($quedan as $i => $actividad) {
+            $texto = trim((string) ($actividad['descripcion_ejecucion'] ?? ''));
+
+            if ($texto !== '' && mb_strlen($texto) < 20) {
+                return $this->volverConError('/cuentas/nueva/2', 'La descripción de la actividad ' . ($i + 1) . ' es muy corta: cuente qué hizo, con al menos una frase completa.');
+            }
+
+            if ($texto === '') {
+                $vacias[] = $i + 1;
+            }
+        }
+
+        if ($vacias !== [] && !$peticion->request->getBoolean('continuar_con_vacias')) {
+            $this->guardarFlash('cc_error', 'Dejó sin descripción la actividad ' . implode(', la ', $vacias) . '. Si de verdad no hizo nada frente a ella este periodo, marque la casilla de abajo y continúe.');
             $this->guardarFlash('cc_confirmar_vacias', '1');
 
             return new RedirectResponse('/cuentas/nueva/2', Response::HTTP_SEE_OTHER);

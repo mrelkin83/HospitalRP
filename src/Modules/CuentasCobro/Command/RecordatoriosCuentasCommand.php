@@ -18,7 +18,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * - Al CONTRATISTA cuya cuota ya puede cobrarse y no ha presentado la
  *   cuenta: el primer día y luego cada semana, para acompañar sin acosar.
- * - Al SUPERVISOR con cuentas ENVIADAS sin revisar a los 3 días HÁBILES
+ * - A los REVISORES con cuentas ENVIADAS sin tomar a los 3 días HÁBILES
+ *   (un solo correo por revisor con el total: la bandeja es compartida).
+ * - Al SUPERVISOR con cuentas REVISADAS sin aprobar a los 3 días HÁBILES
  *   (calculados con la tabla de festivos de la plataforma), y luego cada
  *   3 hábiles.
  *
@@ -37,22 +39,78 @@ final class RecordatoriosCuentasCommand extends Command
     protected function configure(): void
     {
         $this->setName('cuentas:recordatorios')
-            ->setDescription('Recuerda cuentas por presentar (contratistas) y por revisar (supervisores)');
+            ->setDescription('Recuerda cuentas por presentar (contratistas), por revisar (revisores) y por aprobar (supervisores)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $aContratistas = $this->recordarAContratistas();
+        $aRevisores = $this->recordarARevisores();
         $aSupervisores = $this->recordarASupervisores();
 
         $io->success(sprintf(
-            'Recordatorios: %d a contratistas, %d a supervisores.',
+            'Recordatorios: %d a contratistas, %d a revisores, %d a supervisores.',
             $aContratistas,
+            $aRevisores,
             $aSupervisores,
         ));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Cuentas ENVIADAS con 3+ días hábiles sin que ningún revisor las tome,
+     * cada 3 hábiles. Un solo correo por revisor activo con el total: la
+     * bandeja es compartida y llenarles el buzón cuenta por cuenta cansa.
+     */
+    private function recordarARevisores(): int
+    {
+        $pendientes = $this->conexion->fetchAllAssociative(
+            "SELECT c.radicado, c.enviada_en
+               FROM cc_cuentas c
+              WHERE c.estado = 'ENVIADA' AND c.enviada_en IS NOT NULL",
+        );
+        $vencidas = 0;
+
+        foreach ($pendientes as $fila) {
+            $habiles = $this->habiles->habilesEntre(
+                new \DateTimeImmutable((string) $fila['enviada_en']),
+                new \DateTimeImmutable('today'),
+            );
+
+            if ($habiles >= 3 && ($habiles - 3) % 3 === 0) {
+                $vencidas++;
+            }
+        }
+
+        if ($vencidas === 0) {
+            return 0;
+        }
+
+        $correos = $this->conexion->fetchFirstColumn(
+            "SELECT u.correo FROM cc_revisores r
+               JOIN usuarios u ON u.id = r.usuario_id
+              WHERE r.activo = 1 AND u.correo IS NOT NULL AND u.correo <> ''",
+        );
+        $enviados = 0;
+
+        foreach ($correos as $correo) {
+            try {
+                $this->correo->enviar(
+                    (string) $correo,
+                    $vencidas . ' cuenta(s) de cobro llevan 3+ días hábiles sin revisión previa',
+                    'Hay ' . $vencidas . " cuenta(s) enviadas esperando la revisión previa desde hace 3 o más días hábiles.\n\n"
+                    . "Revíselas en el panel: Cuentas de cobro → Bandeja de revisión.\n\n"
+                    . 'E.S.E. Hospital Rosario Pumarejo de López',
+                );
+                $enviados++;
+            } catch (\Throwable) {
+                // Un correo caído no frena la tanda.
+            }
+        }
+
+        return $enviados;
     }
 
     /** Cuotas vencidas de contratos activos sin cuenta viva, con contratista con correo. */
@@ -102,7 +160,11 @@ final class RecordatoriosCuentasCommand extends Command
         return $enviados;
     }
 
-    /** Cuentas ENVIADAS con 3+ días hábiles esperando, cada 3 hábiles. */
+    /**
+     * Cuentas REVISADAS (ya pasaron la revisión previa) con 3+ días hábiles
+     * esperando al supervisor, cada 3 hábiles. Las ENVIADA son de los
+     * revisores: ellos reciben su propio recordatorio.
+     */
     private function recordarASupervisores(): int
     {
         $filas = $this->conexion->fetchAllAssociative(
@@ -113,7 +175,7 @@ final class RecordatoriosCuentasCommand extends Command
                JOIN cc_contratistas t ON t.id = k.contratista_id
                JOIN cc_supervisores s ON s.id = k.supervisor_id AND s.activo = 1
                JOIN usuarios u ON u.id = s.usuario_id
-              WHERE c.estado = 'ENVIADA' AND c.enviada_en IS NOT NULL",
+              WHERE c.estado = 'REVISADA' AND c.enviada_en IS NOT NULL",
         );
         $enviados = 0;
 

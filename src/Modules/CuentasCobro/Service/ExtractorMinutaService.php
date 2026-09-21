@@ -37,6 +37,7 @@ final readonly class ExtractorMinutaService
         private ArchivosCuentas $archivos,
         private ValidadorExtraccion $validador,
         private ExtraccionMinutaRepository $extracciones,
+        private TextoPdfMinutaService $textoPdf,
     ) {
     }
 
@@ -69,6 +70,19 @@ final readonly class ExtractorMinutaService
             $this->extracciones->actualizar($extraccionId, ['estado' => 'ERROR', 'error' => $e->getMessage()]);
 
             return ['ok' => false, 'mensaje' => $e->getMessage()];
+        }
+
+        // Antes de pagar la IA: ¿el PDF trae su propio texto? Las minutas
+        // nacen en Word, y cuando llega la exportación —no el escaneo del
+        // impreso— el contrato está escrito ahí dentro. Leerlo cuesta cero
+        // y no puede alucinar. Si lo rescatado no alcanza para identificar
+        // el contrato, se sigue de largo a la IA como si nada.
+        $porTexto = ParserTextoMinuta::interpretar(
+            $this->textoPdf->texto((string) $extraccion['minuta_archivo']),
+        );
+
+        if (ParserTextoMinuta::suficiente($porTexto)) {
+            return $this->guardarResultado($extraccionId, $porTexto, 'texto', 'pdftotext', 'Extracción lista desde el texto del PDF (sin costo de IA)');
         }
 
         if (!$this->iaDisponible()) {
@@ -153,6 +167,26 @@ final readonly class ExtractorMinutaService
             return ['ok' => false, 'mensaje' => 'La IA no devolvió un JSON legible; reintente o llene el formulario a mano.'];
         }
 
+        return $this->guardarResultado($extraccionId, $resultado, $proveedor, $modelo, 'Extracción lista');
+    }
+
+    /**
+     * Guarda lo extraído —venga de la IA o del texto del PDF— con sus
+     * alertas. Las dos rutas terminan aquí para que la validación y el
+     * estado final sean literalmente el mismo código: una extracción por
+     * texto que se saltara las alertas sería una trampa silenciosa.
+     *
+     * @param array<string, mixed> $resultado
+     *
+     * @return array{ok: bool, mensaje: string}
+     */
+    private function guardarResultado(
+        int $extraccionId,
+        array $resultado,
+        string $proveedor,
+        string $modelo,
+        string $encabezado,
+    ): array {
         $alertas = $this->validador->alertas($resultado);
         $this->extracciones->actualizar($extraccionId, [
             'estado' => 'LISTA',
@@ -164,7 +198,7 @@ final readonly class ExtractorMinutaService
             'terminado_en' => date('Y-m-d H:i:s'),
         ]);
 
-        return ['ok' => true, 'mensaje' => 'Extracción lista' . ($alertas !== [] ? ' con ' . count($alertas) . ' alerta(s) por revisar.' : ' sin alertas.')];
+        return ['ok' => true, 'mensaje' => $encabezado . ($alertas !== [] ? ' con ' . count($alertas) . ' alerta(s) por revisar.' : ' sin alertas.')];
     }
 
     /** La consigna con el esquema exacto de §10 (pública: la usa también el arnés de verificación). */
@@ -198,6 +232,10 @@ final readonly class ExtractorMinutaService
             Reglas: fechas SIEMPRE en formato AAAA-MM-DD (la minuta puede traer DD-MM-AAAA); valores en pesos enteros sin puntos;
             las cuotas salen de la cláusula FORMA DE PAGO: si el primer pago cubre solo unos días del mes, su "tipo" es "PARCIAL";
             transcribe las obligaciones completas, sin resumirlas ni renumerarlas.
+            IMPORTANTE: este módulo solo admite contratos de PRESTACIÓN DE SERVICIOS (incluidos los «de servicios
+            profesionales» y los «de apoyo a la gestión»). Si el documento es otra cosa (compraventa, suministro,
+            arrendamiento, obra), NO inventes ese campo: transcribe el tipo tal cual aparezca en "tipo_contrato"
+            para que el sistema lo rechace.
             CONSIGNA;
     }
 

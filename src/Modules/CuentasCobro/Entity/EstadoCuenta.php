@@ -16,6 +16,9 @@ enum EstadoCuenta: string
 {
     case BORRADOR = 'BORRADOR';
     case ENVIADA = 'ENVIADA';
+    // La revisión previa: un equipo de revisores verifica la cuenta y la
+    // firma antes de que llegue al supervisor.
+    case REVISADA = 'REVISADA';
     case DEVUELTA = 'DEVUELTA';
     case APROBADA = 'APROBADA';
     case ENTREGADA_FINANCIERA = 'ENTREGADA_FINANCIERA';
@@ -25,7 +28,8 @@ enum EstadoCuenta: string
     {
         return match ($this) {
             self::BORRADOR => 'Borrador',
-            self::ENVIADA => 'Enviada',
+            self::ENVIADA => 'Enviada (en revisión previa)',
+            self::REVISADA => 'Revisada (donde el supervisor)',
             self::DEVUELTA => 'Devuelta',
             self::APROBADA => 'Aprobada',
             self::ENTREGADA_FINANCIERA => 'Entregada a Financiera',

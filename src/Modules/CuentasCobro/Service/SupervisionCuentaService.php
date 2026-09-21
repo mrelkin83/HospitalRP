@@ -47,8 +47,10 @@ final readonly class SupervisionCuentaService
     ): array {
         $cuentaId = (int) $cuenta['id'];
 
-        if ((string) $cuenta['estado'] !== EstadoCuenta::ENVIADA->value) {
-            return ['ok' => false, 'mensaje' => 'Solo una cuenta enviada se puede aprobar.'];
+        // El equipo de revisores va primero: sin su firma (REVISADA), el
+        // supervisor no aprueba.
+        if ((string) $cuenta['estado'] !== EstadoCuenta::REVISADA->value) {
+            return ['ok' => false, 'mensaje' => 'Solo una cuenta que ya pasó la revisión previa se puede aprobar.'];
         }
 
         if (!is_string($supervisor['firma_archivo'] ?? null) || $supervisor['firma_archivo'] === '') {
@@ -114,7 +116,7 @@ final readonly class SupervisionCuentaService
 
         $this->cuentas->transicionar(
             $cuentaId,
-            EstadoCuenta::ENVIADA,
+            EstadoCuenta::REVISADA,
             EstadoCuenta::APROBADA,
             'SUPERVISOR',
             (int) $supervisor['usuario_id'],
@@ -151,8 +153,12 @@ final readonly class SupervisionCuentaService
      */
     public function devolver(array $cuenta, array $supervisor, string $observacion, string $ip): array
     {
-        if ((string) $cuenta['estado'] !== EstadoCuenta::ENVIADA->value) {
-            return ['ok' => false, 'mensaje' => 'Solo una cuenta enviada se puede devolver.'];
+        $estado = EstadoCuenta::from((string) $cuenta['estado']);
+
+        // El supervisor puede devolver tanto la recién enviada como la que
+        // ya pasó revisión y él encontró un reparo.
+        if (!in_array($estado, [EstadoCuenta::ENVIADA, EstadoCuenta::REVISADA], true)) {
+            return ['ok' => false, 'mensaje' => 'Solo una cuenta enviada o revisada se puede devolver.'];
         }
 
         $observacion = trim($observacion);
@@ -163,7 +169,7 @@ final readonly class SupervisionCuentaService
 
         $this->cuentas->transicionar(
             (int) $cuenta['id'],
-            EstadoCuenta::ENVIADA,
+            $estado,
             EstadoCuenta::DEVUELTA,
             'SUPERVISOR',
             (int) $supervisor['usuario_id'],

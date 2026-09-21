@@ -67,6 +67,10 @@ final readonly class CatalogoPermisos
                 // devolver las cuentas de SUS contratos. Separado de
                 // `administrar` a propósito: quien supervisa no configura.
                 'cuentas.supervisar' => 'Revisar y aprobar cuentas de cobro de los contratos que supervisa',
+                // La bandeja del equipo revisor: la verificación previa que
+                // firma la cuenta antes de que llegue al supervisor. Quien
+                // solo revisa no ve nada más del panel.
+                'cuentas.revisar' => 'Verificar y firmar la revisión previa de las cuentas de cobro enviadas',
             ],
         ],
         'transparencia' => [

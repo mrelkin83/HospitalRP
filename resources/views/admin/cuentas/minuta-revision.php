@@ -3,7 +3,8 @@
  * A2 — Revisión a dos columnas: páginas escaneadas a la izquierda,
  * formulario prellenado a la derecha, alertas en rojo arriba (§10).
  * Espera: $extraccion, $resultado, $alertas, $paginas, $supervisores,
- * $iaDisponible, $ocrDisponible, $mensaje, $error, $tokenCsrf.
+ * $deOtro, $tomadaPor, $iaDisponible, $ocrDisponible, $mensaje, $error,
+ * $tokenCsrf.
  */
 $id = (int) $extraccion['id'];
 $r = $resultado;
@@ -24,6 +25,23 @@ $aplicada = (string) $extraccion['estado'] === 'APLICADA';
 <h1 class="text-2xl">Extracción #<?= $id ?> — revisar y crear el contrato</h1>
 <p class="mt-1 texto-suave">Estado: <strong><?= $e((string) $extraccion['estado']) ?></strong>
     <?= $extraccion['proveedor'] !== null ? '· extraído con ' . $e($extraccion['proveedor'] . ' ' . $extraccion['modelo']) : '' ?></p>
+
+<?php if ($deOtro) { ?>
+    <div class="alerta alerta-error mt-4" role="alert">
+        Esta minuta la tiene tomada <strong><?= $e((string) $tomadaPor) ?></strong>.
+        Puede mirarla, pero no aplicarla: pídale que la suelte para evitar que
+        los dos creen el mismo contrato.
+    </div>
+<?php } elseif (!$aplicada) { ?>
+    <form class="mt-4" method="post" action="/admin/cuentas-cobro/minutas/<?= $id ?>/soltar">
+        <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+        <p class="texto-suave text-sm">
+            Usted tiene tomada esta minuta.
+            <button class="enlace" type="submit">Soltarla</button>
+            para que la revise otra persona.
+        </p>
+    </form>
+<?php } ?>
 
 <?php if ($mensaje !== null) { ?><div class="alerta alerta-exito mt-4" role="status"><?= $e($mensaje) ?></div><?php } ?>
 <?php if ($error !== null) { ?><div class="alerta alerta-error mt-4" role="alert"><?= $e($error) ?></div><?php } ?>

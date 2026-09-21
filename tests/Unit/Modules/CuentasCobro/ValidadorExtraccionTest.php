@@ -123,4 +123,39 @@ final class ValidadorExtraccionTest extends TestCase
             static fn (string $a): bool => str_contains($a, 'cronograma trae'),
         ));
     }
+
+    /**
+     * Los lotes escaneados traen compraventas mezcladas: el validador las
+     * marca y esPrestacionDeServicios() las veta para que jamás se apliquen.
+     */
+    public function testRechazaUnContratoDeCompraventa(): void
+    {
+        $r = self::sana();
+        $r['tipo_contrato'] = 'CONTRATO DE COMPRAVENTA';
+        $r['objeto'] = 'Compraventa de insumos de papelería para la entidad.';
+
+        self::assertFalse(ValidadorExtraccion::esPrestacionDeServicios($r));
+
+        $alertas = $this->validador->alertasDeDatos($r);
+        self::assertNotSame([], $alertas);
+        self::assertStringContainsString('no parece un contrato de prestación de servicios', $alertas[0]);
+    }
+
+    public function testAceptaPrestacionDeServiciosYApoyoALaGestion(): void
+    {
+        self::assertTrue(ValidadorExtraccion::esPrestacionDeServicios(self::sana()));
+        self::assertTrue(ValidadorExtraccion::esPrestacionDeServicios([
+            'tipo_contrato' => 'PRESTACIÓN DE SERVICIOS PROFESIONALES',
+            'objeto' => 'Prestar los servicios profesionales como abogado.',
+        ]));
+        // Tipo ilegible (OCR pobre): decide el objeto.
+        self::assertTrue(ValidadorExtraccion::esPrestacionDeServicios([
+            'tipo_contrato' => '',
+            'objeto' => 'PRESTAR sus servicios de apoyo en el área de facturación.',
+        ]));
+        self::assertFalse(ValidadorExtraccion::esPrestacionDeServicios([
+            'tipo_contrato' => 'SUMINISTRO',
+            'objeto' => 'Suministro de oxígeno medicinal.',
+        ]));
+    }
 }

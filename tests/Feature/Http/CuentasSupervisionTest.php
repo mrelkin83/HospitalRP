@@ -10,8 +10,11 @@ use App\Core\Config\ConfigAplicacion;
 use App\Core\Config\Env;
 use App\Http\Admin\CuentasSupervisionController;
 use App\Http\Kernel;
+use App\Modules\CuentasCobro\Repository\CuentaRepository;
 use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
+use App\Modules\CuentasCobro\Service\RevisionCuentaService;
+use App\Ports\NotificadorCorreo;
 use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
 use App\Modules\CuentasCobro\Service\SesionContratista;
 use Doctrine\DBAL\Connection;
@@ -197,9 +200,9 @@ final class CuentasSupervisionTest extends TestCase
         foreach ([
             'cc_descarga_tokens', 'cc_cuenta_firmas', 'cc_cuenta_historial', 'cc_cuenta_adjuntos',
             'cc_cuenta_seguridad_social', 'cc_cuenta_actividades', 'cc_cuentas',
-            'cc_extracciones', 'cc_otp', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
+            'cc_extracciones', 'cc_ingreso_intentos', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
             'cc_contrato_imputaciones', 'cc_contrato_novedades', 'cc_contratos',
-            'cc_supervisores', 'cc_contratistas',
+            'cc_supervisores', 'cc_revisores', 'cc_contratistas',
         ] as $tabla) {
             self::$conexion->executeStatement('DELETE FROM ' . $tabla);
         }
@@ -216,6 +219,15 @@ final class CuentasSupervisionTest extends TestCase
     public function testAprobarCongelaLosMontosYArmaElPaquete(): void
     {
         $primeraId = $this->enviarCuentaDelPortal();
+
+        // Sin la revisión previa, el supervisor no puede aprobar.
+        $this->post('/admin/cuentas-cobro/bandeja/' . $primeraId . '/aprobar', [
+            'fecha_informe' => '2026-09-05',
+            'observacion' => '',
+        ]);
+        self::assertSame('ENVIADA', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$primeraId]), 'Aprobó una cuenta sin revisión previa.');
+
+        $this->pasarPorRevision($primeraId);
 
         $respuesta = $this->post('/admin/cuentas-cobro/bandeja/' . $primeraId . '/aprobar', [
             'fecha_informe' => '2026-09-05',
@@ -253,6 +265,7 @@ final class CuentasSupervisionTest extends TestCase
         $segunda = self::$conexion->fetchAssociative('SELECT * FROM cc_cuentas WHERE id = ?', [$segundaId]);
         self::assertSame(2, (int) $segunda['consecutivo']);
 
+        $this->pasarPorRevision($segundaId);
         $this->post('/admin/cuentas-cobro/bandeja/' . $segundaId . '/aprobar', [
             'fecha_informe' => '2026-10-05',
             'observacion' => '',
@@ -357,6 +370,108 @@ final class CuentasSupervisionTest extends TestCase
     // ------------------------------------------------------------------
     // Ayudas
     // ------------------------------------------------------------------
+
+    /**
+     * Pasa la cuenta ENVIADA por la revisión previa: siembra (una vez) un
+     * revisor con firma y firma la revisión. Es el paso nuevo del flujo
+     * ENVIADA → REVISADA → APROBADA.
+     */
+    private function pasarPorRevision(int $cuentaId): void
+    {
+        $revisor = $this->revisorSembrado();
+        $cuenta = self::$conexion->fetchAssociative('SELECT * FROM cc_cuentas WHERE id = ?', [$cuentaId]);
+        self::assertNotFalse($cuenta);
+
+        $servicio = new RevisionCuentaService(
+            self::$conexion,
+            new CuentaRepository(self::$conexion),
+            new class implements NotificadorCorreo {
+                public function enviar(string $destinatario, string $asunto, string $textoPlano): void
+                {
+                }
+            },
+        );
+        $resultado = $servicio->marcarRevisada($cuenta, $revisor, null, '127.0.0.1', 'PHPUnit');
+        self::assertTrue($resultado['ok'], $resultado['mensaje']);
+        self::assertSame('REVISADA', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$cuentaId]));
+
+        // La firma del revisor quedó como evidencia.
+        $firma = self::$conexion->fetchAssociative(
+            "SELECT * FROM cc_cuenta_firmas WHERE cuenta_id = ? AND firmante_rol = 'REVISOR' AND documento = 'REVISION'",
+            [$cuentaId],
+        );
+        self::assertNotFalse($firma, 'No quedó la evidencia de firma del revisor.');
+    }
+
+    /** @return array<string, mixed> El revisor de prueba (se siembra una sola vez, con firma). */
+    private function revisorSembrado(): array
+    {
+        $revisor = self::$conexion->fetchAssociative('SELECT * FROM cc_revisores LIMIT 1');
+
+        if ($revisor === false) {
+            self::$conexion->insert('roles', [
+                'nombre' => 'Rol revisor',
+                'slug' => 'prueba-' . bin2hex(random_bytes(6)),
+                'permisos' => json_encode(['cuentas.revisar'], JSON_THROW_ON_ERROR),
+            ]);
+            self::$conexion->insert('usuarios', [
+                'nombre' => 'Revisora de cuentas',
+                'correo' => 'prueba-rev@hospital.gov.co',
+                'hash_password' => 'x',
+                'rol_id' => (int) self::$conexion->lastInsertId(),
+            ]);
+            self::$conexion->insert('cc_revisores', [
+                'usuario_id' => (int) self::$conexion->lastInsertId(),
+                'nombre_completo' => 'REVISORA DE CUENTAS',
+                'cargo' => 'AUXILIAR ADMINISTRATIVO',
+                'firma_archivo' => 'firmas/prueba-firma.png',
+                'activo' => 1,
+            ]);
+            $revisor = self::$conexion->fetchAssociative('SELECT * FROM cc_revisores LIMIT 1');
+        }
+
+        self::assertNotFalse($revisor);
+
+        return $revisor;
+    }
+
+    /**
+     * La bandeja de revisión por HTTP con el permiso cuentas.revisar: la
+     * cola compartida lista la cuenta, el detalle responde y el botón
+     * «revisar» la firma y la pasa al supervisor.
+     */
+    public function testBandejaDeRevisionPorHttp(): void
+    {
+        $cuentaId = $this->enviarCuentaDelPortal();
+        $revisor = $this->revisorSembrado();
+
+        /** @var Sesion $sesion */
+        $sesion = $this->contenedor->get(Sesion::class);
+        $sesion->autenticar(new Usuario(
+            id: (int) $revisor['usuario_id'],
+            nombre: 'Revisora de cuentas',
+            correo: 'prueba-rev@hospital.gov.co',
+            hashPassword: '',
+            rolId: 0,
+            activo: true,
+            intentosFallidos: 0,
+            bloqueadoHasta: null,
+            debeCambiarPassword: false,
+        ));
+
+        $radicado = (string) self::$conexion->fetchOne('SELECT radicado FROM cc_cuentas WHERE id = ?', [$cuentaId]);
+
+        $bandeja = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/revision'));
+        self::assertSame(Response::HTTP_OK, $bandeja->getStatusCode());
+        self::assertStringContainsString($radicado, (string) $bandeja->getContent());
+
+        $detalle = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/revision/' . $cuentaId));
+        self::assertSame(Response::HTTP_OK, $detalle->getStatusCode());
+        self::assertStringContainsString('firmar la revisión', (string) $detalle->getContent());
+
+        $this->post('/admin/cuentas-cobro/revision/' . $cuentaId . '/revisar', ['observacion' => '']);
+        self::assertSame('REVISADA', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$cuentaId]));
+    }
 
     /** Lleva una cuenta del portal hasta ENVIADA y devuelve su id. */
     private function enviarCuentaDelPortal(): int

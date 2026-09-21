@@ -1,7 +1,7 @@
 <?php
 /**
  * P3 — Qué hizo este mes: una tarjeta por obligación, con autoguardado.
- * Espera: $contrato, $cuenta, $actividades, $periodoTexto, $error,
+ * Espera: $contrato, $cuenta, $actividades, $modoManual, $periodoTexto, $error,
  * $mensaje, $tokenCsrf.
  */
 $precargada = array_filter($actividades, static fn (array $a): bool => ($a['descripcion_ejecucion'] ?? null) !== null);
@@ -19,22 +19,54 @@ ob_start(); ?>
       data-csrf="<?= $e($tokenCsrf) ?>">
     <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
 
-    <?php foreach ($actividades as $actividad) { $oid = (int) $actividad['obligacion_id']; ?>
-        <section class="tarjeta">
-            <h2>Obligación <?= (int) $actividad['orden'] ?></h2>
-            <p><?= $e((string) $actividad['texto']) ?></p>
-            <label for="actividad-<?= $oid ?>">Qué hizo usted para cumplirla</label>
-            <textarea id="actividad-<?= $oid ?>" name="actividad[<?= $oid ?>]"
-                      class="actividad" data-obligacion="<?= $oid ?>"
-                      aria-describedby="guardado-<?= $oid ?>"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '')) ?></textarea>
-            <span class="ayuda" id="guardado-<?= $oid ?>" aria-live="polite"></span>
-            <button class="boton-secundario" type="button" data-limpiar="actividad-<?= $oid ?>">Limpiar</button>
-        </section>
+    <?php if ($modoManual) { ?>
+        <div class="alerta-aviso" role="status">
+            Este contrato no tiene obligaciones cargadas (la minuta no existe en
+            digital o el escaneado no se puede leer), así que las actividades se
+            escriben aquí a mano. Para quitar una, borre su título y guarde.
+        </div>
+
+        <?php $n = 0; foreach ($actividades as $actividad) { $aid = (int) $actividad['id']; $n++; ?>
+            <section class="tarjeta">
+                <h2>Actividad <?= $n ?></h2>
+                <label for="titulo-<?= $aid ?>">A qué se comprometió (la obligación del contrato)</label>
+                <input class="campo" id="titulo-<?= $aid ?>" name="actividad_manual[<?= $aid ?>][titulo]"
+                       type="text" maxlength="300" value="<?= $e((string) ($actividad['titulo_manual'] ?? '')) ?>">
+                <label for="descripcion-<?= $aid ?>">Qué hizo usted este periodo para cumplirla</label>
+                <textarea id="descripcion-<?= $aid ?>" name="actividad_manual[<?= $aid ?>][descripcion]"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '')) ?></textarea>
+            </section>
+        <?php } ?>
+
+        <?php for ($i = 0; $i < 3; $i++) { $n++; ?>
+            <section class="tarjeta">
+                <h2>Actividad nueva</h2>
+                <label for="nuevo-titulo-<?= $i ?>">A qué se comprometió (la obligación del contrato)</label>
+                <input class="campo" id="nuevo-titulo-<?= $i ?>" name="nueva_actividad[<?= $i ?>][titulo]"
+                       type="text" maxlength="300" placeholder="Deje en blanco si no la necesita">
+                <label for="nuevo-descripcion-<?= $i ?>">Qué hizo usted este periodo para cumplirla</label>
+                <textarea id="nuevo-descripcion-<?= $i ?>" name="nueva_actividad[<?= $i ?>][descripcion]"></textarea>
+            </section>
+        <?php } ?>
+
+        <p class="ayuda">¿Necesita más de tres filas nuevas? Guarde con «Continuar», vuelva a este paso y aparecerán otras tres.</p>
+    <?php } else { ?>
+        <?php foreach ($actividades as $actividad) { $oid = (int) $actividad['obligacion_id']; ?>
+            <section class="tarjeta">
+                <h2>Obligación <?= (int) $actividad['orden'] ?></h2>
+                <p><?= $e((string) $actividad['texto']) ?></p>
+                <label for="actividad-<?= $oid ?>">Qué hizo usted para cumplirla</label>
+                <textarea id="actividad-<?= $oid ?>" name="actividad[<?= $oid ?>]"
+                          class="actividad" data-obligacion="<?= $oid ?>"
+                          aria-describedby="guardado-<?= $oid ?>"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '')) ?></textarea>
+                <span class="ayuda" id="guardado-<?= $oid ?>" aria-live="polite"></span>
+                <button class="boton-secundario" type="button" data-limpiar="actividad-<?= $oid ?>">Limpiar</button>
+            </section>
+        <?php } ?>
     <?php } ?>
 
     <label class="casilla tarjeta">
         <input type="checkbox" name="continuar_con_vacias" value="1">
-        <span>Dejé alguna obligación sin descripción a propósito (el supervisor lo verá así).</span>
+        <span>Dejé alguna <?= $modoManual ? 'actividad' : 'obligación' ?> sin descripción a propósito (el supervisor lo verá así).</span>
     </label>
 
     <button class="boton" type="submit">Continuar</button>

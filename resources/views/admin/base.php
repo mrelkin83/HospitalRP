@@ -56,11 +56,13 @@ $secciones = [
         'Eventos' => ['/admin/eventos', 'eventos.ver'],
     ],
     'Cuentas de cobro' => [
+        'Bandeja de revisión' => ['/admin/cuentas-cobro/revision', 'cuentas.revisar'],
         'Bandeja de supervisión' => ['/admin/cuentas-cobro/bandeja', 'cuentas.supervisar'],
         'Contratos' => ['/admin/cuentas-cobro/contratos', 'cuentas.administrar'],
         'Cargar minuta' => ['/admin/cuentas-cobro/minutas', 'cuentas.administrar'],
         'Contratistas' => ['/admin/cuentas-cobro/contratistas', 'cuentas.administrar'],
         'Supervisores' => ['/admin/cuentas-cobro/supervisores', 'cuentas.administrar'],
+        'Revisores' => ['/admin/cuentas-cobro/revisores', 'cuentas.administrar'],
         'Parámetros' => ['/admin/cuentas-cobro/parametros', 'cuentas.administrar'],
         'Reportes' => ['/admin/cuentas-cobro/reportes', 'cuentas.administrar'],
     ],

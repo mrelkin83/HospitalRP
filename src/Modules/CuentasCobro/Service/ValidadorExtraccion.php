@@ -38,6 +38,15 @@ final readonly class ValidadorExtraccion
     public function alertasDeDatos(array $r): array
     {
         $alertas = [];
+
+        // 0. El tipo de contrato: si no es prestación de servicios, la
+        //    extracción no podrá aplicarse (lotes con compraventas mezcladas).
+        if (!self::esPrestacionDeServicios($r)) {
+            $tipoLeido = trim((string) ($r['tipo_contrato'] ?? ''));
+            $alertas[] = 'Este documento no parece un contrato de prestación de servicios'
+                . ($tipoLeido !== '' ? " (dice: «{$tipoLeido}»)" : ' (el tipo no se pudo leer)')
+                . '. Solo se cargan contratos de prestación de servicios, servicios profesionales o apoyo a la gestión; no podrá aplicarse.';
+        }
         $valorTotal = (int) ($r['valor_total'] ?? 0);
         $cuotas = is_array($r['cuotas'] ?? null) ? $r['cuotas'] : [];
 
@@ -156,6 +165,32 @@ final readonly class ValidadorExtraccion
 
     // ------------------------------------------------------------------
     // Ayudas
+
+    /**
+     * Solo entran al módulo los contratos de prestación de servicios (los
+     * «profesionales» y los «de apoyo a la gestión» incluidos). Compraventas,
+     * suministros u obras que aparezcan en los lotes escaneados se rechazan.
+     *
+     * @param array<string, mixed> $r
+     */
+    public static function esPrestacionDeServicios(array $r): bool
+    {
+        $tipo = self::normalizar((string) ($r['tipo_contrato'] ?? ''));
+        $objeto = self::normalizar((string) ($r['objeto'] ?? ''));
+
+        foreach (['COMPRAVENTA', 'COMPRA VENTA', 'SUMINISTRO', 'ARRENDAMIENTO', 'OBRA PUBLICA', 'CONTRATO DE OBRA'] as $vetado) {
+            if (str_contains($tipo, $vetado)) {
+                return false;
+            }
+        }
+
+        if (str_contains($tipo, 'PRESTACION DE SERVICIOS') || str_contains($tipo, 'APOYO A LA GESTION')) {
+            return true;
+        }
+
+        // Sin tipo legible (OCR pobre), decide el objeto.
+        return $tipo === '' && (str_contains($objeto, 'PRESTAR') || str_contains($objeto, 'PRESTACION DE SERVICIOS'));
+    }
     // ------------------------------------------------------------------
 
     /** Mayúsculas, sin tildes ni signos: para comparar texto de escáner. */

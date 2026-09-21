@@ -136,6 +136,10 @@ $formulario = static function (array $c, string $accion, string $sufijo) use ($e
                                 <?= ((int) $contratista['activo'] === 1) ? 'Desactivar' : 'Reactivar' ?>
                             </button>
                         </form>
+                        <form method="post" action="/admin/cuentas-cobro/contratistas/<?= $cid ?>/restablecer-contrasena">
+                            <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                            <button class="enlace text-sm" type="submit">Restablecer contraseña</button>
+                        </form>
                     </td>
                 </tr>
                 <tr class="border-t borde-suave">

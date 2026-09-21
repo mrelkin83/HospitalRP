@@ -97,9 +97,9 @@ final class CuentasMinutasTest extends TestCase
         foreach ([
             'cc_descarga_tokens', 'cc_cuenta_firmas', 'cc_cuenta_historial', 'cc_cuenta_adjuntos',
             'cc_cuenta_seguridad_social', 'cc_cuenta_actividades', 'cc_cuentas',
-            'cc_extracciones', 'cc_otp', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
+            'cc_extracciones', 'cc_ingreso_intentos', 'cc_contrato_pagos', 'cc_contrato_obligaciones',
             'cc_contrato_imputaciones', 'cc_contrato_novedades', 'cc_contratos',
-            'cc_supervisores', 'cc_contratistas',
+            'cc_supervisores', 'cc_revisores', 'cc_contratistas',
         ] as $tabla) {
             self::$conexion->executeStatement('DELETE FROM ' . $tabla);
         }
@@ -120,7 +120,14 @@ final class CuentasMinutasTest extends TestCase
         $extraccion = self::$conexion->fetchAssociative('SELECT * FROM cc_extracciones ORDER BY id DESC LIMIT 1');
         self::assertNotFalse($extraccion, 'No se creó la extracción.');
         $id = (int) $extraccion['id'];
-        self::assertSame('/admin/cuentas-cobro/minutas/' . $id, $respuesta->headers->get('Location'));
+        self::assertSame('/admin/cuentas-cobro/minutas', $respuesta->headers->get('Location'));
+        self::assertSame('PENDIENTE', $extraccion['estado'], 'La subida solo encola; el trabajo pesado corre por detrás.');
+
+        // 1b. La cola puede saltarse para una minuta suelta: procesar ahora.
+        $ahora = $this->post('/admin/cuentas-cobro/minutas/' . $id . '/ahora', []);
+        self::assertSame('/admin/cuentas-cobro/minutas/' . $id, $ahora->headers->get('Location'), 'El «procesar ahora» no llegó al controlador: ' . $ahora->getStatusCode() . ' — ' . mb_substr((string) preg_replace('/\s+/', ' ', strip_tags((string) $ahora->getContent())), 0, 600));
+        $extraccion = self::$conexion->fetchAssociative('SELECT * FROM cc_extracciones WHERE id = ?', [$id]);
+        self::assertNotFalse($extraccion);
         self::assertSame('LISTA', $extraccion['estado']);
         self::assertStringContainsString('no está configurado', implode(' ', self::alertasDe($extraccion)));
 

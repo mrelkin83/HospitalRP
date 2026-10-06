@@ -55,4 +55,17 @@ final class BaseDatosDePruebas
 
         return self::$conexion = $conexion;
     }
+
+    /**
+     * La conexión YA abierta, o `null` si ninguna prueba la ha pedido todavía.
+     *
+     * La usa la extensión `SaneaTransacciones` al terminar cada prueba. No
+     * llama a `conexionMigrada()` a propósito: eso abriría la conexión y
+     * correría las migraciones por el simple hecho de que terminó una prueba
+     * unitaria que nunca toca la base.
+     */
+    public static function conexionAbiertaONula(): ?Connection
+    {
+        return self::$conexion;
+    }
 }

@@ -11,6 +11,14 @@
          failOnWarning="true"
          colors="true">
 
+    <!-- Deshace transacciones que una prueba fallida deje abiertas en la
+         conexión compartida. Sin esto, un solo fallo dentro de un
+         `transactional()` arrastra a todas las pruebas siguientes con
+         «SAVEPOINT DOCTRINE_NN does not exist». -->
+    <extensions>
+        <bootstrap class="Tests\Support\SaneaTransacciones"/>
+    </extensions>
+
     <testsuites>
         <testsuite name="unit">
             <directory>tests/Unit</directory>

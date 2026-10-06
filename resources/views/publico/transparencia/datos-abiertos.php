@@ -45,4 +45,37 @@
             <?php } ?>
         </ul>
     <?php } ?>
+
+    <?php /* ITA 9.2: vista de los datos de la entidad en el portal nacional.
+             Si todavía no hay perfil publicado, no se inventa el enlace. */ ?>
+    <?php if ($portalUrl !== '') { ?>
+        <section class="mt-10">
+            <h2 class="text-base">Portal de Datos Abiertos del Estado colombiano</h2>
+            <p class="mt-2 text-sm texto-suave max-w-prose">
+                Los conjuntos de datos de la E.S.E. también se consultan y
+                descargan desde el portal nacional <strong>datos.gov.co</strong>,
+                donde quedan disponibles con su ficha técnica y su API.
+            </p>
+            <p class="mt-3">
+                <a class="boton boton-secundario" href="<?= $e($portalUrl) ?>" target="_blank" rel="noopener">
+                    Ver nuestros datos en datos.gov.co
+                </a>
+            </p>
+        </section>
+    <?php } ?>
+
+    <?php /* ITA 9.1: los tres instrumentos de gestión de la información. */ ?>
+    <section class="mt-10">
+        <h2 class="text-base">Instrumentos de gestión de la información</h2>
+        <p class="mt-2 text-sm texto-suave max-w-prose">
+            Qué información produce la entidad, cuál reserva y dónde se
+            consulta (Ley 1712 de 2014, artículo 6, literal d).
+        </p>
+        <p class="mt-3">
+            <a class="boton boton-secundario" href="/transparencia/instrumentos-de-gestion">
+                Consultar los instrumentos
+                (<?= array_sum($conteoInstrumentos) ?> registros)
+            </a>
+        </p>
+    </section>
 </div>

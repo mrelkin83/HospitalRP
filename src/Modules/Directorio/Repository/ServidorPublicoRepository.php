@@ -36,6 +36,12 @@ final readonly class ServidorPublicoRepository
                     s.tipo_vinculacion, s.formacion_academica,
                     s.correo_institucional, s.telefono_institucional,
                     s.url_hoja_vida, s.escala_salarial, s.url_escala_salarial,
+                    -- ITA 3.5.b, 3.5.d y 3.5.j. El lugar de nacimiento va sin
+                    -- la fecha a propósito: el criterio pide el lugar, y lugar
+                    -- más fecha juntos reconstruyen un dato identificador.
+                    s.pais_nacimiento, s.departamento_nacimiento, s.ciudad_nacimiento,
+                    s.experiencia_laboral,
+                    s.contrato_objeto, s.contrato_valor, s.contrato_desde, s.contrato_hasta,
                     COALESCE(d.nombre, ?) AS dependencia
                FROM servidores_publicos s
                LEFT JOIN dependencias d ON d.id = s.dependencia_id

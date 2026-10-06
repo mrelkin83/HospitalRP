@@ -162,6 +162,10 @@ final class SembrarMenusCommand extends Command
             ['Política de privacidad', '/politica-privacidad-web', 1, []],
             ['Política de tratamiento de datos', '/politica-tratamiento-datos', 1, []],
             ['Política de cookies', '/politica-de-cookies', 1, []],
+            // Numeral 2.3 del Anexo 2: las cuatro políticas obligatorias deben
+            // estar enlazadas desde el pie (criterio 2.2.g). Faltaban estas dos.
+            ['Términos y condiciones', '/terminos-y-condiciones', 1, []],
+            ['Política de derechos de autor', '/politica-de-derechos-de-autor', 1, []],
             ['Accesibilidad', '/accesibilidad', 1, []],
             ['PQRSDF', '/atencion-ciudadania/pqrsdf', 1, []],
         ]],

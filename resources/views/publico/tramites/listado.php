@@ -24,6 +24,10 @@
                     <?php } ?>
                     <p class="mt-2 text-sm texto-suave">
                         Plazo de respuesta: <?= $tipo->diasTermino ?> días <?= $tipo->diasHabiles ? 'hábiles' : 'calendario' ?>.
+                        <?php /* Costos asociados (ITA 7.1): también en el
+                                 listado, para que se vean sin entrar a cada
+                                 trámite. */ ?>
+                        <?= $tipo->gratuito ? 'Gratuito.' : 'Tiene costo.' ?>
                     </p>
                     <p class="mt-auto pt-4">
                         <a class="boton boton-primario" href="/atencion-ciudadania/tramites/<?= $e($tipo->slug) ?>">Radicar</a>

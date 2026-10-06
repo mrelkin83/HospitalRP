@@ -6,6 +6,7 @@ namespace Tests\Feature\Modules\Transparencia;
 
 use App\Core\Audit\AuditoriaService;
 use App\Modules\Transparencia\Command\SembrarTransparenciaCommand;
+use App\Modules\Transparencia\Repository\EnteVigilanciaRepository;
 use App\Modules\Transparencia\Repository\DatasetRepository;
 use App\Modules\Transparencia\Repository\TransparenciaRepository;
 use Doctrine\DBAL\Connection;
@@ -131,6 +132,7 @@ final class TransparenciaTest extends TestCase
         $tester = new CommandTester(new SembrarTransparenciaCommand(
             self::$conexion,
             new AuditoriaService(self::$conexion),
+            new EnteVigilanciaRepository(self::$conexion),
         ));
         $tester->execute([]);
         $tester->assertCommandIsSuccessful();

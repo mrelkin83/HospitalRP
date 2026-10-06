@@ -85,6 +85,65 @@ $soloTelefono = static fn (string $t): string => (string) preg_replace('/[^0-9+]
                                         <?php } ?>
                                     </td>
                                 </tr>
+                                <?php
+                                /* Resto de los literales del ITA 3.5: formación
+                                   (c), experiencia (d), lugar de nacimiento (b)
+                                   y datos del contrato de prestación de
+                                   servicios (j).
+
+                                   Va en una fila desplegable y no en columnas
+                                   nuevas porque la tabla ya tiene cinco: nueve
+                                   columnas serían ilegibles. El contenido está
+                                   en el DOM aunque el detalle esté cerrado, así
+                                   que se indexa y se puede verificar. */
+                                $nacimiento = array_filter([
+                                    (string) ($s['ciudad_nacimiento'] ?? ''),
+                                    (string) ($s['departamento_nacimiento'] ?? ''),
+                                    (string) ($s['pais_nacimiento'] ?? ''),
+                                ], static fn (string $v): bool => trim($v) !== '');
+
+                                $detalle = [
+                                    'Lugar de nacimiento' => implode(', ', $nacimiento),
+                                    'Formación académica' => (string) ($s['formacion_academica'] ?? ''),
+                                    'Experiencia laboral y profesional' => (string) ($s['experiencia_laboral'] ?? ''),
+                                ];
+
+                                if (trim((string) ($s['contrato_objeto'] ?? '')) !== '') {
+                                    $detalle['Objeto del contrato'] = (string) $s['contrato_objeto'];
+                                }
+
+                                if (($s['contrato_valor'] ?? null) !== null) {
+                                    $detalle['Valor total de los honorarios'] =
+                                        '$' . number_format((float) $s['contrato_valor'], 0, ',', '.');
+                                }
+
+                                if (trim((string) ($s['contrato_desde'] ?? '')) !== '') {
+                                    $detalle['Vigencia del contrato'] = sprintf(
+                                        'Del %s al %s',
+                                        (string) $s['contrato_desde'],
+                                        (string) ($s['contrato_hasta'] ?? 'por definir'),
+                                    );
+                                }
+
+                                $detalle = array_filter($detalle, static fn (string $v): bool => trim($v) !== '');
+                                ?>
+                                <?php if ($detalle !== []) { ?>
+                                    <tr>
+                                        <td colspan="5" class="pt-0">
+                                            <details class="text-sm">
+                                                <summary>Más información de <?= $e((string) $s['nombres']) ?> <?= $e((string) $s['apellidos']) ?></summary>
+                                                <dl class="mt-2 flex flex-col gap-1">
+                                                    <?php foreach ($detalle as $etiqueta => $valor) { ?>
+                                                        <div>
+                                                            <dt class="inline font-semibold"><?= $e($etiqueta) ?>:</dt>
+                                                            <dd class="inline"><?= $e($valor) ?></dd>
+                                                        </div>
+                                                    <?php } ?>
+                                                </dl>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
                             <?php } ?>
                         </tbody>
                     </table>

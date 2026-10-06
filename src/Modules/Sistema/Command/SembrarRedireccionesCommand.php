@@ -55,6 +55,12 @@ final class SembrarRedireccionesCommand extends Command
         '/transparencia/*' => '/transparencia',
         '/normativa' => '/transparencia/normatividad',
         '/normativa/*' => '/transparencia/normatividad',
+        // Regla EXACTA antes del comodín: el repositorio resuelve primero por
+        // origen exacto, así que esta gana sobre `/informes/*`. La URL está
+        // citada textualmente en el oficio de Supersalud 20264200002708501, y
+        // mandarla al índice de la sección rompería el «enlace directo y
+        // funcional» que exige su orden 9.
+        '/informes/reportes-de-control-interno' => '/transparencia/informes-de-control-interno',
         '/informes' => '/transparencia/planeacion-presupuesto-informes',
         '/informes/*' => '/transparencia/planeacion-presupuesto-informes',
         '/contratacion' => '/transparencia/contratacion',

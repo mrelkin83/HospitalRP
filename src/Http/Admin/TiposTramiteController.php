@@ -75,6 +75,13 @@ final readonly class TiposTramiteController
             'dias_termino' => $dias,
             'tipo_dias' => $r->getString('tipo_dias') === 'calendario' ? 'calendario' : 'habiles',
             'fundamento_legal' => $r->getString('fundamento_legal') !== '' ? trim($r->getString('fundamento_legal')) : null,
+            // Costos asociados (ITA 7.1). El detalle solo se guarda si el
+            // trámite tiene costo: dejar un texto de cobro colgando de un
+            // trámite gratuito confundiría a quien va a radicar.
+            'gratuito' => $r->getBoolean('gratuito') ? 1 : 0,
+            'costo_detalle' => !$r->getBoolean('gratuito') && trim($r->getString('costo_detalle')) !== ''
+                ? mb_substr(trim($r->getString('costo_detalle')), 0, 500)
+                : null,
             'permite_anonimo' => $r->getBoolean('permite_anonimo') ? 1 : 0,
             'requiere_adjunto' => $r->getBoolean('requiere_adjunto') ? 1 : 0,
             'max_adjuntos' => max(1, min(10, $r->getInt('max_adjuntos', 3))),

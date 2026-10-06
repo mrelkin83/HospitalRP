@@ -10,6 +10,7 @@ use App\Core\Support\Vistas;
 use App\Modules\Tramites\Repository\TipoTramiteRepository;
 use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Request\SolicitudTramite;
+use App\Modules\Tramites\Service\ProteccionSpam;
 use App\Modules\Tramites\Service\RadicacionService;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -30,6 +31,7 @@ final readonly class TramitesPublicoController
         private TramiteRepository $tramites,
         private RadicacionService $radicacion,
         private AlmacenArchivos $almacen,
+        private ProteccionSpam $spam,
     ) {
     }
 
@@ -75,6 +77,35 @@ final readonly class TramitesPublicoController
         }
 
         $solicitud = SolicitudTramite::desdePeticion($peticion, $tipo);
+
+        // Anti-SPAM (ITA 13.3.c). Va ANTES de validar y de guardar adjuntos:
+        // no tiene sentido escribir en disco un envío que vamos a rechazar.
+        //
+        // Al robot se le responde como a cualquier error de validación, sin
+        // decirle qué lo delató: si el mensaje nombrara el campo trampa,
+        // bastaría una pasada para aprender a dejarlo vacío.
+        if ($this->spam->pareceRobot($peticion)) {
+            return $this->renderFormulario(
+                $tipo,
+                $solicitud,
+                ['descripcion' => 'No pudimos procesar el formulario. Revisa los datos e intenta de nuevo.'],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        $ip = $peticion->getClientIp();
+
+        if ($this->spam->excedeLimite($ip)) {
+            return $this->renderFormulario(
+                $tipo,
+                $solicitud,
+                ['descripcion' => $this->spam->mensajeDeLimite()],
+                Response::HTTP_TOO_MANY_REQUESTS,
+            );
+        }
+
+        $this->spam->registrarIntento($ip);
+
         $errores = $solicitud->validar($tipo);
 
         // Adjuntos del ciudadano: privados (solo el panel los ve), validados

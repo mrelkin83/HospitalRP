@@ -60,6 +60,56 @@ final class SembrarCumplimientoCommand extends Command
             . 'contacto@hrplopez.gov.co: nos ayuda a corregirla.</p>'
             . '<p><strong>Versión provisional</strong>, vigente mientras se completa la evaluación formal de conformidad.</p>',
         ],
+        // ITA 2.3.a. El numeral exige un contenido mínimo: alcance y límites
+        // de uso, derechos y deberes del usuario, límite de responsabilidad
+        // de la entidad, contacto, y referencia a las políticas de privacidad
+        // y de derechos de autor. El texto de abajo los cubre en ese orden.
+        'terminos' => [
+            'Términos y condiciones de uso (PROVISIONAL)',
+            '<p>Estos términos regulan el uso del sitio web de la E.S.E. Hospital Rosario Pumarejo '
+            . 'de López y de los trámites y servicios que se ofrecen en él. Al usar el sitio '
+            . 'aceptas estas condiciones.</p>'
+            . '<p><strong>Alcance y límites de uso.</strong> El sitio ofrece información '
+            . 'institucional, consulta de documentos públicos y radicación de solicitudes. '
+            . 'No sustituye la atención en salud ni la consulta médica, y por él nunca se '
+            . 'entrega información clínica: la historia clínica y los resultados se solicitan '
+            . 'en línea pero se entregan por canal controlado, verificando tu identidad.</p>'
+            . '<p><strong>Derechos y deberes de quien usa el sitio.</strong> Tienes derecho a '
+            . 'recibir respuesta a tus solicitudes en los términos de la Ley 1755 de 2015, a '
+            . 'consultar el estado de tu radicado y a que tus datos se traten conforme a la ley. '
+            . 'Te corresponde entregar información veraz, no suplantar a otra persona y no usar '
+            . 'el sitio para fines ilícitos ni para afectar su funcionamiento.</p>'
+            . '<p><strong>Límite de responsabilidad.</strong> La entidad procura que la '
+            . 'información publicada esté completa y actualizada, pero no responde por el uso '
+            . 'que se haga de ella, por interrupciones del servicio ajenas a su control, ni por '
+            . 'el contenido de los sitios de terceros a los que se enlaza.</p>'
+            . '<p><strong>Contacto.</strong> Para asuntos relacionados con estos términos: '
+            . 'contacto@hrplopez.gov.co, o mediante el trámite de PQRSDF de este sitio.</p>'
+            . '<p>Consulta también la <a href="/politica-tratamiento-datos">política de '
+            . 'tratamiento de datos personales</a> y la <a href="/politica-de-derechos-de-autor">'
+            . 'política de derechos de autor</a>.</p>'
+            . '<p><strong>Versión provisional</strong>, vigente mientras la oficina jurídica adopta el texto definitivo.</p>',
+        ],
+        // ITA 2.3.c. Debe declarar el alcance y las limitaciones de uso de los
+        // datos, contenidos y código fuente producidos por el sujeto obligado.
+        'derechos_autor' => [
+            'Política de derechos de autor y autorización de uso (PROVISIONAL)',
+            '<p>Los contenidos de este sitio —textos, documentos, datos abiertos, imágenes y '
+            . 'código fuente— son producidos por la E.S.E. Hospital Rosario Pumarejo de López o '
+            . 'se usan con autorización de su titular.</p>'
+            . '<p><strong>Información pública y datos abiertos.</strong> La información pública '
+            . 'y los conjuntos de datos abiertos pueden consultarse, descargarse, reutilizarse y '
+            . 'redistribuirse libremente, incluso con fines comerciales, citando a la E.S.E. '
+            . 'Hospital Rosario Pumarejo de López como fuente y la fecha de consulta, sin '
+            . 'alterar su contenido ni atribuirle a la entidad interpretaciones derivadas.</p>'
+            . '<p><strong>Limitaciones.</strong> El escudo, el logotipo y demás signos '
+            . 'distintivos de la entidad no pueden usarse sin autorización escrita. Los '
+            . 'contenidos de terceros publicados en el sitio conservan los derechos de su titular '
+            . 'y se rigen por la licencia que cada uno indique.</p>'
+            . '<p>Para solicitar autorización de uso escribe a contacto@hrplopez.gov.co o radica '
+            . 'tu solicitud por <a href="/atencion-ciudadania/pqrsdf">PQRSDF</a>.</p>'
+            . '<p><strong>Versión provisional</strong>, vigente mientras la oficina jurídica adopta el texto definitivo.</p>',
+        ],
     ];
 
     /** Normativa que el hospital ya publica (inventario del sitio actual). */

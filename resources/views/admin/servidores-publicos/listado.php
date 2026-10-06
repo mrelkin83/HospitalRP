@@ -63,6 +63,67 @@ $campos = static function (array $f, array $dependencias, array $vinculaciones, 
         <input class="campo" id="formacion-<?= $e($id) ?>" type="text" name="formacion_academica" maxlength="300"
                value="<?= $e((string) ($f['formacion_academica'] ?? '')) ?>">
     </div>
+    <div class="mt-3">
+        <label class="etiqueta" for="experiencia-<?= $e($id) ?>">Experiencia laboral y profesional</label>
+        <textarea class="campo" id="experiencia-<?= $e($id) ?>" name="experiencia_laboral" rows="2"><?= $e((string) ($f['experiencia_laboral'] ?? '')) ?></textarea>
+        <p class="ayuda-campo">Exigida por el criterio 3.5.d del ITA. Resume cargos y años, sin datos personales.</p>
+    </div>
+
+    <?php /* ITA 3.5.b. Se pide el LUGAR de nacimiento, nunca la fecha: juntos
+             reconstruyen un dato identificador que la ley no obliga a publicar. */ ?>
+    <fieldset class="mt-4">
+        <legend class="etiqueta">Lugar de nacimiento</legend>
+        <p class="text-sm texto-suave">
+            Lo exige el criterio 3.5.b del ITA. No registres la fecha de nacimiento.
+        </p>
+        <div class="mt-2 grid gap-4 sm:grid-cols-3">
+            <div>
+                <label class="etiqueta" for="paisnac-<?= $e($id) ?>">País</label>
+                <input class="campo" id="paisnac-<?= $e($id) ?>" type="text" name="pais_nacimiento" maxlength="80"
+                       value="<?= $e((string) ($f['pais_nacimiento'] ?? 'Colombia')) ?>">
+            </div>
+            <div>
+                <label class="etiqueta" for="depnac-<?= $e($id) ?>">Departamento</label>
+                <input class="campo" id="depnac-<?= $e($id) ?>" type="text" name="departamento_nacimiento" maxlength="120"
+                       value="<?= $e((string) ($f['departamento_nacimiento'] ?? '')) ?>">
+            </div>
+            <div>
+                <label class="etiqueta" for="ciunac-<?= $e($id) ?>">Ciudad</label>
+                <input class="campo" id="ciunac-<?= $e($id) ?>" type="text" name="ciudad_nacimiento" maxlength="120"
+                       value="<?= $e((string) ($f['ciudad_nacimiento'] ?? '')) ?>">
+            </div>
+        </div>
+    </fieldset>
+
+    <?php /* ITA 3.5.j: solo para contratos de prestación de servicios. */ ?>
+    <fieldset class="mt-4">
+        <legend class="etiqueta">Contrato de prestación de servicios</legend>
+        <p class="text-sm texto-suave">
+            Diligénciala solo si la vinculación es por contrato. Lo exige el criterio 3.5.j del ITA.
+        </p>
+        <div class="mt-2">
+            <label class="etiqueta" for="objeto-<?= $e($id) ?>">Objeto del contrato</label>
+            <textarea class="campo" id="objeto-<?= $e($id) ?>" name="contrato_objeto" rows="2"><?= $e((string) ($f['contrato_objeto'] ?? '')) ?></textarea>
+        </div>
+        <div class="mt-3 grid gap-4 sm:grid-cols-3">
+            <div>
+                <label class="etiqueta" for="valor-<?= $e($id) ?>">Valor total de los honorarios</label>
+                <input class="campo" id="valor-<?= $e($id) ?>" type="text" name="contrato_valor" inputmode="numeric"
+                       value="<?= ($f['contrato_valor'] ?? null) !== null ? number_format((float) $f['contrato_valor'], 0, ',', '.') : '' ?>"
+                       placeholder="1.500.000">
+            </div>
+            <div>
+                <label class="etiqueta" for="desde-<?= $e($id) ?>">Fecha de inicio</label>
+                <input class="campo" id="desde-<?= $e($id) ?>" type="date" name="contrato_desde"
+                       value="<?= $e((string) ($f['contrato_desde'] ?? '')) ?>">
+            </div>
+            <div>
+                <label class="etiqueta" for="hasta-<?= $e($id) ?>">Fecha de terminación</label>
+                <input class="campo" id="hasta-<?= $e($id) ?>" type="date" name="contrato_hasta"
+                       value="<?= $e((string) ($f['contrato_hasta'] ?? '')) ?>">
+            </div>
+        </div>
+    </fieldset>
     <fieldset class="mt-4">
         <legend class="etiqueta">Contacto institucional</legend>
         <p class="text-sm texto-suave">

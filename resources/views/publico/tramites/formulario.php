@@ -26,8 +26,15 @@ $anonimoMarcado = $enviado?->anonimo ?? false;
     <?php } ?>
     <p class="mt-2 text-sm texto-suave">
         Plazo de respuesta: <?= $tipo->diasTermino ?> días <?= $tipo->diasHabiles ? 'hábiles' : 'calendario' ?>
+        <?php /* Costos asociados (ITA 7.1). Se dice siempre, incluso cuando es
+                 gratuito: «no dice nada» y «no cuesta nada» no son lo mismo
+                 para quien llega a radicar, ni para quien evalúa el índice. */ ?>
+        · <?php if ($tipo->gratuito) { ?>Trámite gratuito<?php } else { ?>Tiene costo<?php } ?>
         <?php if ($tipo->fundamentoLegal !== null) { ?> · <?= $e($tipo->fundamentoLegal) ?><?php } ?>
     </p>
+    <?php if (!$tipo->gratuito && $tipo->costoDetalle !== null) { ?>
+        <p class="mt-2 text-sm max-w-prose"><strong>Costo:</strong> <?= $e($tipo->costoDetalle) ?></p>
+    <?php } ?>
 
     <?php if ($errores !== []) { ?>
         <div class="alerta alerta-error mt-6 max-w-3xl" role="alert">
@@ -93,10 +100,33 @@ $anonimoMarcado = $enviado?->anonimo ?? false;
                     <input class="campo" type="tel" id="telefono" name="telefono" maxlength="60" autocomplete="tel"
                            value="<?= $e($enviado?->telefono ?? '') ?>">
                 </div>
+                <?php /* Dirección de correspondencia completa (ITA 13.3.g):
+                         «Dirección, Barrio/Vereda/Corregimiento,
+                         Municipio/Distrito, País». Todos opcionales: solo hacen
+                         falta si pides la respuesta en físico, y exigirlos a
+                         todo el mundo alargaría el formulario sin razón. */ ?>
+                <div>
+                    <label class="etiqueta" for="direccion">Dirección (opcional)</label>
+                    <input class="campo" type="text" id="direccion" name="direccion" maxlength="255"
+                           autocomplete="street-address"
+                           value="<?= $e($enviado?->direccion ?? '') ?>">
+                    <p class="ayuda-campo">Solo si quieres la respuesta por correspondencia física.</p>
+                </div>
+                <div>
+                    <label class="etiqueta" for="barrio">Barrio, vereda o corregimiento (opcional)</label>
+                    <input class="campo" type="text" id="barrio" name="barrio" maxlength="160"
+                           value="<?= $e($enviado?->barrio ?? '') ?>">
+                </div>
                 <div>
                     <label class="etiqueta" for="municipio">Municipio (opcional)</label>
                     <input class="campo" type="text" id="municipio" name="municipio" maxlength="120"
                            value="<?= $e($enviado?->municipio ?? 'Valledupar') ?>">
+                </div>
+                <div>
+                    <label class="etiqueta" for="pais">País (opcional)</label>
+                    <input class="campo" type="text" id="pais" name="pais" maxlength="120"
+                           autocomplete="country-name"
+                           value="<?= $e($enviado?->pais ?? 'Colombia') ?>">
                 </div>
                 <div>
                     <label class="etiqueta" for="medio_respuesta">¿Cómo prefieres la respuesta?</label>
@@ -165,6 +195,17 @@ $anonimoMarcado = $enviado?->anonimo ?? false;
                 <?= $error('adjuntos') ?>
             </div>
         </fieldset>
+
+        <?php /* Campo trampa anti-SPAM (ITA 13.3.c). El CSS lo saca de la
+                 pantalla; `tabindex="-1"` lo salta en el recorrido por teclado
+                 y `autocomplete="off"` evita que el navegador lo rellene solo.
+                 La etiqueta existe y es explícita para quien use lector de
+                 pantalla: nadie que lo oiga va a escribir ahí. */ ?>
+        <div class="trampa-spam" aria-hidden="true">
+            <label for="confirmar_correo">No escribas nada en este campo</label>
+            <input type="text" id="confirmar_correo" name="confirmar_correo"
+                   tabindex="-1" autocomplete="off" value="">
+        </div>
 
         <div class="tarjeta <?= isset($errores['autoriza_datos']) ? 'border-error-600' : '' ?>">
             <label class="flex items-start gap-3">

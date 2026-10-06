@@ -154,5 +154,40 @@ use App\Core\Support\Fechas;
                 <button type="submit" class="boton boton-secundario mt-3 w-full">Agregar</button>
             </form>
         </section>
+
+        <?php /* ITA 6.10.b y 6.10.d. De aquí salen dos de las cuatro cifras
+                 del informe trimestral de acceso a la información; si nadie
+                 marca aquí, el informe reporta cero para siempre. */ ?>
+        <section class="tarjeta" aria-labelledby="t-acceso">
+            <h2 id="t-acceso" class="text-base">Acceso a la información</h2>
+            <p class="mt-1 text-sm texto-suave">
+                Alimenta el informe trimestral que exige la Ley 1712.
+            </p>
+            <form class="mt-3" method="post" action="/admin/tramites/<?= (int) $tramite['id'] ?>/acceso">
+                <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+
+                <label class="etiqueta" for="traslado">Trasladada a otra entidad</label>
+                <input class="campo" id="traslado" type="text" name="trasladado_a" maxlength="200"
+                       value="<?= $e((string) ($tramite['trasladado_a'] ?? '')) ?>"
+                       placeholder="Nombre de la entidad competente">
+                <p class="ayuda-campo">Déjalo vacío si la solicitud no se trasladó.</p>
+
+                <label class="mt-3 flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="acceso_negado" value="1"
+                           <?= ((int) ($tramite['acceso_negado'] ?? 0)) === 1 ? 'checked' : '' ?>>
+                    Se negó el acceso a la información
+                </label>
+
+                <label class="etiqueta mt-2" for="causal">Causal de la negativa</label>
+                <textarea class="campo" id="causal" name="causal_negacion" rows="2"
+                          maxlength="300"><?= $e((string) ($tramite['causal_negacion'] ?? '')) ?></textarea>
+                <p class="ayuda-campo">
+                    Obligatoria si niegas el acceso: la Ley 1712 exige que toda
+                    negativa sea motivada por escrito (artículos 18, 19 y 26).
+                </p>
+
+                <button type="submit" class="boton boton-secundario mt-3 w-full">Guardar</button>
+            </form>
+        </section>
     </aside>
 </div>

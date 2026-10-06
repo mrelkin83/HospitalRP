@@ -1188,3 +1188,24 @@ html:not([data-js]) .encuesta-paso {
 html:not([data-js]) .heroe-navegacion {
     display: none;
 }
+
+/* =====================================================================
+   Campo trampa anti-SPAM del formulario de trámites (ITA 13.3.c)
+   =====================================================================
+
+   Va FUERA de @layer, como todo lo que esconde, porque en Tailwind v4
+   `@layer utilities` le gana a `@layer components` y el campo reaparecería.
+
+   Se saca de la pantalla en lugar de usar `display:none` o `hidden`: los
+   robots más nuevos ignoran los campos no renderizados, y este tiene que
+   existir en el DOM para que los rellenen. `aria-hidden` en el contenedor
+   lo deja fuera del árbol de accesibilidad, y el `tabindex="-1"` del input
+   lo salta al tabular, así que para una persona es como si no estuviera.
+   ===================================================================== */
+.trampa-spam {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

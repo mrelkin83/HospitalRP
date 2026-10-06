@@ -77,6 +77,22 @@ final readonly class ServidoresPublicosAdminController
                 ? $r->getString('tipo_vinculacion')
                 : 'planta',
             'formacion_academica' => $this->opcional($r->getString('formacion_academica'), 300),
+            // ITA 3.5.b, 3.5.d y 3.5.j. NO se captura fecha de nacimiento:
+            // el criterio pide el lugar, y lugar más fecha juntos reconstruyen
+            // un dato identificador que la Ley 1712 no obliga a publicar.
+            'pais_nacimiento' => $this->opcional($r->getString('pais_nacimiento'), 80),
+            'departamento_nacimiento' => $this->opcional($r->getString('departamento_nacimiento'), 120),
+            'ciudad_nacimiento' => $this->opcional($r->getString('ciudad_nacimiento'), 120),
+            'experiencia_laboral' => $this->opcional($r->getString('experiencia_laboral'), 4000),
+            'contrato_objeto' => $this->opcional($r->getString('contrato_objeto'), 4000),
+            // Honorarios en pesos enteros: se dejan solo los dígitos, así da
+            // igual si el funcionario escribe «1.500.000», «1500000» o
+            // «$ 1 500 000». Sin centavos, que en un contrato no se usan.
+            'contrato_valor' => preg_replace('/\D+/', '', $r->getString('contrato_valor')) !== ''
+                ? (float) preg_replace('/\D+/', '', $r->getString('contrato_valor'))
+                : null,
+            'contrato_desde' => $this->opcional($r->getString('contrato_desde'), 10),
+            'contrato_hasta' => $this->opcional($r->getString('contrato_hasta'), 10),
             'correo_institucional' => $this->opcional($r->getString('correo_institucional'), 160),
             'telefono_institucional' => $this->opcional($r->getString('telefono_institucional'), 60),
             'url_hoja_vida' => $this->opcional($r->getString('url_hoja_vida'), 500),

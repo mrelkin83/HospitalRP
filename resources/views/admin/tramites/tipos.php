@@ -73,6 +73,23 @@ $campos = static function (?TipoTramite $t, string $clave, array $dependencias, 
                        value="<?= $e($t?->notificarCorreos ?? '') ?>">
             </div>
         </div>
+        <?php /* Costos asociados (ITA 7.1). Es el criterio que costó puntos en
+                 2025 por quedarse sin publicar; aquí lo mantiene el hospital. */ ?>
+        <div class="mt-3 grid gap-4 sm:grid-cols-2 sm:items-end">
+            <div>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="gratuito" value="1" <?= ($t?->gratuito ?? true) ? 'checked' : '' ?>>
+                    <span>Es un trámite gratuito</span>
+                </label>
+                <p class="ayuda-campo">Si lo desmarcas, escribe al lado cuánto cuesta y con qué norma se cobra.</p>
+            </div>
+            <div>
+                <label class="etiqueta" for="costo-<?= $clave ?>">Costo del trámite</label>
+                <input class="campo" id="costo-<?= $clave ?>" type="text" name="costo_detalle" maxlength="500"
+                       value="<?= $e($t?->costoDetalle ?? '') ?>"
+                       placeholder="Copia de historia clínica: $X por folio (Resolución N.º ...)">
+            </div>
+        </div>
     <?php return (string) ob_get_clean();
 };
 ?>

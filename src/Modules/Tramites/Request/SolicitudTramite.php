@@ -34,6 +34,17 @@ final readonly class SolicitudTramite
         public string $descripcion,
         public array $valores,
         public bool $autorizaDatos,
+        // El criterio 13.3.g del ITA enumera la dirección de correspondencia
+        // completa: «Dirección, Barrio/Vereda/Corregimiento, Municipio/Distrito,
+        // País». Barrio y país faltaban, y en Valledupar el corregimiento es
+        // lo que hace ubicable una dirección rural.
+        //
+        // Van al final y con valor por omisión, no junto a `direccion`, porque
+        // son opcionales: así quien ya construía la solicitud por posición
+        // sigue funcionando. `desdePeticion()` usa argumentos nombrados, de
+        // modo que el orden no afecta a la lectura del formulario.
+        public ?string $barrio = null,
+        public ?string $pais = null,
     ) {
     }
 
@@ -66,7 +77,12 @@ final readonly class SolicitudTramite
             correo: $texto('correo', 160),
             telefono: $texto('telefono', 60),
             direccion: $texto('direccion', 255),
+            barrio: $texto('barrio', 160),
             municipio: $texto('municipio', 120),
+            // Por defecto Colombia: el ITA solo exige el país «en caso que sea
+            // diferente al de Colombia», y pedírselo a todo el mundo añade un
+            // campo que el 99 % deja igual.
+            pais: $texto('pais', 120) ?? 'Colombia',
             medioRespuesta: in_array($medio, self::MEDIOS_RESPUESTA, true) ? $medio : 'correo',
             asunto: mb_substr(trim($r->getString('asunto')), 0, 300),
             descripcion: trim($r->getString('descripcion')),

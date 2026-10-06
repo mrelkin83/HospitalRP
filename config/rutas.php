@@ -24,8 +24,10 @@ use App\Http\Admin\CuentasSupervisionController;
 use App\Http\Admin\CuentasRevisionController;
 use App\Http\Admin\CuentasRevisoresController;
 use App\Http\Admin\CuentasSupervisoresController;
+use App\Http\Admin\EntesControlController;
 use App\Http\Admin\FaqController;
 use App\Http\Admin\IaController;
+use App\Http\Admin\InstrumentosController;
 use App\Http\Admin\LoginController;
 use App\Http\Admin\MediosController;
 use App\Http\Admin\HeroesController;
@@ -237,6 +239,14 @@ foreach ([
     'politica.privacidad' => ['/politica-privacidad-web', 'aviso_privacidad'],
     'politica.cookies' => ['/politica-de-cookies', 'cookies'],
     'politica.accesibilidad' => ['/accesibilidad', 'accesibilidad'],
+    // Numeral 2.3 del Anexo 2: las cuatro políticas obligatorias del pie.
+    // Faltaban estas dos, y sin ellas el criterio 2.3 se evalúa incompleto
+    // por mucho que el resto del pie esté bien.
+    'politica.terminos' => ['/terminos-y-condiciones', 'terminos'],
+    'politica.derechos_autor' => ['/politica-de-derechos-de-autor', 'derechos_autor'],
+    // Anexo 3 (seguridad digital): la política existe como documento de
+    // Sistemas; esta ruta le da un lugar estable donde citarla.
+    'politica.seguridad' => ['/politica-de-seguridad-de-la-informacion', 'seguridad'],
 ] as $nombrePolitica => [$rutaPolitica, $tipoPolitica]) {
     $rutas->add($nombrePolitica, new Route(
         path: $rutaPolitica,
@@ -266,6 +276,69 @@ $rutas->add('transparencia.datos.descargar', new Route(
     path: '/transparencia/datos/{id}/descargar',
     defaults: ['_controlador' => [TransparenciaPublicoController::class, 'descargarRecurso']],
     requirements: ['id' => '\d+'],
+    methods: ['GET'],
+));
+
+// --- Instrumentos de gestión de la información (Ley 1712 art. 6 lit. d) ---
+//
+// Van ANTES del comodín `/transparencia/{resto}`: Symfony resuelve en orden de
+// registro y el comodín se los tragaría, mandándolos de vuelta al índice con
+// un 301.
+//
+// El CSV va como ruta propia y no como parámetro de consulta para que el
+// enlace que se reporta al ITA sea estable y citable en el expediente.
+
+$rutas->add('transparencia.instrumentos', new Route(
+    path: '/transparencia/instrumentos-de-gestion',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'instrumentos']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.instrumento.csv', new Route(
+    path: '/transparencia/instrumentos-de-gestion/{slug}.csv',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'instrumentoCsv']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
+    methods: ['GET'],
+));
+
+// ITA 6.10: informe trimestral de acceso a la información.
+$rutas->add('transparencia.informe_acceso.csv', new Route(
+    path: '/transparencia/informe-de-acceso-a-la-informacion.csv',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'informeAccesoCsv']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.informe_acceso', new Route(
+    path: '/transparencia/informe-de-acceso-a-la-informacion',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'informeAcceso']],
+    methods: ['GET'],
+));
+
+// ITA 5.3: estado de ejecución de los contratos. El CSV va primero porque
+// `{slug}` del comodín de más abajo se tragaría el «.csv».
+$rutas->add('transparencia.ejecucion.csv', new Route(
+    path: '/transparencia/ejecucion-contractual.csv',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'ejecucionContractualCsv']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.ejecucion', new Route(
+    path: '/transparencia/ejecucion-contractual',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'ejecucionContractual']],
+    methods: ['GET'],
+));
+
+// ITA 3.13: entes y autoridades que vigilan. También antes del comodín.
+$rutas->add('transparencia.entes', new Route(
+    path: '/transparencia/entes-de-control',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'entesDeControl']],
+    methods: ['GET'],
+));
+
+$rutas->add('transparencia.instrumento', new Route(
+    path: '/transparencia/instrumentos-de-gestion/{slug}',
+    defaults: ['_controlador' => [TransparenciaPublicoController::class, 'instrumento']],
+    requirements: ['slug' => '[a-z0-9\-]+'],
     methods: ['GET'],
 ));
 
@@ -688,6 +761,8 @@ $rutas->add('admin.tramites.detalle', new Route('/admin/tramites/{id}', $permiso
 $rutas->add('admin.tramites.estado', new Route('/admin/tramites/{id}/estado', $permisoTram('cambiarEstado'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tramites.asignar', new Route('/admin/tramites/{id}/asignar', $permisoTram('asignar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.tramites.nota', new Route('/admin/tramites/{id}/nota', $permisoTram('agregarNota'), ['id' => '\d+'], methods: ['POST']));
+// ITA 6.10.b y 6.10.d: insumos del informe trimestral de acceso.
+$rutas->add('admin.tramites.acceso', new Route('/admin/tramites/{id}/acceso', $permisoTram('marcarAcceso'), ['id' => '\d+'], methods: ['POST']));
 
 // --- Panel: tipos de trámite configurables ---
 
@@ -724,12 +799,17 @@ $rutas->add('admin.cc.contratos.anular', new Route('/admin/cuentas-cobro/contrat
 $rutas->add('admin.cc.contratistas', new Route('/admin/cuentas-cobro/contratistas', $permisoCuentas(CuentasContratistasController::class, 'listado'), methods: ['GET']));
 $rutas->add('admin.cc.contratistas.crear', new Route('/admin/cuentas-cobro/contratistas', $permisoCuentas(CuentasContratistasController::class, 'guardar'), methods: ['POST']));
 $rutas->add('admin.cc.contratistas.guardar', new Route('/admin/cuentas-cobro/contratistas/{id}', $permisoCuentas(CuentasContratistasController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.contratistas.documento', new Route('/admin/cuentas-cobro/contratistas/{id}/documento/{documento}', $permisoCuentas(CuentasContratistasController::class, 'documento'), ['id' => '\\d+', 'documento' => 'cedula|cedula-reverso|rut|certificacion-bancaria|firma'], methods: ['GET']));
 $rutas->add('admin.cc.contratistas.activo', new Route('/admin/cuentas-cobro/contratistas/{id}/activo', $permisoCuentas(CuentasContratistasController::class, 'cambiarActivo'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.contratistas.password', new Route('/admin/cuentas-cobro/contratistas/{id}/restablecer-contrasena', $permisoCuentas(CuentasContratistasController::class, 'restablecerPassword'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.supervisores', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'listado'), methods: ['GET']));
 $rutas->add('admin.cc.supervisores.crear', new Route('/admin/cuentas-cobro/supervisores', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), methods: ['POST']));
 $rutas->add('admin.cc.supervisores.guardar', new Route('/admin/cuentas-cobro/supervisores/{id}', $permisoCuentas(CuentasSupervisoresController::class, 'guardar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.parametros', new Route('/admin/cuentas-cobro/parametros', $permisoCuentas(CuentasParametrosController::class, 'index'), methods: ['GET']));
+$rutas->add('admin.cc.parametros.bancos', new Route('/admin/cuentas-cobro/parametros/bancos', $permisoCuentas(CuentasParametrosController::class, 'crearBanco'), methods: ['POST']));
+$rutas->add('admin.cc.parametros.banco.alternar', new Route('/admin/cuentas-cobro/parametros/bancos/{id}/alternar', $permisoCuentas(CuentasParametrosController::class, 'alternarBanco'), ['id' => '\\d+'], methods: ['POST']));
+$rutas->add('admin.cc.parametros.productos', new Route('/admin/cuentas-cobro/parametros/productos', $permisoCuentas(CuentasParametrosController::class, 'crearProducto'), methods: ['POST']));
+$rutas->add('admin.cc.parametros.producto.alternar', new Route('/admin/cuentas-cobro/parametros/productos/{id}/alternar', $permisoCuentas(CuentasParametrosController::class, 'alternarProducto'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.parametros.anio', new Route('/admin/cuentas-cobro/parametros/anio', $permisoCuentas(CuentasParametrosController::class, 'guardarAnio'), methods: ['POST']));
 $rutas->add('admin.cc.parametros.plantilla', new Route('/admin/cuentas-cobro/parametros/plantillas/{clave}', $permisoCuentas(CuentasParametrosController::class, 'guardarPlantilla'), ['clave' => '[A-Z_]+'], methods: ['POST']));
 
@@ -763,6 +843,8 @@ $rutas->add('admin.cc.bandeja.previa', new Route('/admin/cuentas-cobro/bandeja/{
 $rutas->add('admin.cc.bandeja.aprobar', new Route('/admin/cuentas-cobro/bandeja/{id}/aprobar', $permisoSupervision('aprobar'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.bandeja.devolver', new Route('/admin/cuentas-cobro/bandeja/{id}/devolver', $permisoSupervision('devolver'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.cc.bandeja.entregada', new Route('/admin/cuentas-cobro/bandeja/{id}/entregada', $permisoSupervision('marcarEntregada'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.cc.bandeja.documento', new Route('/admin/cuentas-cobro/bandeja/{id}/documento/{documento}', $permisoSupervision('documentoContratista'), ['id' => '\\d+', 'documento' => 'cedula|cedula-reverso|rut|certificacion-bancaria|firma'], methods: ['GET']));
+$rutas->add('admin.cc.bandeja.evidencia', new Route('/admin/cuentas-cobro/bandeja/{id}/evidencia/{evidencia}', $permisoSupervision('evidencia'), ['id' => '\d+', 'evidencia' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.bandeja.descargar', new Route('/admin/cuentas-cobro/bandeja/{id}/descargar/{documento}', $permisoSupervision('descargar'), ['id' => '\d+', 'documento' => 'cuenta|informe|supervision|paquete'], methods: ['GET']));
 $rutas->add('admin.cc.adjunto', new Route('/admin/cuentas-cobro/adjuntos/{id}', $permisoSupervision('adjunto'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.miscontratos', new Route('/admin/cuentas-cobro/mis-contratos', $permisoSupervision('misContratos'), methods: ['GET']));
@@ -778,6 +860,8 @@ $permisoRevision = static fn (string $metodo): array => [
 
 $rutas->add('admin.cc.rev', new Route('/admin/cuentas-cobro/revision', $permisoRevision('bandeja'), methods: ['GET']));
 $rutas->add('admin.cc.rev.firma', new Route('/admin/cuentas-cobro/revision/firma', $permisoRevision('guardarMiFirma'), methods: ['POST']));
+$rutas->add('admin.cc.rev.documento', new Route('/admin/cuentas-cobro/revision/{id}/documento/{documento}', $permisoRevision('documentoContratista'), ['id' => '\\d+', 'documento' => 'cedula|cedula-reverso|rut|certificacion-bancaria|firma'], methods: ['GET']));
+$rutas->add('admin.cc.rev.evidencia', new Route('/admin/cuentas-cobro/revision/evidencia/{evidencia}', $permisoRevision('evidencia'), ['evidencia' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.rev.adjunto', new Route('/admin/cuentas-cobro/revision/adjunto/{id}', $permisoRevision('adjunto'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.rev.detalle', new Route('/admin/cuentas-cobro/revision/{id}', $permisoRevision('detalle'), ['id' => '\d+'], methods: ['GET']));
 $rutas->add('admin.cc.rev.revisar', new Route('/admin/cuentas-cobro/revision/{id}/revisar', $permisoRevision('marcarRevisada'), ['id' => '\d+'], methods: ['POST']));
@@ -817,6 +901,49 @@ $rutas->add('admin.transparencia', new Route('/admin/transparencia', [
 $rutas->add('admin.transparencia.seccion', new Route('/admin/transparencia/secciones/{id}', $permisoTransp('actualizarSeccion'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.transparencia.item.crear', new Route('/admin/transparencia/secciones/{id}/items', $permisoTransp('crearItem'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('admin.transparencia.item.eliminar', new Route('/admin/transparencia/items/{id}/eliminar', $permisoTransp('eliminarItem'), ['id' => '\d+'], methods: ['POST']));
+
+// --- Panel: instrumentos de gestión de la información (ITA 9.1) ---
+//
+// Comparten el permiso de Transparencia: quien administra el menú de la Ley
+// 1712 es quien administra sus instrumentos. El `{tipo}` se valida contra los
+// tres slugs del enum, no con un comodín.
+
+$permisoInstr = static fn (string $metodo): array => [
+    '_controlador' => [InstrumentosController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.editar',
+];
+$slugsInstrumento = 'registro-de-activos-de-informacion|indice-de-informacion-clasificada-y-reservada|esquema-de-publicacion-de-informacion';
+
+// ITA 3.13: entes que vigilan. Mismo permiso que el resto de Transparencia.
+$permisoEntes = static fn (string $metodo): array => [
+    '_controlador' => [EntesControlController::class, $metodo],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.editar',
+];
+
+$rutas->add('admin.entes', new Route('/admin/transparencia/entes', [
+    '_controlador' => [EntesControlController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.ver',
+], methods: ['GET']));
+$rutas->add('admin.entes.crear', new Route('/admin/transparencia/entes', $permisoEntes('guardar'), methods: ['POST']));
+$rutas->add('admin.entes.guardar', new Route('/admin/transparencia/entes/{id}', $permisoEntes('guardar'), ['id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.entes.eliminar', new Route('/admin/transparencia/entes/{id}/eliminar', $permisoEntes('eliminar'), ['id' => '\d+'], methods: ['POST']));
+
+$rutas->add('admin.instrumentos', new Route('/admin/transparencia/instrumentos', [
+    '_controlador' => [InstrumentosController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.ver',
+], methods: ['GET']));
+$rutas->add('admin.instrumentos.tipo', new Route('/admin/transparencia/instrumentos/{tipo}', [
+    '_controlador' => [InstrumentosController::class, 'listado'],
+    '_acceso' => 'privado',
+    '_permiso' => 'transparencia.ver',
+], ['tipo' => $slugsInstrumento], methods: ['GET']));
+$rutas->add('admin.instrumentos.crear', new Route('/admin/transparencia/instrumentos/{tipo}', $permisoInstr('guardar'), ['tipo' => $slugsInstrumento], methods: ['POST']));
+$rutas->add('admin.instrumentos.guardar', new Route('/admin/transparencia/instrumentos/{tipo}/{id}', $permisoInstr('guardar'), ['tipo' => $slugsInstrumento, 'id' => '\d+'], methods: ['POST']));
+$rutas->add('admin.instrumentos.eliminar', new Route('/admin/transparencia/instrumentos/{tipo}/{id}/eliminar', $permisoInstr('eliminar'), ['tipo' => $slugsInstrumento, 'id' => '\d+'], methods: ['POST']));
 
 // --- Panel: datos abiertos ---
 
@@ -1169,6 +1296,8 @@ $rutas->add('cuentas.ingreso', new Route('/cuentas/ingreso', $rutaCuentas(Cuenta
 $rutas->add('cuentas.entrar', new Route('/cuentas/ingreso', $rutaCuentas(CuentasPortalController::class, 'entrar'), methods: ['POST']));
 $rutas->add('cuentas.crear', new Route('/cuentas/crear-contrasena', $rutaCuentas(CuentasPortalController::class, 'crearPasswordFormulario'), methods: ['GET']));
 $rutas->add('cuentas.crear.guardar', new Route('/cuentas/crear-contrasena', $rutaCuentas(CuentasPortalController::class, 'crearPassword'), methods: ['POST']));
+$rutas->add('cuentas.recuperar', new Route('/cuentas/recuperar-contrasena', $rutaCuentas(CuentasPortalController::class, 'recuperarFormulario'), methods: ['GET']));
+$rutas->add('cuentas.recuperar.guardar', new Route('/cuentas/recuperar-contrasena', $rutaCuentas(CuentasPortalController::class, 'recuperar'), methods: ['POST']));
 $rutas->add('cuentas.salir', new Route('/cuentas/salir', $rutaCuentas(CuentasPortalController::class, 'salir'), methods: ['POST']));
 $rutas->add('cuentas.inicio', new Route('/cuentas/inicio', $rutaCuentas(CuentasPortalController::class, 'inicio'), methods: ['GET']));
 $rutas->add('cuentas.misdatos', new Route('/cuentas/mis-datos', $rutaCuentas(CuentasPortalController::class, 'misDatos'), methods: ['GET']));
@@ -1178,6 +1307,7 @@ $rutas->add('cuentas.nueva1.confirmar', new Route('/cuentas/nueva/1', $rutaCuent
 $rutas->add('cuentas.nueva.reportar', new Route('/cuentas/nueva/reportar', $rutaCuentas(CuentasNuevaController::class, 'reportarProblema'), methods: ['POST']));
 $rutas->add('cuentas.nueva2', new Route('/cuentas/nueva/2', $rutaCuentas(CuentasNuevaController::class, 'paso2'), methods: ['GET']));
 $rutas->add('cuentas.nueva2.guardar', new Route('/cuentas/nueva/2', $rutaCuentas(CuentasNuevaController::class, 'guardarPaso2'), methods: ['POST']));
+$rutas->add('cuentas.nueva2.evidencia.eliminar', new Route('/cuentas/nueva/2/evidencia/{id}/eliminar', $rutaCuentas(CuentasNuevaController::class, 'eliminarEvidencia'), ['id' => '\d+'], methods: ['POST']));
 $rutas->add('cuentas.autoguardar', new Route('/cuentas/nueva/autoguardar', $rutaCuentas(CuentasNuevaController::class, 'autoguardar'), methods: ['POST']));
 $rutas->add('cuentas.nueva3', new Route('/cuentas/nueva/3', $rutaCuentas(CuentasNuevaController::class, 'paso3'), methods: ['GET']));
 $rutas->add('cuentas.nueva3.guardar', new Route('/cuentas/nueva/3', $rutaCuentas(CuentasNuevaController::class, 'guardarPaso3'), methods: ['POST']));

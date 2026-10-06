@@ -32,8 +32,14 @@
                     </div>
 
                     <div class="space-y-6">
+                        <?php /* Cada subsección lleva su propia ancla. El oficio
+                                 de Supersalud exige «enlace directo y funcional»
+                                 por criterio, y sin esto el enlace más preciso
+                                 que se podía certificar era el de la sección
+                                 entera. */ ?>
                         <?php foreach ($seccion['hijas'] as $hija) { ?>
-                            <div class="p-4 bg-white/50 dark:bg-primario-900/30 rounded-2xl border border-primario-100/20 dark:border-primario-700/20">
+                            <div id="seccion-<?= $e((string) $hija['codigo']) ?>"
+                                 class="p-4 bg-white/50 dark:bg-primario-900/30 rounded-2xl border border-primario-100/20 dark:border-primario-700/20 scroll-mt-24">
                                 <h3 class="text-base font-bold texto-titular flex items-center gap-2">
                                     <span class="h-1.5 w-1.5 rounded-full bg-[color:var(--color-marca-cian)]"></span>
                                     <?= $e((string) $hija['codigo']) ?>. <?= $e((string) $hija['nombre']) ?>

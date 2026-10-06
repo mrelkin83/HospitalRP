@@ -199,6 +199,15 @@ final class SembrarConfiguracionCommand extends Command
             'https://www.gov.co/',
             'texto', 'pie', 'Enlace del Portal GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
         ],
+        // ITA 9.2. Se siembra VACÍA a propósito: el enlace debe apuntar al
+        // perfil real de la entidad en datos.gov.co, y publicar uno inventado
+        // es peor que no publicar ninguno. Mientras esté vacía, el sitio
+        // simplemente no muestra la sección.
+        'datos_abiertos.portal_url' => [
+            '',
+            'texto', 'pie', 'Perfil en datos.gov.co',
+            'Enlace al perfil de la entidad en el Portal de Datos Abiertos. Exigido por el criterio 9.2 del ITA. Déjalo vacío mientras no exista el perfil',
+        ],
         'govco.leyenda' => [
             'Portal Único del Estado Colombiano',
             'texto', 'pie', 'Leyenda de la barra GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',

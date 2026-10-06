@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Admin;
 
+use App\Core\Audit\AccionAuditoria;
+use App\Core\Audit\AuditoriaService;
+use App\Core\Audit\RegistroAuditoria;
 use App\Core\Auth\Actor;
 use App\Core\Auth\Sesion;
 use App\Core\Support\Vistas;
@@ -30,6 +33,7 @@ final readonly class BandejaTramitesController
         private DependenciaRepository $dependencias,
         private GestionTramiteService $gestion,
         private Connection $conexion,
+        private AuditoriaService $auditoria,
     ) {
     }
 
@@ -116,6 +120,55 @@ final readonly class BandejaTramitesController
             $peticion->request->getInt('dependencia_id') > 0 ? $peticion->request->getInt('dependencia_id') : null,
             Actor::desde($this->sesion, $peticion),
         );
+
+        return new RedirectResponse('/admin/tramites/' . $id . '?guardado=1', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Marca una solicitud como trasladada a otra entidad o con acceso negado
+     * (ITA 6.10.b y 6.10.d).
+     *
+     * Sin esta pantalla el informe trimestral reportaría siempre cero negadas
+     * y cero traslados, que es justo la cifra que el evaluador del índice
+     * contrasta contra el resto del expediente.
+     *
+     * Negar el acceso sin causal no se guarda: la Ley 1712 (arts. 18, 19 y 26)
+     * exige que toda negativa sea motivada por escrito, así que el formulario
+     * no puede permitir lo que la ley prohíbe.
+     */
+    public function marcarAcceso(Request $peticion): Response
+    {
+        if (($rechazo = $this->exigirCsrf($peticion)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $r = $peticion->request;
+
+        $negado = $r->getBoolean('acceso_negado');
+        $causal = trim($r->getString('causal_negacion'));
+        $traslado = trim($r->getString('trasladado_a'));
+
+        if ($negado && $causal === '') {
+            return new RedirectResponse('/admin/tramites/' . $id . '?sin_causal=1', Response::HTTP_SEE_OTHER);
+        }
+
+        $this->conexion->update('tramites', [
+            'acceso_negado' => $negado ? 1 : 0,
+            'causal_negacion' => $negado ? mb_substr($causal, 0, 300) : null,
+            'trasladado_a' => $traslado !== '' ? mb_substr($traslado, 0, 200) : null,
+        ], ['id' => $id]);
+
+        $this->auditoria->registrar(new RegistroAuditoria(
+            accion: AccionAuditoria::Actualizacion,
+            entidad: 'tramites',
+            entidadId: $id,
+            descripcion: $negado
+                ? sprintf('Acceso negado a la información. Causal: %s', mb_substr($causal, 0, 200))
+                : 'Marca de acceso a la información actualizada',
+            usuarioId: $this->sesion->usuarioId(),
+            usuarioNombre: $this->sesion->usuarioNombre(),
+        ));
 
         return new RedirectResponse('/admin/tramites/' . $id . '?guardado=1', Response::HTTP_SEE_OTHER);
     }

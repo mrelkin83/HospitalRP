@@ -51,6 +51,8 @@ use App\Http\Admin\DependenciasController;
 use App\Http\Admin\DocumentosController;
 use App\Http\Admin\BandejaTramitesController;
 use App\Http\Admin\TiposTramiteController;
+use App\Http\Admin\EntesControlController;
+use App\Http\Admin\InstrumentosController;
 use App\Http\Admin\TransparenciaController;
 use App\Http\Admin\EspecialidadesController;
 use App\Http\Admin\IaController;
@@ -90,6 +92,7 @@ use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Repository\SupervisorRepository;
 use App\Modules\CuentasCobro\Repository\RevisorRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
+use App\Modules\CuentasCobro\Service\EjecucionContractualPublica;
 use App\Modules\CuentasCobro\Service\EnvioCuentaService;
 use App\Modules\CuentasCobro\Service\GeneradorDocumentosCuenta;
 use App\Modules\CuentasCobro\Service\SesionContratista;
@@ -111,6 +114,9 @@ use App\Http\Web\CuentasDescargaController;
 use App\Http\Web\CuentasNuevaController;
 use App\Http\Web\CuentasPortalController;
 use App\Modules\CuentasCobro\Service\CombinadorPaquete;
+use App\Modules\CuentasCobro\Service\ValidadorEvidencias;
+use App\Modules\CuentasCobro\Service\CompresorImagen;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Modules\CuentasCobro\Service\SupervisionCuentaService;
 use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Directorio\Repository\ServidorPublicoRepository;
@@ -123,10 +129,14 @@ use App\Modules\Tramites\Repository\TramiteRepository;
 use App\Modules\Tramites\Service\CalculadoraDiasHabiles;
 use App\Modules\Tramites\Service\GeneradorRadicado;
 use App\Modules\Tramites\Service\GestionTramiteService;
+use App\Modules\Tramites\Service\InformeAccesoInformacion;
+use App\Modules\Tramites\Service\ProteccionSpam;
 use App\Modules\Tramites\Service\RadicacionService;
 use App\Modules\Cumplimiento\Repository\PoliticaRepository;
 use App\Ports\NotificadorCorreo;
 use App\Modules\Transparencia\Repository\DatasetRepository;
+use App\Modules\Transparencia\Repository\EnteVigilanciaRepository;
+use App\Modules\Transparencia\Repository\InstrumentoInformacionRepository;
 use App\Modules\Transparencia\Repository\TransparenciaRepository;
 use App\Http\Web\BuscarController;
 use App\Http\Web\DirectorioPublicoController;
@@ -287,6 +297,12 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(DatasetRepository::class, DatasetRepository::class)
         ->setAutowired(true);
 
+    $contenedor->register(InstrumentoInformacionRepository::class, InstrumentoInformacionRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(EnteVigilanciaRepository::class, EnteVigilanciaRepository::class)
+        ->setAutowired(true);
+
     // --- Módulo Trámites ---
     $contenedor->register(NotificadorCorreo::class, NotificadorSymfonyMailer::class)
         ->setFactory([NotificadorSymfonyMailer::class, 'desde'])
@@ -305,6 +321,14 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(RadicacionService::class, RadicacionService::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ProteccionSpam::class, ProteccionSpam::class)
+        ->setAutowired(true);
+
+    // Servicio público del módulo: Transparencia publica con él el informe
+    // trimestral de acceso a la información (ITA 6.10).
+    $contenedor->register(InformeAccesoInformacion::class, InformeAccesoInformacion::class)
         ->setAutowired(true);
 
     $contenedor->register(GestionTramiteService::class, GestionTramiteService::class)
@@ -628,6 +652,14 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true)
         ->setPublic(true);
 
+    $contenedor->register(InstrumentosController::class, InstrumentosController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
+    $contenedor->register(EntesControlController::class, EntesControlController::class)
+        ->setAutowired(true)
+        ->setPublic(true);
+
     $contenedor->register(BandejaTramitesController::class, BandejaTramitesController::class)
         ->setAutowired(true)
         ->setPublic(true);
@@ -696,6 +728,11 @@ return static function (Env $env): ContainerBuilder {
     $contenedor->register(ArchivosCuentas::class, ArchivosCuentas::class)
         ->setArguments([dirname(__DIR__) . '/storage/cuentas']);
 
+    // Servicio público del módulo: lo consume Transparencia para publicar la
+    // ejecución contractual (ITA 5.3) sin importar sus repositorios.
+    $contenedor->register(EjecucionContractualPublica::class, EjecucionContractualPublica::class)
+        ->setAutowired(true);
+
     $contenedor->register(GeneradorDocumentosCuenta::class, GeneradorDocumentosCuenta::class)
         ->setArguments([
             new Reference(Connection::class),
@@ -709,6 +746,16 @@ return static function (Env $env): ContainerBuilder {
         ->setAutowired(true);
 
     $contenedor->register(CombinadorPaquete::class, CombinadorPaquete::class)
+        ->setAutowired(true);
+
+    // Fase 6, bloque B: producto y evidencia por actividad.
+    $contenedor->register(EvidenciaActividadRepository::class, EvidenciaActividadRepository::class)
+        ->setAutowired(true);
+
+    $contenedor->register(CompresorImagen::class, CompresorImagen::class)
+        ->setAutowired(true);
+
+    $contenedor->register(ValidadorEvidencias::class, ValidadorEvidencias::class)
         ->setAutowired(true);
 
     $contenedor->register(SupervisionCuentaService::class, SupervisionCuentaService::class)

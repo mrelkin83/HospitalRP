@@ -35,6 +35,12 @@ final readonly class TipoTramite
         public bool $activo,
         public array $campos = [],
         public array $estados = [],
+        // Costos asociados al trámite (ITA 7.1). Fue el único «No» de 2025:
+        // la sección sacó 75/100 porque los costos los publicaba un contratista
+        // y al terminar su contrato nadie los volvió a publicar. Como campo del
+        // tipo de trámite, dejan de depender de un tercero.
+        public bool $gratuito = true,
+        public ?string $costoDetalle = null,
     ) {
     }
 
@@ -63,6 +69,13 @@ final readonly class TipoTramite
             activo: (bool) $fila['activo'],
             campos: array_map(self::campoDesdeFila(...), $campos),
             estados: array_map(self::estadoDesdeFila(...), $estados),
+            // Sin la columna (una fila construida a mano en pruebas) se asume
+            // gratuito: es el caso de casi todos los trámites del hospital y
+            // el error seguro, porque nunca anuncia un cobro inexistente.
+            gratuito: (bool) ($fila['gratuito'] ?? true),
+            costoDetalle: isset($fila['costo_detalle']) && (string) $fila['costo_detalle'] !== ''
+                ? (string) $fila['costo_detalle']
+                : null,
         );
     }
 

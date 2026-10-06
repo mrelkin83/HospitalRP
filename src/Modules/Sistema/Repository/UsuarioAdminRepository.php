@@ -59,6 +59,25 @@ final readonly class UsuarioAdminRepository
     }
 
     /**
+     * Búsqueda por el dato que el funcionario sí recuerda cuando ya no
+     * recuerda la contraseña: su correo de ingreso.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function porCorreo(string $correo): ?array
+    {
+        $fila = $this->conexion->fetchAssociative(
+            'SELECT u.*, r.nombre AS rol_nombre, r.slug AS rol_slug
+               FROM usuarios u
+               JOIN roles r ON r.id = u.rol_id
+              WHERE u.correo = ?',
+            [$correo],
+        );
+
+        return $fila === false ? null : $fila;
+    }
+
+    /**
      * Incluye los eliminados: el correo es único en toda la tabla y reciclar
      * el de una cuenta dada de baja confundiría la auditoría histórica.
      */

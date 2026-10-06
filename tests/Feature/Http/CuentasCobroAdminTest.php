@@ -258,6 +258,80 @@ final class CuentasCobroAdminTest extends TestCase
         ]);
     }
 
+    /**
+     * El catálogo de productos de las actividades (fase 6, B1) se
+     * administra desde Parámetros: la lista la mantiene el hospital, no
+     * una migración.
+     */
+    public function testElCatalogoDeProductosSeAdministraDesdeElPanel(): void
+    {
+        // El catálogo NO se limpia entre corridas —es configuración, no
+        // datos de prueba—, así que esta prueba retira su propia fila
+        // antes de crearla. Sin esto pasa la primera vez y falla la
+        // segunda, que es la peor clase de prueba.
+        self::$conexion->executeStatement("DELETE FROM cc_productos_actividad WHERE clave = 'acta-de-entrega'");
+
+        $pantalla = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/parametros'));
+
+        self::assertSame(Response::HTTP_OK, $pantalla->getStatusCode());
+        self::assertStringContainsString('Productos de las actividades', (string) $pantalla->getContent());
+        self::assertStringContainsString('NO APLICA', (string) $pantalla->getContent());
+
+        $this->post('/admin/cuentas-cobro/parametros/productos', ['nombre' => 'Acta de entrega']);
+
+        $creado = self::$conexion->fetchAssociative(
+            "SELECT nombre, activo FROM cc_productos_actividad WHERE clave = 'acta-de-entrega'",
+        );
+        self::assertNotFalse($creado, 'El producto no entró al catálogo.');
+        self::assertSame('ACTA DE ENTREGA', $creado['nombre'], 'Los productos se guardan como en el formato: en mayúsculas.');
+
+        // Retirar no borra: las cuentas ya radicadas lo siguen citando.
+        $id = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'acta-de-entrega'");
+        $this->post('/admin/cuentas-cobro/parametros/productos/' . $id . '/alternar', []);
+
+        self::assertSame(0, (int) self::$conexion->fetchOne('SELECT activo FROM cc_productos_actividad WHERE id = ?', [$id]));
+        self::assertSame(1, (int) self::$conexion->fetchOne('SELECT COUNT(*) FROM cc_productos_actividad WHERE id = ?', [$id]));
+    }
+
+    /**
+     * Los documentos que sube el contratista se pueden abrir desde su
+     * ficha. Sin esto se pedían —cédula, RUT, certificación bancaria— y
+     * nadie podía comprobarlos: quedaban en un almacén privado sin puerta.
+     */
+    public function testLosDocumentosDelContratistaSeAbrenDesdeLaFicha(): void
+    {
+        $raiz = dirname(__DIR__, 3);
+        $relativa = 'contratistas/' . date('Y') . '/prueba-rut.pdf';
+        $absoluta = $raiz . '/storage/cuentas/' . $relativa;
+
+        if (!is_dir(dirname($absoluta))) {
+            mkdir(dirname($absoluta), 0755, true);
+        }
+
+        file_put_contents($absoluta, "%PDF-1.4\n%%EOF");
+
+        $contratistaId = (int) self::$conexion->fetchOne('SELECT id FROM cc_contratistas ORDER BY id LIMIT 1');
+        self::$conexion->update('cc_contratistas', ['rut_archivo' => $relativa], ['id' => $contratistaId]);
+
+        $ficha = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/contratistas'));
+        self::assertStringContainsString(
+            '/documento/rut',
+            (string) $ficha->getContent(),
+            'La ficha debe enlazar el documento que sí está subido.',
+        );
+
+        $documento = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/contratistas/' . $contratistaId . '/documento/rut'));
+        self::assertSame(Response::HTTP_OK, $documento->getStatusCode());
+        self::assertSame('application/pdf', $documento->headers->get('Content-Type'));
+        self::assertStringStartsWith('%PDF', (string) $documento->getContent());
+
+        // Un documento que no subió no se sirve: se avisa y se vuelve.
+        $sinSubir = $this->kernel->manejar(Request::create('/admin/cuentas-cobro/contratistas/' . $contratistaId . '/documento/certificacion-bancaria'));
+        self::assertSame('/admin/cuentas-cobro/contratistas', $sinSubir->headers->get('Location'));
+
+        unlink($absoluta);
+    }
+
     /** @param array<string, string> $campos */
     private function post(string $ruta, array $campos): Response
     {

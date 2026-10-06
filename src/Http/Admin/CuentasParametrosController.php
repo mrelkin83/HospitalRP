@@ -7,6 +7,7 @@ namespace App\Http\Admin;
 use App\Core\Audit\AccionAuditoria;
 use App\Core\Support\Vistas;
 use App\Http\Admin\Soporte\PantallaAdmin;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +30,7 @@ final readonly class CuentasParametrosController
         private PantallaAdmin $pantalla,
         private Vistas $vistas,
         private ParametrosCuentasRepository $parametros,
+        private EvidenciaActividadRepository $productos,
     ) {
     }
 
@@ -40,11 +42,135 @@ final readonly class CuentasParametrosController
         return $this->pantalla->pagina(self::TITULO, $this->vistas->render('admin/cuentas/parametros', [
             'anuales' => $this->parametros->anuales(),
             'clasesArl' => $this->parametros->clasesArl(),
+            'productos' => $this->productos->catalogo(),
+            'bancos' => $this->parametros->catalogoBancos(),
             'plantillas' => $this->parametros->plantillas(),
             'mensaje' => is_string($mensaje) ? $mensaje : null,
             'error' => is_string($error) ? $error : null,
             'tokenCsrf' => $this->pantalla->tokenCsrf(),
         ]));
+    }
+
+    /**
+     * Alta de un producto del catálogo de actividades.
+     *
+     * Está aquí y no en una migración porque la lista la mantiene el
+     * hospital: si mañana aparece «ACTA DE ENTREGA», debe entrar como un
+     * registro más, sin tocar código.
+     */
+    public function crearProducto(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $nombre = trim($peticion->request->getString('nombre'));
+
+        if (mb_strlen($nombre) < 3) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'El producto necesita un nombre; escríbalo como aparece en el formato.');
+
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $nombre = mb_strtoupper(mb_substr($nombre, 0, 120));
+        $clave = $this->claveDe($nombre);
+
+        if ($this->productos->idPorClave($clave) !== null) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'Ya existe un producto con ese nombre.');
+
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $id = $this->productos->crearProducto($clave, $nombre);
+        $this->pantalla->auditar($peticion, AccionAuditoria::Creacion, 'cc_producto_actividad', $id, 'Producto de actividad «' . $nombre . '» creado');
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', 'Producto agregado al catálogo.');
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
+    /** Retirar un producto sin borrarlo: las cuentas viejas lo siguen citando. */
+    public function alternarProducto(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $activo = $this->productos->alternarProducto($id);
+        $this->pantalla->auditar(
+            $peticion,
+            AccionAuditoria::Actualizacion,
+            'cc_producto_actividad',
+            $id,
+            $activo ? 'Producto de actividad reactivado' : 'Producto de actividad retirado del catálogo',
+        );
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Alta de un banco.
+     *
+     * La lista nacional cambia —entran entidades, otras se fusionan— y eso
+     * lo arregla Contratación desde aquí, no un despliegue (CLAUDE.md §2.2).
+     */
+    public function crearBanco(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $nombre = trim($peticion->request->getString('nombre'));
+
+        if (mb_strlen($nombre) < 3) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'El banco necesita un nombre.');
+
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $nombre = mb_substr($nombre, 0, 120);
+
+        if ($this->parametros->bancoExiste($nombre)) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'Ese banco ya está en la lista.');
+
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $id = $this->parametros->crearBanco($nombre);
+        $this->pantalla->auditar($peticion, AccionAuditoria::Creacion, 'cc_banco', $id, 'Banco «' . $nombre . '» agregado al catálogo');
+        $this->pantalla->guardarEnLaSesion('cc_mensaje', 'Banco agregado.');
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
+    /** Retirar un banco sin borrarlo: hay contratistas que lo tienen guardado. */
+    public function alternarBanco(Request $peticion): Response
+    {
+        if (($rechazo = $this->pantalla->rechazoCsrf($peticion, self::TITULO, self::RUTA)) !== null) {
+            return $rechazo;
+        }
+
+        $id = $peticion->attributes->getInt('id');
+        $activo = $this->parametros->alternarBanco($id);
+        $this->pantalla->auditar(
+            $peticion,
+            AccionAuditoria::Actualizacion,
+            'cc_banco',
+            $id,
+            $activo ? 'Banco reactivado' : 'Banco retirado del catálogo',
+        );
+
+        return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+    }
+
+    /** Clave estable a partir del nombre: sin tildes, en minúscula, con guiones. */
+    private function claveDe(string $nombre): string
+    {
+        $sinTildes = strtr(mb_strtolower($nombre), [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+        ]);
+
+        return mb_substr(trim((string) preg_replace('/[^a-z0-9]+/', '-', $sinTildes), '-'), 0, 40);
     }
 
     public function guardarAnio(Request $peticion): Response

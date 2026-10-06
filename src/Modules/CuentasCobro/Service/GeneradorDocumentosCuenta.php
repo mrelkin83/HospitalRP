@@ -253,9 +253,11 @@ final readonly class GeneradorDocumentosCuenta
         // numeran a continuación de las que sí la tienen.
         $filas = $this->conexion->fetchAllAssociative(
             'SELECT o.orden, COALESCE(o.texto, a.titulo_manual) AS texto,
-                    a.descripcion_ejecucion, a.cumplimiento
+                    a.descripcion_ejecucion, a.cumplimiento, p.nombre AS producto,
+                    (SELECT COUNT(*) FROM cc_actividad_evidencias ev WHERE ev.actividad_id = a.id) AS evidencias
                FROM cc_cuenta_actividades a
                LEFT JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
+               LEFT JOIN cc_productos_actividad p ON p.id = a.producto_id
               WHERE a.cuenta_id = ?
               ORDER BY COALESCE(o.orden, 100000), a.id',
             [$cuentaId],
@@ -277,6 +279,13 @@ final readonly class GeneradorDocumentosCuenta
             'orden' => (int) $f['orden'],
             'texto' => (string) $f['texto'],
             'ejecucion' => (string) ($f['descripcion_ejecucion'] ?? ''),
+            'producto' => (string) ($f['producto'] ?? ''),
+            // El informe dice cuántos soportes respaldan la fila: el
+            // supervisor sabe así si el anexo que está viendo está
+            // completo, sin tener que contarlos en el paquete.
+            'evidencias' => (int) ($f['evidencias'] ?? 0) > 0
+                ? sprintf('%d anexo(s)', (int) $f['evidencias'])
+                : '',
             // Por defecto SÍ: es lo que el supervisor confirma al abrir (§7.2).
             'marca_si' => ($f['cumplimiento'] ?? 'SI') === 'SI' ? 'X' : '',
             'marca_no' => ($f['cumplimiento'] ?? '') === 'NO' ? 'X' : '',

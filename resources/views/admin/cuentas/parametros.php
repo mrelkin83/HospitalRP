@@ -98,6 +98,79 @@ $moneda = static fn (string $v): string => '$ ' . number_format((int) explode('.
 </section>
 
 <section class="tarjeta mt-4">
+    <h2 class="text-lg font-semibold texto-titular">Bancos</h2>
+    <p class="mt-1 text-sm texto-suave">
+        Lo que el contratista ve al escoger dónde le consignan. Retirar uno no
+        se lo borra a quien ya lo tenía: deja de ofrecerse en adelante.
+    </p>
+    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <?php foreach ($bancos as $banco) { ?>
+            <div class="flex items-center justify-between gap-3 border-t borde-suave py-2">
+                <span class="<?= (int) $banco['activo'] === 1 ? 'font-semibold' : 'texto-suave line-through' ?>">
+                    <?= $e((string) $banco['nombre']) ?>
+                </span>
+                <form method="post" action="/admin/cuentas-cobro/parametros/bancos/<?= (int) $banco['id'] ?>/alternar">
+                    <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                    <button class="boton-secundario" type="submit">
+                        <?= (int) $banco['activo'] === 1 ? 'Retirar' : 'Reactivar' ?>
+                    </button>
+                </form>
+            </div>
+        <?php } ?>
+    </div>
+
+    <form class="mt-3 flex flex-wrap items-end gap-3" method="post" action="/admin/cuentas-cobro/parametros/bancos">
+        <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+        <div class="grow">
+            <label class="etiqueta" for="banco-nombre">Agregar un banco</label>
+            <input class="campo" id="banco-nombre" name="nombre" type="text" maxlength="120"
+                   placeholder="Banco Ejemplo" required>
+        </div>
+        <button class="boton-principal" type="submit">Agregar</button>
+    </form>
+</section>
+
+<section class="tarjeta mt-4">
+    <h2 class="text-lg font-semibold texto-titular">Productos de las actividades</h2>
+    <p class="mt-1 text-sm texto-suave">
+        Con qué respalda el contratista cada obligación de su informe. «NO APLICA»
+        es el único que no exige evidencia. Retirar uno no borra las cuentas que ya
+        lo citan: deja de ofrecerse en adelante.
+    </p>
+    <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="text-left texto-suave"><th class="p-2">Producto</th><th class="p-2">Estado</th><th class="p-2"></th></tr></thead>
+            <tbody>
+                <?php foreach ($productos as $producto) { ?>
+                    <tr class="border-t borde-suave">
+                        <td class="p-2 font-semibold"><?= $e((string) $producto['nombre']) ?></td>
+                        <td class="p-2"><?= (int) $producto['activo'] === 1 ? 'En uso' : 'Retirado' ?></td>
+                        <td class="p-2">
+                            <form method="post" action="/admin/cuentas-cobro/parametros/productos/<?= (int) $producto['id'] ?>/alternar">
+                                <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                                <button class="boton-secundario" type="submit">
+                                    <?= (int) $producto['activo'] === 1 ? 'Retirar' : 'Reactivar' ?>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+
+    <form class="mt-3 flex flex-wrap items-end gap-3" method="post" action="/admin/cuentas-cobro/parametros/productos">
+        <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+        <div class="grow">
+            <label class="etiqueta" for="producto-nombre">Agregar un producto</label>
+            <input class="campo" id="producto-nombre" name="nombre" type="text" maxlength="120"
+                   placeholder="ACTA DE ENTREGA" required>
+        </div>
+        <button class="boton-principal" type="submit">Agregar</button>
+    </form>
+</section>
+
+<section class="tarjeta mt-4">
     <h2 class="text-lg font-semibold texto-titular">Plantillas de documentos</h2>
     <p class="mt-1 text-sm texto-suave">
         El encabezado de cada PDF lleva CÓDIGO / VERSIÓN / FECHA del sistema de

@@ -8,8 +8,11 @@ use App\Core\Support\Vistas;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
 use App\Modules\CuentasCobro\Repository\ContratoRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
+use App\Modules\CuentasCobro\Service\CompresorImagen;
+use App\Modules\CuentasCobro\Service\ValidadorEvidencias;
 use App\Modules\CuentasCobro\Service\CalculosCuenta;
 use App\Modules\CuentasCobro\Service\EnvioCuentaService;
 use App\Modules\CuentasCobro\Service\FechasCuenta;
@@ -40,6 +43,9 @@ final readonly class CuentasNuevaController
         private SesionContratista $sesion,
         private ContratistaRepository $contratistas,
         private CuentaRepository $cuentas,
+        private EvidenciaActividadRepository $evidencias,
+        private ValidadorEvidencias $validadorEvidencias,
+        private CompresorImagen $compresor,
         private ParametrosCuentasRepository $parametros,
         private ArchivosCuentas $archivos,
         private GeneradorDocumentosCuenta $generador,
@@ -180,6 +186,11 @@ final readonly class CuentasNuevaController
             'contrato' => $contrato,
             'cuenta' => $cuenta,
             'actividades' => $actividades,
+            'productos' => $this->evidencias->productos(),
+            'evidencias' => $this->evidencias->porCuenta((int) $cuenta['id']),
+            'maximoEvidencias' => EvidenciaActividadRepository::MAXIMO_POR_ACTIVIDAD,
+            'claveSinEntregable' => EvidenciaActividadRepository::CLAVE_SIN_ENTREGABLE,
+            'claveEnlace' => EvidenciaActividadRepository::CLAVE_ENLACE,
             // Sin obligaciones cargadas (minuta inexistente o ilegible para
             // el OCR), las actividades se escriben a mano.
             'modoManual' => $this->esModoManual($actividades),
@@ -216,6 +227,10 @@ final readonly class CuentasNuevaController
         [, , $cuenta] = $contexto;
         $cuentaId = (int) $cuenta['id'];
 
+        if (($problema = $this->guardarProductosYEvidencias($peticion, $cuentaId)) !== null) {
+            return $this->volverConError('/cuentas/nueva/2', $problema);
+        }
+
         if ($this->esModoManual($this->cuentas->actividades($cuentaId))) {
             return $this->guardarPaso2Manual($peticion, $cuentaId);
         }
@@ -245,7 +260,31 @@ final readonly class CuentasNuevaController
             return new RedirectResponse('/cuentas/nueva/2', Response::HTTP_SEE_OTHER);
         }
 
+        $this->avisarRespaldoPendiente($cuentaId);
+
         return new RedirectResponse('/cuentas/nueva/3', Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Avisa en el paso 2 de lo que le falta al respaldo, sin cerrarle el
+     * paso.
+     *
+     * Enterarse al final —cuando ya llenó la planilla y le da a enviar— de
+     * que hay que volver atrás por un producto es la clase de viaje que
+     * hace que la gente abandone el trámite. La puerta dura sigue estando
+     * en el envío; esto solo lo dice a tiempo.
+     */
+    private function avisarRespaldoPendiente(int $cuentaId): void
+    {
+        $faltantes = $this->validadorEvidencias->problemas($cuentaId);
+
+        if ($faltantes === []) {
+            return;
+        }
+
+        $this->guardarFlash('cc_error', 'Puede seguir, pero para enviar le faltará: '
+            . implode(' ', array_slice($faltantes, 0, 3))
+            . (count($faltantes) > 3 ? ' …y ' . (count($faltantes) - 3) . ' más.' : ''));
     }
 
     /**
@@ -320,10 +359,149 @@ final readonly class CuentasNuevaController
             return new RedirectResponse('/cuentas/nueva/2', Response::HTTP_SEE_OTHER);
         }
 
+        $this->avisarRespaldoPendiente($cuentaId);
+
         return new RedirectResponse('/cuentas/nueva/3', Response::HTTP_SEE_OTHER);
     }
 
     /** Autoguardado silencioso cada pocos segundos (fetch desde el portal). */
+    /**
+     * Producto y evidencias de cada actividad (§fase 6, bloque B).
+     *
+     * Devuelve el mensaje de error, o null si todo entró. Un archivo malo
+     * no tumba el paso completo salvo que sea el único: al contratista se
+     * le dice qué falló y conserva lo demás escrito.
+     */
+    private function guardarProductosYEvidencias(Request $peticion, int $cuentaId): ?string
+    {
+        $productos = $peticion->request->all()['producto'] ?? [];
+        $enlaces = $peticion->request->all()['enlace'] ?? [];
+        $archivos = $peticion->files->all()['evidencia'] ?? [];
+        $idEnlace = $this->evidencias->idPorClave(EvidenciaActividadRepository::CLAVE_ENLACE);
+
+        foreach ($this->cuentas->actividades($cuentaId) as $actividad) {
+            $actividadId = (int) $actividad['id'];
+
+            // Ausente y vacío no son lo mismo: vacío es «lo estoy
+            // quitando» y ausente es «este formulario no traía el campo».
+            // Sin la distinción, cualquier guardado parcial borraría los
+            // productos ya elegidos.
+            if (array_key_exists($actividadId, $productos)) {
+                $productoId = (int) $productos[$actividadId];
+
+                // Se guarda aunque venga solo: el contratista puede
+                // elegirlo hoy y adjuntar mañana, el borrador aguanta.
+                $this->cuentas->guardarProducto(
+                    $cuentaId,
+                    $actividadId,
+                    $productoId > 0 && $this->evidencias->producto($productoId) !== null ? $productoId : null,
+                );
+            } else {
+                $productoId = (int) ($actividad['producto_id'] ?? 0);
+            }
+
+            // LINK DE ACCESO se respalda con una URL, no con un archivo.
+            $enlace = trim((string) ($enlaces[$actividadId] ?? ''));
+
+            if ($enlace !== '' && $productoId === $idEnlace) {
+                if (filter_var($enlace, FILTER_VALIDATE_URL) === false) {
+                    return 'El enlace que puso como evidencia no parece una dirección web válida. Debe empezar por https://';
+                }
+
+                $this->evidencias->agregarEnlace($actividadId, $enlace);
+            }
+
+            if (($problema = $this->subirEvidencias($actividadId, $archivos[$actividadId] ?? [])) !== null) {
+                return $problema;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param mixed $subidos Lo que llegó en `evidencia[<actividad>][]`.
+     */
+    private function subirEvidencias(int $actividadId, mixed $subidos): ?string
+    {
+        $lista = array_filter(
+            is_array($subidos) ? $subidos : [$subidos],
+            static fn (mixed $archivo): bool => $archivo instanceof UploadedFile,
+        );
+
+        if ($lista === []) {
+            return null;
+        }
+
+        $yaTiene = $this->evidencias->contar($actividadId);
+
+        if ($yaTiene + count($lista) > EvidenciaActividadRepository::MAXIMO_POR_ACTIVIDAD) {
+            return sprintf(
+                'Cada actividad admite hasta %d evidencias; en una de ellas se pasó. Quite alguna antes de subir más.',
+                EvidenciaActividadRepository::MAXIMO_POR_ACTIVIDAD,
+            );
+        }
+
+        foreach ($lista as $subido) {
+            try {
+                $ruta = $this->archivos->guardar($subido, 'evidencias');
+            } catch (\InvalidArgumentException $e) {
+                return $e->getMessage();
+            }
+
+            $absoluta = $this->archivos->rutaAbsoluta($ruta);
+            $mime = (string) $subido->getClientMimeType();
+
+            // La foto del celular se encoge antes de quedarse: catorce
+            // obligaciones × 1.500 contratistas al mes es la diferencia
+            // entre cinco gigas y treinta.
+            $comprimida = $this->compresor->comprimir($absoluta, $mime);
+
+            if ($comprimida !== null) {
+                // Con su propia extensión: un .png que por dentro es JPEG
+                // funciona mientras todo el mundo mire el mime de la base,
+                // y falla el día que alguien mire el nombre del archivo.
+                @unlink($absoluta);
+                $ruta = $this->archivos->guardarGenerado($comprimida, 'jpg', 'evidencias');
+                $absoluta = $this->archivos->rutaAbsoluta($ruta);
+                $mime = 'image/jpeg';
+            }
+
+            $this->evidencias->agregarArchivo(
+                $actividadId,
+                $ruta,
+                (string) $subido->getClientOriginalName(),
+                $mime,
+                (int) filesize($absoluta),
+            );
+        }
+
+        return null;
+    }
+
+    /** Quitar una evidencia mientras la cuenta sigue en borrador. */
+    public function eliminarEvidencia(Request $peticion): Response
+    {
+        if (($rechazo = $this->rechazoCsrf($peticion)) !== null) {
+            return $rechazo;
+        }
+
+        $contexto = $this->contextoConCuenta();
+
+        if ($contexto instanceof Response) {
+            return $contexto;
+        }
+
+        [, , $cuenta] = $contexto;
+        $ruta = $this->evidencias->eliminarDeCuenta($peticion->attributes->getInt('id'), (int) $cuenta['id']);
+
+        if ($ruta !== null && $this->archivos->existe($ruta)) {
+            @unlink($this->archivos->rutaAbsoluta($ruta));
+        }
+
+        return new RedirectResponse('/cuentas/nueva/2', Response::HTTP_SEE_OTHER);
+    }
+
     public function autoguardar(Request $peticion): Response
     {
         if (!$this->sesion->validarCsrf((string) $peticion->headers->get('X-Token-CSRF', ''))) {

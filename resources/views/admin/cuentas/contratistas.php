@@ -3,7 +3,7 @@
  * A4 — Contratistas.
  * Espera: $contratistas, $mensaje, $error, $tokenCsrf.
  */
-$formulario = static function (array $c, string $accion, string $sufijo) use ($e, $tokenCsrf): string {
+$formulario = static function (array $c, string $accion, string $sufijo) use ($e, $tokenCsrf, $bancos): string {
     ob_start(); ?>
     <form class="mt-3 grid gap-3 sm:grid-cols-3" method="post" action="<?= $e($accion) ?>">
         <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
@@ -66,8 +66,14 @@ $formulario = static function (array $c, string $accion, string $sufijo) use ($e
         </div>
         <div>
             <label class="etiqueta" for="ct-banco-<?= $e($sufijo) ?>">Banco</label>
-            <input class="campo" id="ct-banco-<?= $e($sufijo) ?>" type="text" name="banco" maxlength="100"
-                   value="<?= $e((string) ($c['banco'] ?? '')) ?>">
+            <select class="campo" id="ct-banco-<?= $e($sufijo) ?>" name="banco">
+                <option value="">— Sin definir —</option>
+                <?php foreach ($bancos as $banco) { ?>
+                    <option value="<?= $e($banco) ?>" <?= ($c['banco'] ?? '') === $banco ? 'selected' : '' ?>>
+                        <?= $e($banco) ?>
+                    </option>
+                <?php } ?>
+            </select>
         </div>
         <div>
             <label class="etiqueta" for="ct-tipo-cuenta-<?= $e($sufijo) ?>">Tipo de cuenta</label>
@@ -82,6 +88,46 @@ $formulario = static function (array $c, string $accion, string $sufijo) use ($e
             <input class="campo" id="ct-cuenta-<?= $e($sufijo) ?>" type="text" name="numero_cuenta" maxlength="40"
                    value="<?= $e((string) ($c['numero_cuenta'] ?? '')) ?>">
         </div>
+        <div class="sm:col-span-3">
+            <?php /* Lo que subió el contratista, para poder verificarlo: la
+                     certificación bancaria contra el número de cuenta, el RUT
+                     contra el régimen, la cédula contra el nombre. Sin esto,
+                     los documentos se pedían y nadie los miraba. */ ?>
+            <p class="etiqueta">Documentos del contratista</p>
+            <ul class="mt-1 flex flex-wrap gap-2 text-sm">
+                <?php
+                $documentos = [
+                    'cedula' => ['Cédula', 'cedula_archivo'],
+                    'cedula-reverso' => ['Cédula (reverso)', 'cedula_reverso_archivo'],
+                    'rut' => ['RUT', 'rut_archivo'],
+                    'certificacion-bancaria' => ['Certificación bancaria', 'certificacion_bancaria_archivo'],
+                    'firma' => ['Firma', 'firma_archivo'],
+                ];
+
+                foreach ($documentos as $clave => [$rotulo, $columna]) {
+                    $tiene = ($c[$columna] ?? null) !== null;
+                    // El reverso solo se echa de menos cuando la cédula es una
+                    // foto: en PDF vienen las dos caras en el mismo archivo.
+                    $esPdf = str_ends_with((string) ($c['cedula_archivo'] ?? ''), '.pdf');
+
+                    if ($clave === 'cedula-reverso' && !$tiene && $esPdf) {
+                        continue;
+                    }
+                    ?>
+                    <li>
+                        <?php if ($tiene && ($c['id'] ?? null) !== null) { ?>
+                            <a class="enlace" target="_blank" rel="noopener"
+                               href="/admin/cuentas-cobro/contratistas/<?= (int) $c['id'] ?>/documento/<?= $e($clave) ?>">
+                                <?= $e($rotulo) ?>
+                            </a>
+                        <?php } else { ?>
+                            <span class="texto-suave"><?= $e($rotulo) ?>: sin subir</span>
+                        <?php } ?>
+                    </li>
+                <?php } ?>
+            </ul>
+        </div>
+
         <div class="sm:col-span-3">
             <button class="boton-principal" type="submit">Guardar</button>
         </div>

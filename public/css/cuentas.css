@@ -1,97 +1,164 @@
 /*
- * Portal de cuentas de cobro. CSS propio y pequeño, sin framework: el
- * portal lo usan adultos mayores desde celulares de gama baja (§2 del
- * documento del módulo). Tipografía 18px+, botones de 56px, contraste AA,
- * foco visible. Funciona desde 320px de ancho.
+ * Portal de cuentas de cobro.
+ *
+ * Mismo lenguaje visual que el ingreso —degradado de marca, tarjeta blanca
+ * redondeada, azul institucional— pero con la escala del portal:
+ * tipografía 18px+, botones de 56px, contraste AA y foco visible, porque
+ * lo usan adultos mayores desde celulares de gama baja (§2 del documento
+ * del módulo). Funciona desde 320px de ancho.
+ *
+ * CSS propio y pequeño a propósito: el portal carga en conexiones malas y
+ * no necesita arrastrar la hoja completa del panel. Los colores son los
+ * mismos tokens de la marca, escritos aquí como literales para no depender
+ * del build de Tailwind.
  */
+:root {
+    --marca-700: #1d5ba7;
+    --marca-600: #0065ae;
+    --marca-500: #0997d5;
+    --marca-400: #35bde9;
+    --tinta: #1a202e;
+    --tinta-suave: #48566b;
+    --borde: #dbe3ee;
+    --superficie: #fff;
+}
+
 * { box-sizing: border-box; }
+
 body {
     margin: 0;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     line-height: 1.55;
-    color: #1a202e;
-    background: #f5f7fa;
+    color: var(--tinta);
+    /* El degradado del ingreso, con el velo claro encima para que el texto
+       conserve el contraste AA sobre cualquier zona. */
+    background-color: #ebf4f9;
+    /* El mismo velo del ingreso (`--velo-fondo`), ni más ni menos: con uno
+       más opaco el degradado se lava y la pantalla deja de parecerse. */
+    background-image:
+        linear-gradient(#ebf4f980, #ebf4f980),
+        linear-gradient(135deg, var(--marca-700) 0%, var(--marca-600) 34%, var(--marca-500) 67%, var(--marca-400) 100%);
+    background-attachment: fixed;
+    min-height: 100svh;
 }
-.saltar { position: absolute; left: -9999px; }
-.saltar:focus { left: 1rem; top: 1rem; background: #fff; padding: .75rem 1rem; z-index: 10; }
-.cabecera {
-    display: flex; align-items: center; justify-content: space-between;
-    background: #fff; padding: .75rem 1rem; border-bottom: 2px solid #e2e8f0;
-}
-.cabecera img { max-width: 55%; height: auto; }
-.principal { max-width: 40rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
-.titulo { font-size: 26px; line-height: 1.25; margin: .75rem 0 1rem; }
-h2 { font-size: 22px; margin: 1.5rem 0 .5rem; }
-.pie { max-width: 40rem; margin: 0 auto; padding: 1rem; color: #48566b; font-size: 16px; }
 
-.progreso { margin: .5rem 0 .25rem; font-weight: 600; color: #2a4d8f; }
-.barra { background: #dbe3ee; border-radius: 999px; height: 12px; overflow: hidden; }
-.barra-lleno { background: #2a4d8f; height: 100%; border-radius: 999px; }
+.saltar { position: absolute; left: -9999px; }
+.saltar:focus {
+    left: 1rem; top: 1rem; background: var(--superficie); padding: .75rem 1rem;
+    border-radius: 10px; z-index: 10;
+}
+
+.cabecera {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    max-width: 44rem; margin: 0 auto; padding: 1.25rem 1rem .5rem;
+}
+.cabecera img {
+    width: 4rem; height: 4rem; object-fit: contain;
+    background: var(--superficie); border-radius: 1rem; padding: .25rem;
+    box-shadow: 0 10px 25px -12px #0a192f66;
+}
+
+.principal { max-width: 44rem; margin: 0 auto; padding: .5rem 1rem 3rem; }
+.titulo { font-size: 26px; line-height: 1.25; margin: .75rem 0 1rem; color: #0f2545; }
+h2 { font-size: 22px; margin: 1.5rem 0 .5rem; }
+/* El pie también va sobre el degradado: se le pone el mismo vidrio
+   translúcido que usa el ingreso, y así el gris conserva su contraste. */
+.pie {
+    max-width: 44rem; margin: 1.5rem auto 2rem; padding: .85rem 1rem; font-size: 16px;
+    color: var(--tinta); background: #ffffffd9; border-radius: 14px;
+    text-align: center;
+}
+.pie p { margin: 0; }
+
+/* Lo que va DIRECTO sobre el degradado usa tinta oscura: el azul de marca
+   sobre el azul del fondo se queda en 2,6:1 y la regla del módulo es AA. */
+.progreso { margin: .5rem 0 .25rem; font-weight: 700; color: #0f2545; }
+.barra { background: #ffffffb3; border-radius: 999px; height: 12px; overflow: hidden; }
+.barra-lleno {
+    background: linear-gradient(90deg, var(--marca-600), var(--marca-400));
+    height: 100%; border-radius: 999px;
+}
 .paso-1 { width: 25%; } .paso-2 { width: 50%; } .paso-3 { width: 75%; } .paso-4 { width: 100%; }
 
 .tarjeta {
-    background: #fff; border: 1px solid #dbe3ee; border-radius: 12px;
-    padding: 1.25rem; margin: 1rem 0;
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: 1.5rem;
+    padding: 1.5rem; margin: 1rem 0;
+    box-shadow: 0 10px 30px -10px #0a192f1a;
 }
 .tarjeta h2:first-child { margin-top: 0; }
-.dato dt { color: #48566b; font-size: 16px; }
+.dato dt { color: var(--tinta-suave); font-size: 16px; }
 .dato dd { margin: 0 0 .75rem; font-weight: 600; }
 
 label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
-.ayuda { font-weight: 400; color: #48566b; font-size: 16px; display: block; }
+.ayuda { font-weight: 400; color: var(--tinta-suave); font-size: 16px; display: block; }
+
+/* `password` y `url` faltaban en esta lista y caían al estilo por defecto
+   del navegador: campos chiquitos y delgados al lado de los demás. */
 input[type="text"], input[type="email"], input[type="tel"], input[type="date"],
-input[type="number"], input[type="month"], input[type="file"], select, textarea {
+input[type="number"], input[type="month"], input[type="file"],
+input[type="password"], input[type="url"], select, textarea {
     width: 100%; font-size: 18px; padding: .8rem; border: 2px solid #94a3b8;
-    border-radius: 10px; background: #fff; color: inherit; min-height: 56px;
+    border-radius: 12px; background: var(--superficie); color: inherit; min-height: 56px;
 }
 textarea { min-height: 8rem; }
 input:focus, select:focus, textarea:focus, button:focus, a:focus {
-    outline: 3px solid #1d4ed8; outline-offset: 2px;
+    outline: 3px solid var(--marca-600); outline-offset: 2px;
 }
-input[type="checkbox"] { width: 1.6rem; height: 1.6rem; min-height: 0; }
+input[type="checkbox"] { width: 1.6rem; height: 1.6rem; min-height: 0; accent-color: var(--marca-600); }
 .casilla { display: flex; gap: .75rem; align-items: flex-start; font-weight: 400; }
 
 .boton, .boton-secundario {
     display: block; width: 100%; min-height: 56px; font-size: 20px;
-    font-weight: 700; border-radius: 12px; border: none; cursor: pointer;
+    font-weight: 700; border-radius: 14px; border: none; cursor: pointer;
     padding: .9rem 1.25rem; margin-top: 1.25rem; text-align: center;
     text-decoration: none;
 }
-.boton { background: #1d4ed8; color: #fff; }
-.boton:hover { background: #1e40af; }
-.boton-secundario { background: #fff; color: #1d4ed8; border: 2px solid #1d4ed8; }
+.boton {
+    background: var(--marca-600); color: #fff;
+    box-shadow: 0 12px 24px -12px #0065ae99;
+}
+.boton:hover { background: var(--marca-700); }
+.boton-secundario { background: var(--superficie); color: var(--marca-600); border: 2px solid var(--marca-600); }
 .boton-salir {
     min-height: 44px; font-size: 16px; padding: .5rem 1rem; border-radius: 10px;
-    background: #fff; color: #1a202e; border: 2px solid #94a3b8; cursor: pointer;
+    background: var(--superficie); color: var(--tinta); border: 2px solid #94a3b8; cursor: pointer;
 }
-.enlace-suave { color: #1d4ed8; }
+.enlace-suave { color: var(--marca-600); }
 
 .alerta-error {
     background: #fdecec; border: 2px solid #b3261e; color: #7f1d1d;
-    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+    border-radius: 12px; padding: 1rem; margin: 1rem 0;
 }
 .alerta-exito {
     background: #e8f5ec; border: 2px solid #1b7d3c; color: #14532d;
-    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+    border-radius: 12px; padding: 1rem; margin: 1rem 0;
 }
 .alerta-aviso {
     background: #fff7e0; border: 2px solid #946200; color: #713f12;
-    border-radius: 10px; padding: 1rem; margin: 1rem 0;
+    border-radius: 12px; padding: 1rem; margin: 1rem 0;
 }
 
 .lista-cuentas { list-style: none; padding: 0; margin: 0; }
 .lista-cuentas li {
     display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-    border-top: 1px solid #dbe3ee; padding: .75rem 0; flex-wrap: wrap;
+    border-top: 1px solid var(--borde); padding: .75rem 0; flex-wrap: wrap;
 }
 .estado { font-weight: 700; }
 
-.firma-lienzo {
-    border: 2px dashed #94a3b8; border-radius: 10px; width: 100%;
-    height: 10rem; touch-action: none; background: #fff;
+/* Las evidencias de cada actividad (fase 6, bloque B). */
+.lista-evidencias { list-style: none; padding: 0; margin: .75rem 0 0; }
+.lista-evidencias li {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    flex-wrap: wrap; border-top: 1px solid var(--borde); padding: .6rem 0;
 }
-.visor-pdf { width: 100%; height: 24rem; border: 2px solid #dbe3ee; border-radius: 10px; }
+.lista-evidencias .boton-secundario { width: auto; margin: 0; min-height: 44px; font-size: 16px; }
+
+.firma-lienzo {
+    border: 2px dashed #94a3b8; border-radius: 12px; width: 100%;
+    height: 10rem; touch-action: none; background: var(--superficie);
+}
+.visor-pdf { width: 100%; height: 24rem; border: 2px solid var(--borde); border-radius: 12px; }
 
 @media (min-width: 640px) {
     .dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.25rem; }

@@ -8,9 +8,11 @@ use App\Modules\CuentasCobro\Entity\ModalidadPeriodos;
 use App\Modules\CuentasCobro\Service\CalculosCuenta;
 use App\Modules\CuentasCobro\Service\FechasCuenta;
 use App\Modules\CuentasCobro\Service\NumeroALetras;
+use App\Core\Auth\HasherPassword;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -46,15 +48,29 @@ final class SembrarCuentasCobroCommand extends Command
     private const string NOMBRE_RUBRO = 'SERVICIOS DE GESTIÓN Y ADMINISTRACIÓN EMPRESARIAL (OFICINA CENTRAL)';
     private const string RECURSO = '1.2.3.2.09 VENTA DE BIENES Y SERVICIOS';
 
-    public function __construct(private readonly Connection $conexion)
-    {
+    public function __construct(
+        private readonly Connection $conexion,
+        private readonly HasherPassword $hasher,
+    ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this->setName('semillas:cuentas-cobro')
-            ->setDescription('Siembra los contratos de muestra del módulo de cuentas de cobro (datos ficticios)');
+            ->setDescription('Siembra los contratos de muestra del módulo de cuentas de cobro (datos ficticios)')
+            ->addOption(
+                'solo',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Sembrar un solo contrato por su número (p. ej. 1407-2026), para tener un caso de prueba y no ocho',
+            )
+            ->addOption(
+                'password',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Contraseña del portal para los contratistas sembrados. Sin ella, el contratista la crea desde el portal con la fecha del contrato',
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -72,13 +88,51 @@ final class SembrarCuentasCobroCommand extends Command
         }
 
         $supervisorId = $this->supervisorDemo((int) $usuarioId);
+
+        // El flujo pasa por REVISADA antes de APROBADA: sin un revisor
+        // vinculado, la cuenta sembrada se queda atascada en la bandeja.
+        $this->revisorDemo((int) $usuarioId);
+
+        $solo = trim((string) $input->getOption('solo'));
+        $contratos = $this->contratos();
+
+        if ($solo !== '') {
+            $contratos = array_values(array_filter(
+                $contratos,
+                static fn (array $c): bool => $c['numero'] === $solo,
+            ));
+
+            if ($contratos === []) {
+                $io->error(sprintf('No hay ningún contrato de muestra con el número «%s».', $solo));
+
+                return Command::INVALID;
+            }
+        }
+
         $creados = 0;
 
-        foreach ($this->contratos() as $contrato) {
+        foreach ($contratos as $contrato) {
             $creados += $this->sembrarContrato($contrato, $supervisorId, (int) $usuarioId, $io);
         }
 
-        $io->success($creados . ' contratos sembrados (los existentes se dejaron como estaban).');
+        $io->success($creados . ' contrato(s) sembrado(s) (los existentes se dejaron como estaban).');
+
+        $password = (string) $input->getOption('password');
+
+        if ($password !== '') {
+            $this->ponerPassword($contratos, $password, $io);
+        }
+
+        foreach ($contratos as $contrato) {
+            $io->text(sprintf(
+                'Contrato %s · contratista %s %s · cédula %s · fecha del contrato %s',
+                $contrato['numero'],
+                $contrato['nombres'],
+                $contrato['apellidos'],
+                $contrato['cedula'],
+                $contrato['fecha'],
+            ));
+        }
 
         return Command::SUCCESS;
     }
@@ -127,6 +181,58 @@ final class SembrarCuentasCobroCommand extends Command
              'modalidad' => 'ANIVERSARIO', 'seccion' => 'Autorizadora urgencias', 'rp' => ['2055', '2026-01-28', 14100000], 'acta' => '2026-01-28', 'arl' => 3,
              'cuotas' => array_map(static fn (int $n): array => ['descripcion' => 'Mensualidad ' . $n, 'tipo' => 'COMPLETA', 'mes' => null, 'valor' => 2350000], range(1, 6))],
         ];
+    }
+
+    /**
+     * La contraseña del portal, puesta por consola.
+     *
+     * El camino normal es que el contratista la cree él mismo confirmando
+     * la fecha del contrato; esto es para tener un caso de prueba listo
+     * sin pasar por esa pantalla.
+     *
+     * @param list<array<string, mixed>> $contratos
+     */
+    private function ponerPassword(array $contratos, string $password, SymfonyStyle $io): void
+    {
+        if (mb_strlen($password) < 8) {
+            $io->warning('La contraseña del portal necesita al menos 8 caracteres; no se puso ninguna.');
+
+            return;
+        }
+
+        $hash = $this->hasher->hash($password);
+
+        foreach ($contratos as $contrato) {
+            $this->conexion->executeStatement(
+                'UPDATE cc_contratistas SET password_hash = ? WHERE numero_documento = ?',
+                [$hash, $contrato['cedula']],
+            );
+        }
+
+        $io->text([
+            '',
+            'Contraseña del portal fijada para ' . count($contratos) . ' contratista(s).',
+            'Ingreso: /cuentas/ingreso — con la cédula o el número del contrato.',
+        ]);
+    }
+
+    /** Un revisor demo, el eslabón previo al supervisor en el flujo. */
+    private function revisorDemo(int $usuarioId): int
+    {
+        $existente = $this->conexion->fetchOne('SELECT id FROM cc_revisores WHERE usuario_id = ?', [$usuarioId]);
+
+        if ($existente !== false) {
+            return (int) $existente;
+        }
+
+        $this->conexion->insert('cc_revisores', [
+            'usuario_id' => $usuarioId,
+            'nombre_completo' => 'REVISOR DE PRUEBA',
+            'cargo' => 'TÉCNICO ADMINISTRATIVO (CONTRATACIÓN)',
+            'activo' => 1,
+        ]);
+
+        return (int) $this->conexion->lastInsertId();
     }
 
     /** Un supervisor demo vinculado al primer usuario del panel. */

@@ -225,7 +225,18 @@ final class CuentasPortalTest extends TestCase
             $actividades[(int) $oid] = 'Durante el periodo realicé las labores de la obligación ' . $oid . ' conforme al contrato.';
         }
 
-        $respuesta = $this->post('/cuentas/nueva/2', ['actividad' => $actividades]);
+        // La pantalla del paso 2 ofrece el respaldo de cada obligación.
+        $pantalla = (string) $this->kernel->manejar(Request::create('/cuentas/nueva/2'))->getContent();
+        self::assertStringContainsString('Con qué lo demuestra', $pantalla);
+        self::assertStringContainsString('NO APLICA', $pantalla);
+        self::assertStringContainsString('Adjunte la evidencia', $pantalla);
+
+        // Fase 6: cada actividad se respalda con un producto. La primera
+        // con un INFORME y su archivo; las demás con NO APLICA, que es la
+        // única salida sin evidencia.
+        [$productos, $archivos] = $this->respaldoDeActividades((int) $cuenta['id']);
+
+        $respuesta = $this->post('/cuentas/nueva/2', ['actividad' => $actividades, 'producto' => $productos], $archivos);
         self::assertSame('/cuentas/nueva/3', $respuesta->headers->get('Location'));
 
         // P4: la planilla con los valores sugeridos y su archivo.
@@ -280,6 +291,283 @@ final class CuentasPortalTest extends TestCase
     }
 
     /** El enlace externo sirve UNA vez y a la segunda ya no existe (§9). */
+    /**
+     * Una cuenta no se radica si el contratista no dijo con qué producto
+     * respalda cada obligación. El supervisor va a firmar el cumplimiento
+     * de cada una: sin entregable, firmaría contra un texto libre.
+     */
+    public function testNoSeRadicaSinProductoEnCadaActividad(): void
+    {
+        $cuentaId = $this->borradorConDescripciones();
+
+        $respuesta = $this->post('/cuentas/nueva/enviar', ['confirmo' => '1']);
+
+        self::assertSame('/cuentas/nueva/4', $respuesta->headers->get('Location'));
+        self::assertSame('BORRADOR', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$cuentaId]));
+        self::assertStringContainsString('falta decir con qué producto', (string) ($_SESSION['_flash']['cc_error'] ?? ''));
+    }
+
+    /** Elegido el producto, falta el soporte: tampoco se radica. */
+    public function testNoSeRadicaSiElProductoExigeEvidenciaYNoSeAdjunto(): void
+    {
+        $cuentaId = $this->borradorConDescripciones();
+        $informe = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'informe'");
+
+        foreach (self::$conexion->fetchFirstColumn('SELECT id FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]) as $actividadId) {
+            self::$conexion->update('cc_cuenta_actividades', ['producto_id' => $informe], ['id' => (int) $actividadId]);
+        }
+
+        $this->post('/cuentas/nueva/enviar', ['confirmo' => '1']);
+
+        self::assertSame('BORRADOR', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$cuentaId]));
+        self::assertStringContainsString('falta adjuntar la evidencia', (string) ($_SESSION['_flash']['cc_error'] ?? ''));
+    }
+
+    /**
+     * NO APLICA es la única exención: la obligación que no deja
+     * entregable existe, y exigirle un archivo inventado sería peor.
+     */
+    public function testNoAplicaEximeDeEvidencia(): void
+    {
+        $cuentaId = $this->borradorConDescripciones();
+        $noAplica = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'no-aplica'");
+
+        foreach (self::$conexion->fetchFirstColumn('SELECT id FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]) as $actividadId) {
+            self::$conexion->update('cc_cuenta_actividades', ['producto_id' => $noAplica], ['id' => (int) $actividadId]);
+        }
+
+        $this->post('/cuentas/nueva/enviar', ['confirmo' => '1']);
+
+        self::assertSame('ENVIADA', self::$conexion->fetchOne('SELECT estado FROM cc_cuentas WHERE id = ?', [$cuentaId]));
+    }
+
+    /** La evidencia sube por la pantalla del paso 2 y queda en el almacén privado. */
+    public function testLaEvidenciaSubePorElPasoDos(): void
+    {
+        $cuentaId = $this->borradorConDescripciones();
+        $actividadId = (int) self::$conexion->fetchOne('SELECT id FROM cc_cuenta_actividades WHERE cuenta_id = ? ORDER BY id LIMIT 1', [$cuentaId]);
+        $informe = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'informe'");
+
+        $this->post(
+            '/cuentas/nueva/2',
+            ['producto' => [$actividadId => $informe]],
+            ['evidencia' => [$actividadId => [$this->archivoSubido('soporte.png')]]],
+        );
+
+        $evidencia = self::$conexion->fetchAssociative('SELECT * FROM cc_actividad_evidencias WHERE actividad_id = ?', [$actividadId]);
+        self::assertNotFalse($evidencia, 'La evidencia no se guardó.');
+        self::assertSame('ARCHIVO', $evidencia['tipo']);
+        self::assertSame('soporte.png', $evidencia['nombre_original']);
+        self::assertTrue(
+            is_file(dirname(__DIR__, 3) . '/storage/cuentas/' . $evidencia['archivo']),
+            'El archivo de la evidencia no quedó en el almacén privado.',
+        );
+    }
+
+    /** Un borrador con las descripciones puestas y la planilla del paso 3. */
+    private function borradorConDescripciones(): int
+    {
+        $this->post('/cuentas/nueva/1', []);
+        $cuentaId = (int) self::$conexion->fetchOne(
+            'SELECT id FROM cc_cuentas WHERE contrato_id = ? ORDER BY id DESC LIMIT 1',
+            [$this->contratoId],
+        );
+
+        foreach (self::$conexion->fetchFirstColumn('SELECT id FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]) as $actividadId) {
+            self::$conexion->update(
+                'cc_cuenta_actividades',
+                ['descripcion_ejecucion' => 'Labores ejecutadas durante el periodo conforme al contrato.'],
+                ['id' => (int) $actividadId],
+            );
+        }
+
+        $this->post('/cuentas/nueva/3', [
+            'numero_planilla' => '987654321',
+            'mes_salud' => '2026-07',
+            'mes_pension' => '2026-07',
+            'ibc' => '1750905',
+            'aporte_salud' => '218900',
+            'aporte_pension' => '280200',
+            'aporte_arl' => '42700',
+            'aporte_fsp' => '0',
+        ], ['planilla' => $this->archivoSubido('planilla.png')]);
+
+        return $cuentaId;
+    }
+
+    /**
+     * Productos y archivos para el paso 2: la primera actividad con un
+     * INFORME y su soporte, las demás con NO APLICA.
+     *
+     * @return array{0: array<int, int>, 1: array<string, mixed>}
+     */
+    private function respaldoDeActividades(int $cuentaId): array
+    {
+        $informe = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'informe'");
+        $noAplica = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'no-aplica'");
+        $productos = [];
+        $archivos = [];
+
+        foreach (self::$conexion->fetchFirstColumn('SELECT id FROM cc_cuenta_actividades WHERE cuenta_id = ? ORDER BY id', [$cuentaId]) as $i => $actividadId) {
+            $actividadId = (int) $actividadId;
+
+            if ($i === 0) {
+                $productos[$actividadId] = $informe;
+                $archivos['evidencia'][$actividadId] = [$this->archivoSubido('soporte.png')];
+
+                continue;
+            }
+
+            $productos[$actividadId] = $noAplica;
+        }
+
+        return [$productos, $archivos];
+    }
+
+    /**
+     * «Olvidé mi contraseña»: con la fecha del contrato se fija una nueva
+     * y se entra. Es la misma prueba de identidad que al crearla; la
+     * alternativa era que 1.500 contratistas llamaran a Contratación.
+     */
+    public function testRecuperarLaContrasenaOlvidadaConLaFechaDelContrato(): void
+    {
+        self::$conexion->update(
+            'cc_contratistas',
+            ['password_hash' => (new HasherPassword())->hash('la-que-olvide')],
+            ['id' => $this->contratistaId],
+        );
+
+        $respuesta = $this->post('/cuentas/recuperar-contrasena', [
+            'modo' => 'cedula',
+            'identificador' => '1188888801',
+            'fecha_suscripcion' => '2026-08-01',
+            'contrasena' => 'mi-clave-nueva',
+            'contrasena_confirmacion' => 'mi-clave-nueva',
+        ]);
+
+        self::assertContains($respuesta->headers->get('Location'), ['/cuentas/inicio', '/cuentas/mis-datos']);
+
+        $hash = (string) self::$conexion->fetchOne('SELECT password_hash FROM cc_contratistas WHERE id = ?', [$this->contratistaId]);
+        self::assertTrue((new HasherPassword())->verificar('mi-clave-nueva', $hash));
+        self::assertFalse((new HasherPassword())->verificar('la-que-olvide', $hash), 'La contraseña vieja debe dejar de servir.');
+    }
+
+    /** Con una fecha equivocada no se cambia nada: es toda la verificación de identidad que hay. */
+    public function testRecuperarConFechaEquivocadaNoCambiaLaContrasena(): void
+    {
+        $antes = (new HasherPassword())->hash('la-de-siempre');
+        self::$conexion->update('cc_contratistas', ['password_hash' => $antes], ['id' => $this->contratistaId]);
+
+        $respuesta = $this->post('/cuentas/recuperar-contrasena', [
+            'modo' => 'cedula',
+            'identificador' => '1188888801',
+            'fecha_suscripcion' => '2020-01-01',
+            'contrasena' => 'intento-de-secuestro',
+            'contrasena_confirmacion' => 'intento-de-secuestro',
+        ]);
+
+        self::assertSame('/cuentas/recuperar-contrasena', $respuesta->headers->get('Location'));
+        self::assertSame($antes, self::$conexion->fetchOne('SELECT password_hash FROM cc_contratistas WHERE id = ?', [$this->contratistaId]));
+    }
+
+    /** Las tres pantallas de acceso llevan el diseño del panel y sus controles. */
+    public function testLasPantallasDeAccesoTraenSelectorOjoYRecuperacion(): void
+    {
+        // Sin sesión: con una abierta, el ingreso redirige al inicio y no
+        // habría pantalla que revisar.
+        $_SESSION = [];
+
+        $ingreso = (string) $this->kernel->manejar(Request::create('/cuentas/ingreso'))->getContent();
+
+        self::assertStringContainsString('logo_compacto', $ingreso, 'Falta el logo institucional.');
+        self::assertStringContainsString('fondo-degradado-marca', $ingreso, 'Falta el fondo de marca.');
+        self::assertStringContainsString('<select class="campo text-lg" id="modo"', $ingreso, 'El modo debe ser un desplegable.');
+        self::assertStringContainsString('data-ver-clave="contrasena"', $ingreso, 'Falta el botón de mostrar la contraseña.');
+        self::assertStringContainsString('Recordar mi cuenta en este equipo', $ingreso);
+        self::assertStringContainsString('Mantener la sesión iniciada', $ingreso);
+        self::assertStringContainsString('/cuentas/recuperar-contrasena', $ingreso, 'Falta la salida para la contraseña olvidada.');
+
+        // El rótulo del campo dice QUÉ dato se pide, no «cédula o contrato»:
+        // el servidor lo pinta según el modo y el JS lo cambia al vuelo.
+        self::assertStringContainsString('Ingrese su número de cédula', $ingreso);
+        self::assertStringContainsString('data-etiqueta-contrato="Ingrese su número de contrato"', $ingreso);
+        self::assertStringContainsString('/js/cuentas-acceso.js', $ingreso);
+
+        foreach (['/cuentas/crear-contrasena', '/cuentas/recuperar-contrasena'] as $ruta) {
+            $pantalla = (string) $this->kernel->manejar(Request::create($ruta))->getContent();
+            self::assertStringContainsString('<select class="campo text-lg" id="modo"', $pantalla, $ruta . ' sin desplegable.');
+            self::assertStringContainsString('data-ver-clave="contrasena-confirmacion"', $pantalla, $ruta . ' sin ojo en la confirmación.');
+            self::assertStringContainsString('Ingrese su número de cédula', $pantalla, $ruta . ' sin rótulo específico.');
+        }
+    }
+
+    /**
+     * «Mis datos» no deja adelantarse: cada paso abre el siguiente solo
+     * cuando está completo de verdad.
+     *
+     * Escribir «?paso=3» en la barra del navegador saltaba la validación
+     * entera del paso 2 —los datos del banco se guardan al ENVIARLO, y
+     * quien no lo envía nunca no los llena nunca—.
+     */
+    public function testNoSePuedeSaltarUnPasoDeMisDatos(): void
+    {
+        self::$conexion->update(
+            'cc_contratistas',
+            ['certificacion_bancaria_archivo' => null, 'datos_completos' => 0],
+            ['id' => $this->contratistaId],
+        );
+
+        $salto = $this->kernel->manejar(Request::create('/cuentas/mis-datos?paso=3'));
+
+        self::assertSame('/cuentas/mis-datos?paso=2', $salto->headers->get('Location'));
+        self::assertStringContainsString('la certificación bancaria', (string) ($_SESSION['_flash']['cc_error'] ?? ''));
+
+        // Y tampoco enviando el formulario del paso 3 a mano.
+        $envio = $this->post('/cuentas/mis-datos/3', ['acepto_datos' => '1']);
+        self::assertSame('/cuentas/mis-datos?paso=2', $envio->headers->get('Location'));
+    }
+
+    /** Sin la certificación bancaria, el paso 2 no se da por terminado. */
+    public function testElPasoDelBancoExigeLaCertificacion(): void
+    {
+        self::$conexion->update(
+            'cc_contratistas',
+            ['certificacion_bancaria_archivo' => null, 'datos_completos' => 0],
+            ['id' => $this->contratistaId],
+        );
+
+        $respuesta = $this->post('/cuentas/mis-datos/2', [
+            'banco' => 'Bancolombia',
+            'tipo_cuenta' => 'AHORROS',
+            'numero_cuenta' => '9122801135',
+        ]);
+
+        self::assertSame('/cuentas/mis-datos?paso=2', $respuesta->headers->get('Location'));
+        self::assertStringContainsString('certificación bancaria', (string) ($_SESSION['_flash']['cc_error'] ?? ''));
+
+        // Con ella, sigue al paso 3.
+        $conSoporte = $this->post(
+            '/cuentas/mis-datos/2',
+            ['banco' => 'Bancolombia', 'tipo_cuenta' => 'AHORROS', 'numero_cuenta' => '9122801135'],
+            ['certificacion_bancaria' => $this->archivoSubido('certificacion.png')],
+        );
+
+        self::assertSame('/cuentas/mis-datos?paso=3', $conSoporte->headers->get('Location'));
+    }
+
+    /** El banco sale de la lista: texto libre no entra. */
+    public function testElBancoDebeSalirDelCatalogo(): void
+    {
+        $respuesta = $this->post('/cuentas/mis-datos/2', [
+            'banco' => 'Banco Que No Existe',
+            'tipo_cuenta' => 'AHORROS',
+            'numero_cuenta' => '9122801135',
+        ], ['certificacion_bancaria' => $this->archivoSubido('certificacion.png')]);
+
+        self::assertSame('/cuentas/mis-datos?paso=2', $respuesta->headers->get('Location'));
+        self::assertStringContainsString('de la lista', (string) ($_SESSION['_flash']['cc_error'] ?? ''));
+    }
+
     public function testTokenDeDescargaEsDeUnSoloUso(): void
     {
         $this->post('/cuentas/nueva/1', []);
@@ -350,9 +638,14 @@ final class CuentasPortalTest extends TestCase
 
     private function completarYEnviar(int $cuentaId): void
     {
+        // NO APLICA en todas: esta ayuda sirve a pruebas que van a por otra
+        // cosa (tokens, correo, PDF) y no deben arrastrar el respaldo.
+        $noAplica = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'no-aplica'");
+
         foreach (self::$conexion->fetchFirstColumn('SELECT obligacion_id FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]) as $oid) {
             self::$conexion->update('cc_cuenta_actividades', [
                 'descripcion_ejecucion' => 'Actividades del periodo frente a la obligación ' . $oid . '.',
+                'producto_id' => $noAplica,
             ], ['cuenta_id' => $cuentaId, 'obligacion_id' => $oid]);
         }
 

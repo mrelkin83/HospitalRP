@@ -26,14 +26,25 @@ final readonly class SesionContratista
     private const string CLAVE_CONTRATO = 'cc_contrato_id';
     private const string CLAVE_ULTIMO_USO = 'cc_ultimo_uso';
     private const string CLAVE_PENDIENTE = 'cc_pendiente';
+    private const string CLAVE_PERSISTENTE = 'cc_persistente';
     private const int MINUTOS_INACTIVIDAD = 30;
+
+    /**
+     * «Mantener la sesión iniciada»: 30 días.
+     *
+     * La inactividad corta de arriba está pensada para un computador
+     * prestado; quien marca la casilla dice que el equipo es suyo, y a
+     * un contratista que entra una vez al mes pedirle la clave cada media
+     * hora no protege nada, solo estorba.
+     */
+    private const int MINUTOS_PERSISTENTE = 43200;
 
     public function __construct(private Sesion $sesion)
     {
     }
 
-    /** El ingreso es por contrato: cédula + contrato + código (§9). */
-    public function abrir(int $contratistaId, int $contratoId): void
+    /** El ingreso es por contrato: cédula o número de contrato + contraseña. */
+    public function abrir(int $contratistaId, int $contratoId, bool $persistente = false): void
     {
         $this->sesion->iniciar();
 
@@ -46,6 +57,7 @@ final readonly class SesionContratista
         $_SESSION[self::CLAVE_ID] = $contratistaId;
         $_SESSION[self::CLAVE_CONTRATO] = $contratoId;
         $_SESSION[self::CLAVE_ULTIMO_USO] = time();
+        $_SESSION[self::CLAVE_PERSISTENTE] = $persistente;
         unset($_SESSION[self::CLAVE_PENDIENTE]);
     }
 
@@ -100,8 +112,11 @@ final readonly class SesionContratista
         }
 
         $ultimoUso = $_SESSION[self::CLAVE_ULTIMO_USO] ?? 0;
+        $minutos = ($_SESSION[self::CLAVE_PERSISTENTE] ?? false) === true
+            ? self::MINUTOS_PERSISTENTE
+            : self::MINUTOS_INACTIVIDAD;
 
-        if (!is_int($ultimoUso) || time() - $ultimoUso > self::MINUTOS_INACTIVIDAD * 60) {
+        if (!is_int($ultimoUso) || time() - $ultimoUso > $minutos * 60) {
             $this->cerrar();
 
             return null;

@@ -8,6 +8,8 @@ use App\Core\Audit\AccionAuditoria;
 use App\Core\Support\Vistas;
 use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
+use App\Modules\CuentasCobro\Service\ArchivosCuentas;
+use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,10 +26,25 @@ final readonly class CuentasContratistasController
     private const string TITULO = 'Cuentas de cobro — Contratistas';
     private const string RUTA = '/admin/cuentas-cobro/contratistas';
 
+    /**
+     * Qué documentos se pueden mirar y en qué columna vive cada uno. Lista
+     * cerrada: el nombre llega por la URL y no puede convertirse en «cualquier
+     * columna de la tabla».
+     */
+    private const array DOCUMENTOS = [
+        'cedula' => 'cedula_archivo',
+        'cedula-reverso' => 'cedula_reverso_archivo',
+        'rut' => 'rut_archivo',
+        'certificacion-bancaria' => 'certificacion_bancaria_archivo',
+        'firma' => 'firma_archivo',
+    ];
+
     public function __construct(
         private PantallaAdmin $pantalla,
         private Vistas $vistas,
         private ContratistaRepository $contratistas,
+        private ParametrosCuentasRepository $parametros,
+        private ArchivosCuentas $archivos,
     ) {
     }
 
@@ -38,10 +55,47 @@ final readonly class CuentasContratistasController
 
         return $this->pantalla->pagina(self::TITULO, $this->vistas->render('admin/cuentas/contratistas', [
             'contratistas' => $this->contratistas->listar(),
+            'bancos' => $this->parametros->bancos(),
             'mensaje' => is_string($mensaje) ? $mensaje : null,
             'error' => is_string($error) ? $error : null,
             'tokenCsrf' => $this->pantalla->tokenCsrf(),
         ]));
+    }
+
+    /**
+     * Sirve uno de los documentos que subió el contratista.
+     *
+     * Se subían a un almacén privado y no había forma de mirarlos: ni
+     * Contratación podía comprobar que la certificación bancaria fuera del
+     * titular, ni que el RUT estuviera vigente. Pedir un documento que
+     * nadie puede abrir es pedirlo para nada.
+     *
+     * Van por controlador y no por URL pública porque son datos personales
+     * (§3 del módulo): fuera del document root y con permiso verificado.
+     */
+    public function documento(Request $peticion): Response
+    {
+        $contratista = $this->contratistas->porId($peticion->attributes->getInt('id'));
+        $columna = self::DOCUMENTOS[$peticion->attributes->getString('documento')] ?? null;
+
+        if ($contratista === null || $columna === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $ruta = (string) ($contratista[$columna] ?? '');
+
+        if ($ruta === '' || !$this->archivos->existe($ruta)) {
+            $this->pantalla->guardarEnLaSesion('cc_error', 'Ese documento todavía no lo ha subido el contratista.');
+
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return new Response((string) file_get_contents($this->archivos->rutaAbsoluta($ruta)), Response::HTTP_OK, [
+            'Content-Type' => str_ends_with($ruta, '.pdf') ? 'application/pdf' : 'image/jpeg',
+            'Content-Disposition' => 'inline; filename="' . $peticion->attributes->getString('documento') . '-' . $contratista['numero_documento'] . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     public function guardar(Request $peticion): Response

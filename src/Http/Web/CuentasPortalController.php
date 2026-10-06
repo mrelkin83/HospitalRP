@@ -8,9 +8,11 @@ use App\Core\Auth\HasherPassword;
 use App\Core\Support\Vistas;
 use App\Modules\CuentasCobro\Repository\ContratistaRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
+use App\Modules\CuentasCobro\Repository\ParametrosCuentasRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
 use App\Modules\CuentasCobro\Service\SesionContratista;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,11 +29,22 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final readonly class CuentasPortalController
 {
+    /**
+     * Cookie de «recordar mi cuenta». Guarda SOLO con qué dato entra y
+     * cuál es —cédula o número de contrato—, nunca la contraseña: sirve
+     * para rellenar el campo, no para entrar. La sesión viaja aparte, en
+     * su propia cookie endurecida.
+     */
+    private const string COOKIE_CUENTA = 'cc_recordar';
+
+    private const int DIAS_RECUERDO = 60;
+
     public function __construct(
         private Vistas $vistas,
         private SesionContratista $sesion,
         private ContratistaRepository $contratistas,
         private CuentaRepository $cuentas,
+        private ParametrosCuentasRepository $parametros,
         private HasherPassword $hasher,
         private ArchivosCuentas $archivos,
         private Connection $conexion,
@@ -48,10 +61,18 @@ final readonly class CuentasPortalController
             return new RedirectResponse('/cuentas/inicio', Response::HTTP_SEE_OTHER);
         }
 
+        [$modo, $identificador] = $this->cuentaRecordada($peticion);
+
         return $this->pagina('publico/cuentas/ingreso', [
             'error' => $this->flash('cc_error'),
             'mensaje' => $this->flash('cc_mensaje'),
-        ]);
+            'modo' => $modo,
+            'identificador' => $identificador,
+            // Si el dato vino de la cookie, la casilla ya estaba marcada:
+            // desmarcarla sin querer y perder el recuerdo sería molesto.
+            'recordar' => $identificador !== '',
+            'persistente' => false,
+        ] + self::textosDelModo($modo));
     }
 
     /**
@@ -92,41 +113,177 @@ final readonly class CuentasPortalController
         if (!$this->hasher->verificar($peticion->request->getString('contrasena'), (string) $contratista['password_hash'])) {
             $this->registrarIntentoFallido($ip, (int) $contratista['id']);
 
-            return $this->volverConError('/cuentas/ingreso', 'La contraseña no coincide. Si la olvidó, pida a la oficina de Contratación que se la restablezca.');
+            return $this->volverConError('/cuentas/ingreso', 'La contraseña no coincide. Si la olvidó, use «Olvidé mi contraseña» aquí abajo.');
         }
 
-        $this->sesion->abrir((int) $contratista['id'], (int) $contrato['id']);
+        $this->sesion->abrir(
+            (int) $contratista['id'],
+            (int) $contrato['id'],
+            $peticion->request->getBoolean('persistente'),
+        );
 
-        return new RedirectResponse(
+        $respuesta = new RedirectResponse(
             (int) $contratista['datos_completos'] === 1 ? '/cuentas/inicio' : '/cuentas/mis-datos',
             Response::HTTP_SEE_OTHER,
         );
+
+        $respuesta->headers->setCookie($this->cookieCuenta(
+            $peticion->request->getBoolean('recordar') ? $peticion->request->getString('modo') : null,
+            $peticion->request->getString('identificador'),
+        ));
+
+        return $respuesta;
+    }
+
+    /**
+     * La cookie que recuerda con qué dato entra esta persona.
+     *
+     * Con `$modo = null` la borra: al desmarcar la casilla, el dato tiene
+     * que desaparecer del equipo —que es justo lo que se espera al
+     * desmarcarla en un computador prestado—.
+     */
+    private function cookieCuenta(?string $modo, string $identificador): Cookie
+    {
+        $valor = $modo === null ? '' : ($modo === 'contrato' ? 'contrato' : 'cedula') . '|' . $identificador;
+
+        return Cookie::create(
+            name: self::COOKIE_CUENTA,
+            value: $valor,
+            expire: $valor === '' ? 1 : time() + self::DIAS_RECUERDO * 24 * 3600,
+            path: '/cuentas',
+            httpOnly: true,
+            sameSite: Cookie::SAMESITE_STRICT,
+        );
+    }
+
+    /**
+     * Lo recordado en este equipo.
+     *
+     * @return array{0: string, 1: string} [modo, identificador]
+     */
+    private function cuentaRecordada(Request $peticion): array
+    {
+        $crudo = (string) $peticion->cookies->get(self::COOKIE_CUENTA, '');
+
+        if ($crudo === '' || !str_contains($crudo, '|')) {
+            return ['cedula', ''];
+        }
+
+        [$modo, $identificador] = explode('|', $crudo, 2);
+        $identificador = trim(mb_substr($identificador, 0, 40));
+
+        // La cookie la escribe el navegador y se puede manipular: lo que
+        // salga de ella se trata como lo que es, un dato sin confirmar que
+        // solo rellena un campo.
+        if (preg_match('/^[0-9A-Za-z\-]{0,40}$/', $identificador) !== 1) {
+            return ['cedula', ''];
+        }
+
+        return [$modo === 'contrato' ? 'contrato' : 'cedula', $identificador];
     }
 
     /** Crear (o volver a crear, tras un restablecimiento) la contraseña. */
     public function crearPasswordFormulario(Request $peticion): Response
     {
-        return $this->pagina('publico/cuentas/crear-contrasena', [
+        return $this->paginaDeClave($peticion, false);
+    }
+
+    /**
+     * «Olvidé mi contraseña»: la misma pantalla, pero aceptando que ya
+     * exista una.
+     *
+     * La prueba de identidad es la de siempre —la fecha de suscripción,
+     * que está en su copia del contrato y no es pública— más el bloqueo
+     * por intentos desde la misma IP. No se abre una puerta nueva: es la
+     * misma que ya usaba quien entraba por primera vez. La alternativa
+     * era que 1.500 contratistas llamaran a Contratación.
+     */
+    public function recuperarFormulario(Request $peticion): Response
+    {
+        return $this->paginaDeClave($peticion, true);
+    }
+
+    private function paginaDeClave(Request $peticion, bool $recuperando): Response
+    {
+        [$modo, $identificador] = $this->cuentaRecordada($peticion);
+
+        return $this->pagina('publico/cuentas/clave', [
+            'accion' => $recuperando ? '/cuentas/recuperar-contrasena' : '/cuentas/crear-contrasena',
+            'titulo' => $recuperando ? 'Recuperar su contraseña' : 'Crear su contraseña',
+            'intro' => $recuperando
+                ? 'Si olvidó su contraseña, confirme la fecha de su contrato y escriba una nueva.'
+                : 'Es su primera vez: confirme la fecha de su contrato y escoja una contraseña.',
+            'boton' => $recuperando ? 'Cambiar la contraseña y entrar' : 'Crear contraseña y entrar',
             'error' => $this->flash('cc_error'),
             'mensaje' => $this->flash('cc_mensaje'),
-        ]);
+            'modo' => $modo,
+            'identificador' => $identificador,
+        ] + self::textosDelModo($modo));
+    }
+
+    /**
+     * Cómo se le pide el dato de identificación según el desplegable.
+     *
+     * «Cédula o número de contrato» obliga a decidir otra vez lo que ya se
+     * decidió arriba. El servidor pinta el texto del modo con el que carga
+     * la página y `cuentas-acceso.js` lo cambia al vuelo; sin JavaScript
+     * la pantalla sigue diciendo lo correcto.
+     *
+     * @return array{rotulo: string, ayuda: string, ejemplo: string}
+     */
+    private static function textosDelModo(string $modo): array
+    {
+        if ($modo === 'contrato') {
+            return [
+                'rotulo' => 'Ingrese su número de contrato',
+                'ayuda' => 'Está en la primera página de su copia del contrato. Por ejemplo: 1407-2026.',
+                'ejemplo' => '1407-2026',
+            ];
+        }
+
+        return [
+            'rotulo' => 'Ingrese su número de cédula',
+            'ayuda' => 'Solo los números, sin puntos ni comas. Por ejemplo: 1100000002.',
+            'ejemplo' => '1100000002',
+        ];
     }
 
     public function crearPassword(Request $peticion): Response
+    {
+        return $this->guardarClaveNueva($peticion, false);
+    }
+
+    /** El envío de «olvidé mi contraseña». */
+    public function recuperar(Request $peticion): Response
+    {
+        return $this->guardarClaveNueva($peticion, true);
+    }
+
+    /**
+     * Fija la contraseña tras confirmar la identidad con la fecha del
+     * contrato, y abre la sesión.
+     *
+     * Crear y recuperar son el mismo trámite con una sola diferencia: al
+     * crear, tener ya una contraseña es un error («use el ingreso»); al
+     * recuperar, es justamente el caso. Escribirlo dos veces habría
+     * duplicado el control de intentos y la verificación de la fecha, que
+     * es exactamente donde no conviene tener dos copias.
+     */
+    private function guardarClaveNueva(Request $peticion, bool $recuperando): Response
     {
         if (($rechazo = $this->rechazoCsrf($peticion)) !== null) {
             return $rechazo;
         }
 
+        $volverA = $recuperando ? '/cuentas/recuperar-contrasena' : '/cuentas/crear-contrasena';
         $ip = (string) $peticion->getClientIp();
 
         if ($this->ipBloqueada($ip)) {
-            return $this->volverConError('/cuentas/crear-contrasena', 'Demasiados intentos desde esta conexión. Espere una hora.');
+            return $this->volverConError($volverA, 'Demasiados intentos desde esta conexión. Espere una hora.');
         }
 
         $r = $peticion->request;
         $par = $this->buscarPorIdentificador($r->getString('modo'), $r->getString('identificador'));
-        $volverA = '/cuentas/crear-contrasena';
 
         if ($par === null) {
             $this->registrarIntentoFallido($ip);
@@ -135,9 +292,10 @@ final readonly class CuentasPortalController
         }
 
         [$contratista, $contrato] = $par;
+        $tieneClave = $contratista['password_hash'] !== null && $contratista['password_hash'] !== '';
 
-        if ($contratista['password_hash'] !== null && $contratista['password_hash'] !== '') {
-            return $this->volverConError('/cuentas/ingreso', 'Usted ya tiene contraseña. Si la olvidó, pida a la oficina de Contratación que se la restablezca.');
+        if (!$recuperando && $tieneClave) {
+            return $this->volverConError('/cuentas/ingreso', 'Usted ya tiene contraseña. Si la olvidó, use «Olvidé mi contraseña».');
         }
 
         // La verificación de identidad: la fecha de suscripción, que está
@@ -161,6 +319,10 @@ final readonly class CuentasPortalController
         $this->contratistas->actualizar((int) $contratista['id'], [
             'password_hash' => $this->hasher->hash($contrasena),
         ]);
+
+        // Cambiar la clave limpia el castigo por intentos fallidos: quien
+        // acaba de probar quién es no tiene por qué arrastrarlo.
+        $this->olvidarIntentos($ip, (int) $contratista['id']);
         $this->sesion->abrir((int) $contratista['id'], (int) $contrato['id']);
 
         return new RedirectResponse(
@@ -222,11 +384,33 @@ final readonly class CuentasPortalController
         }
 
         [$contratista] = $contexto;
-        $paso = max(1, min(3, $peticion->query->getInt('paso', 1)));
+        $pedido = max(1, min(3, $peticion->query->getInt('paso', 1)));
+        $permitido = self::pasoMaximo($contratista);
+
+        // Adelantarse está prohibido, volver atrás no. Sin esto, escribir
+        // «?paso=3» en la barra del navegador saltaba la validación entera
+        // del paso 2: los datos del banco se guardan al ENVIAR ese paso, y
+        // quien no lo envía nunca no los llena nunca.
+        if ($pedido > $permitido) {
+            $this->guardarFlash('cc_error', sprintf(
+                'Antes de seguir hay que terminar el paso %d: falta %s.',
+                $permitido,
+                implode(', ', self::loQueFaltaDelPaso($contratista, $permitido)),
+            ));
+
+            return new RedirectResponse('/cuentas/mis-datos?paso=' . $permitido, Response::HTTP_SEE_OTHER);
+        }
+
+        $paso = $pedido;
 
         return $this->pagina('publico/cuentas/mis-datos', [
             'contratista' => $contratista,
             'paso' => $paso,
+            // El banco guardado va en la lista aunque se haya retirado del
+            // catálogo: quitarlo de la oferta no puede borrárselo a quien
+            // ya lo tenía.
+            'bancos' => $this->parametros->bancos((string) ($contratista['banco'] ?? '')),
+            'faltantes' => self::loQueFalta($contratista),
             'error' => $this->flash('cc_error'),
             'mensaje' => $this->flash('cc_mensaje'),
         ]);
@@ -264,7 +448,6 @@ final readonly class CuentasPortalController
             $this->contratistas->actualizar($contratistaId, [
                 'celular' => $celular,
                 'correo' => $correo !== '' ? $correo : null,
-                'direccion' => trim($r->getString('direccion')) !== '' ? mb_substr(trim($r->getString('direccion')), 0, 200) : null,
             ]);
 
             return new RedirectResponse('/cuentas/mis-datos?paso=2', Response::HTTP_SEE_OTHER);
@@ -277,6 +460,12 @@ final readonly class CuentasPortalController
 
             if ($banco === '' || $numeroCuenta === '' || !in_array($tipoCuenta, ['AHORROS', 'CORRIENTE'], true)) {
                 return $this->volverConError('/cuentas/mis-datos?paso=2', 'Complete el banco, el tipo de cuenta y el número de cuenta: ahí le consignan su pago.');
+            }
+
+            // El desplegable manda: un banco que no esté en el catálogo solo
+            // puede venir de un formulario manipulado.
+            if (!in_array($banco, $this->parametros->bancos((string) ($contratista['banco'] ?? '')), true)) {
+                return $this->volverConError('/cuentas/mis-datos?paso=2', 'Elija su banco de la lista.');
             }
 
             $campos = [
@@ -293,6 +482,13 @@ final readonly class CuentasPortalController
                 } catch (\InvalidArgumentException $e) {
                     return $this->volverConError('/cuentas/mis-datos?paso=2', $e->getMessage());
                 }
+            } elseif (($contratista['certificacion_bancaria_archivo'] ?? null) === null) {
+                // Es el soporte de la cuenta donde Tesorería consigna: sin
+                // él, el número de cuenta es una cifra que nadie verificó.
+                return $this->volverConError(
+                    '/cuentas/mis-datos?paso=2',
+                    'Falta la certificación bancaria. La emite su banco y puede tomarle una foto; sin ella no podemos consignarle.',
+                );
             }
 
             $this->contratistas->actualizar($contratistaId, $campos);
@@ -315,7 +511,19 @@ final readonly class CuentasPortalController
         $volverA = '/cuentas/mis-datos?paso=3';
         $campos = [];
 
-        foreach (['cedula_archivo' => 'cedula', 'rut_archivo' => 'rut'] as $columna => $campo) {
+        // La misma puerta del paso 3, también para quien envíe el
+        // formulario sin haber pasado por la pantalla.
+        if (self::pasoMaximo($contratista) < 3) {
+            $pendiente = self::pasoMaximo($contratista);
+
+            return $this->volverConError('/cuentas/mis-datos?paso=' . $pendiente, sprintf(
+                'Antes de subir sus documentos hay que terminar el paso %d: falta %s.',
+                $pendiente,
+                implode(', ', self::loQueFaltaDelPaso($contratista, $pendiente)),
+            ));
+        }
+
+        foreach (['rut_archivo' => 'rut'] as $columna => $campo) {
             $archivo = $peticion->files->get($campo);
 
             if ($archivo instanceof UploadedFile) {
@@ -325,6 +533,10 @@ final readonly class CuentasPortalController
                     return $this->volverConError($volverA, $e->getMessage());
                 }
             }
+        }
+
+        if (($problema = $this->guardarCedula($peticion, $contratista, $campos)) !== null) {
+            return $this->volverConError($volverA, $problema);
         }
 
         $firmaSubida = $peticion->files->get('firma');
@@ -357,23 +569,174 @@ final readonly class CuentasPortalController
             $this->contratistas->actualizar($contratistaId, $campos);
         }
 
-        // ¿Ya está todo? Contacto, banco, firma y los anexos fijos.
+        // ¿Ya está todo? Contacto, banco con su certificación, firma y anexos.
         $al_dia = $this->contratistas->porId($contratistaId);
+        $faltantes = $al_dia === null ? ['sus datos'] : self::loQueFalta($al_dia);
 
-        if ($al_dia !== null
-            && $al_dia['celular'] !== null
-            && $al_dia['banco'] !== null
-            && $al_dia['firma_archivo'] !== null
-            && $al_dia['cedula_archivo'] !== null
-            && $al_dia['rut_archivo'] !== null
-            && $al_dia['acepto_tratamiento_datos_en'] !== null) {
+        if ($faltantes === []) {
             $this->contratistas->actualizar($contratistaId, ['datos_completos' => 1]);
             $this->guardarFlash('cc_mensaje', 'Sus datos quedaron completos. Ya puede presentar su cuenta de cobro.');
 
             return new RedirectResponse('/cuentas/inicio', Response::HTTP_SEE_OTHER);
         }
 
-        return $this->volverConError($volverA, 'Falta algo: revise que estén la foto de su cédula, el RUT y su firma.');
+        // Se dice QUÉ falta y no «revise los documentos»: mandar a alguien a
+        // buscar en tres pantallas lo que el sistema ya sabe es maltratarlo.
+        return $this->volverConError($volverA, 'Todavía falta: ' . implode(', ', $faltantes) . '.');
+    }
+
+    /**
+     * La copia de la cédula: un PDF con las dos caras, o dos fotos.
+     *
+     * El escaneo ya viene completo en un archivo; la cámara del celular no
+     * puede con las dos caras de una sola toma. Por eso el campo admite
+     * varios archivos y la exigencia depende de lo que suban, no de un
+     * número fijo de casillas.
+     *
+     * @param array<string, mixed>  $contratista
+     * @param array<string, mixed>  $campos      Se le añaden las columnas a guardar.
+     *
+     * @return ?string El problema a mostrar, o null si todo bien.
+     */
+    private function guardarCedula(Request $peticion, array $contratista, array &$campos): ?string
+    {
+        $subidos = $peticion->files->all()['cedula'] ?? [];
+        $archivos = array_values(array_filter(
+            is_array($subidos) ? $subidos : [$subidos],
+            static fn (mixed $archivo): bool => $archivo instanceof UploadedFile,
+        ));
+
+        if ($archivos === []) {
+            return null;
+        }
+
+        $pdf = null;
+
+        foreach ($archivos as $archivo) {
+            if ($archivo->getMimeType() === 'application/pdf') {
+                $pdf = $archivo;
+                break;
+            }
+        }
+
+        try {
+            // Un PDF manda sobre todo lo demás: se supone que trae las dos
+            // caras, así que el reverso suelto deja de tener sentido.
+            if ($pdf !== null) {
+                $campos['cedula_archivo'] = $this->archivos->guardar($pdf, 'contratistas');
+                $campos['cedula_reverso_archivo'] = null;
+
+                return null;
+            }
+
+            $campos['cedula_archivo'] = $this->archivos->guardar($archivos[0], 'contratistas');
+
+            if (isset($archivos[1])) {
+                $campos['cedula_reverso_archivo'] = $this->archivos->guardar($archivos[1], 'contratistas');
+
+                return null;
+            }
+        } catch (\InvalidArgumentException $e) {
+            return $e->getMessage();
+        }
+
+        // Una sola foto y ninguna guardada antes: falta la otra cara.
+        if (($contratista['cedula_reverso_archivo'] ?? null) === null) {
+            return 'Subió una sola foto de la cédula. Tome también la otra cara y seleccione las dos fotos juntas (si prefiere, suba un PDF con ambas).';
+        }
+
+        return null;
+    }
+
+    /**
+     * Hasta qué paso de «Mis datos» puede llegar esta persona.
+     *
+     * Cada paso abre el siguiente, y solo cuando está completo de verdad:
+     * el 2 pide el banco Y su certificación, que es el soporte de la cuenta
+     * donde Tesorería consigna.
+     *
+     * @param array<string, mixed> $contratista
+     */
+    private static function pasoMaximo(array $contratista): int
+    {
+        if (($contratista['celular'] ?? null) === null) {
+            return 1;
+        }
+
+        if (self::loQueFaltaDelPaso($contratista, 2) !== []) {
+            return 2;
+        }
+
+        return 3;
+    }
+
+    /**
+     * Lo que le falta a un paso concreto, en el idioma del contratista.
+     *
+     * @param array<string, mixed> $contratista
+     *
+     * @return list<string>
+     */
+    private static function loQueFaltaDelPaso(array $contratista, int $paso): array
+    {
+        $exigidos = $paso === 1
+            ? ['celular' => 'su número de celular']
+            : [
+                'banco' => 'el banco donde le consignan',
+                'tipo_cuenta' => 'el tipo de cuenta',
+                'numero_cuenta' => 'el número de su cuenta',
+                'certificacion_bancaria_archivo' => 'la certificación bancaria',
+            ];
+        $faltan = [];
+
+        foreach ($exigidos as $columna => $comoSeLlama) {
+            if (($contratista[$columna] ?? null) === null || $contratista[$columna] === '') {
+                $faltan[] = $comoSeLlama;
+            }
+        }
+
+        return $faltan;
+    }
+
+    /**
+     * Qué le falta a un contratista para poder presentar cuentas, en su
+     * propio idioma.
+     *
+     * @param array<string, mixed> $contratista
+     *
+     * @return list<string>
+     */
+    private static function loQueFalta(array $contratista): array
+    {
+        $exigidos = [
+            'celular' => 'su número de celular',
+            'banco' => 'el banco donde le consignan',
+            'numero_cuenta' => 'el número de su cuenta',
+            'certificacion_bancaria_archivo' => 'la certificación bancaria',
+            'cedula_archivo' => 'la copia de su cédula',
+            'rut_archivo' => 'su RUT',
+            'firma_archivo' => 'su firma',
+            'acepto_tratamiento_datos_en' => 'la autorización de tratamiento de datos',
+        ];
+        $faltan = [];
+
+        foreach ($exigidos as $columna => $comoSeLlama) {
+            if (($contratista[$columna] ?? null) === null || $contratista[$columna] === '') {
+                $faltan[] = $comoSeLlama;
+            }
+        }
+
+        // La cédula en PDF ya trae las dos caras; en foto, hacen falta las
+        // dos. Por eso el reverso se exige solo cuando lo subido es imagen.
+        $cedula = (string) ($contratista['cedula_archivo'] ?? '');
+
+        if ($cedula !== ''
+            && !str_ends_with($cedula, '.pdf')
+            && ($contratista['cedula_reverso_archivo'] ?? null) === null) {
+            $faltan[] = 'la otra cara de su cédula';
+        }
+
+        return $faltan;
     }
 
     // ------------------------------------------------------------------
@@ -482,6 +845,22 @@ final readonly class CuentasPortalController
             'contratista_id' => $contratistaId,
             'ip' => $ip,
         ]);
+    }
+
+    /**
+     * Borra los intentos fallidos de esta conexión y de esta persona.
+     *
+     * Se llama al fijar una contraseña nueva: quien acaba de demostrar
+     * quién es —con la fecha de su contrato— no tiene por qué arrastrar
+     * el castigo de los intentos anteriores, que son justamente los de
+     * alguien que no lograba entrar.
+     */
+    private function olvidarIntentos(string $ip, int $contratistaId): void
+    {
+        $this->conexion->executeStatement(
+            'DELETE FROM cc_ingreso_intentos WHERE ip = ? OR contratista_id = ?',
+            [$ip, $contratistaId],
+        );
     }
 
     /** @param array<string, mixed> $datos */

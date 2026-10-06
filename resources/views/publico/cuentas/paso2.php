@@ -2,9 +2,65 @@
 /**
  * P3 — Qué hizo este mes: una tarjeta por obligación, con autoguardado.
  * Espera: $contrato, $cuenta, $actividades, $modoManual, $periodoTexto, $error,
- * $mensaje, $tokenCsrf.
+ * $mensaje, $tokenCsrf, $productos, $evidencias, $maximoEvidencias,
+ * $claveSinEntregable, $claveEnlace.
  */
 $precargada = array_filter($actividades, static fn (array $a): bool => ($a['descripcion_ejecucion'] ?? null) !== null);
+
+/**
+ * El respaldo de una actividad: con qué producto la prueba y el archivo o
+ * enlace que lo demuestra. Se dibuja igual en las dos modalidades
+ * —obligaciones de la minuta y actividades escritas a mano—, así que vive
+ * en una sola función y no en dos copias que se desincronizan.
+ */
+$respaldo = static function (array $actividad) use ($e, $productos, $evidencias, $maximoEvidencias, $claveSinEntregable, $claveEnlace, $tokenCsrf): void {
+    $aid = (int) $actividad['id'];
+    $suyas = $evidencias[$aid] ?? [];
+    $elegido = (int) ($actividad['producto_id'] ?? 0);
+    ?>
+    <label for="producto-<?= $aid ?>">Con qué lo demuestra</label>
+    <select class="campo" id="producto-<?= $aid ?>" name="producto[<?= $aid ?>]">
+        <option value="">— Elija el producto —</option>
+        <?php foreach ($productos as $producto) { ?>
+            <option value="<?= (int) $producto['id'] ?>" <?= $elegido === (int) $producto['id'] ? 'selected' : '' ?>>
+                <?= $e((string) $producto['nombre']) ?>
+            </option>
+        <?php } ?>
+    </select>
+    <p class="ayuda">
+        Si esta obligación no deja un documento ni una foto, elija
+        «NO APLICA». En los demás casos hay que adjuntar el soporte.
+    </p>
+
+    <?php if ($suyas !== []) { ?>
+        <ul class="lista-evidencias">
+            <?php foreach ($suyas as $evidencia) { ?>
+                <li>
+                    <?php if ((string) $evidencia['tipo'] === 'ENLACE') { ?>
+                        <span><?= $e((string) $evidencia['enlace']) ?></span>
+                    <?php } else { ?>
+                        <span><?= $e((string) ($evidencia['nombre_original'] ?? 'archivo')) ?></span>
+                    <?php } ?>
+                    <form method="post" action="/cuentas/nueva/2/evidencia/<?= (int) $evidencia['id'] ?>/eliminar">
+                        <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
+                        <button class="boton-secundario" type="submit">Quitar</button>
+                    </form>
+                </li>
+            <?php } ?>
+        </ul>
+    <?php } ?>
+
+    <?php if (count($suyas) < $maximoEvidencias) { ?>
+        <label for="evidencia-<?= $aid ?>">Adjunte la evidencia (foto o PDF, máx. 10 MB)</label>
+        <input class="campo" id="evidencia-<?= $aid ?>" type="file" name="evidencia[<?= $aid ?>][]"
+               accept=".pdf,.jpg,.jpeg,.png" multiple>
+        <label for="enlace-<?= $aid ?>">…o pegue el enlace, si eligió «LINK DE ACCESO»</label>
+        <input class="campo" id="enlace-<?= $aid ?>" type="url" name="enlace[<?= $aid ?>]"
+               placeholder="https://…" inputmode="url">
+    <?php } else { ?>
+        <p class="ayuda">Ya adjuntó el máximo de <?= (int) $maximoEvidencias ?> evidencias para esta actividad.</p>
+    <?php }
+};
 ob_start(); ?>
 
 <p>Cuenta de cobro N° <?= (int) $cuenta['consecutivo'] ?> — Periodo <?= $e($periodoTexto) ?>.</p>
@@ -16,7 +72,7 @@ ob_start(); ?>
 <?php } ?>
 
 <form method="post" action="/cuentas/nueva/2" id="formulario-actividades"
-      data-csrf="<?= $e($tokenCsrf) ?>">
+      enctype="multipart/form-data" data-csrf="<?= $e($tokenCsrf) ?>">
     <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">
 
     <?php if ($modoManual) { ?>
@@ -34,6 +90,7 @@ ob_start(); ?>
                        type="text" maxlength="300" value="<?= $e((string) ($actividad['titulo_manual'] ?? '')) ?>">
                 <label for="descripcion-<?= $aid ?>">Qué hizo usted este periodo para cumplirla</label>
                 <textarea id="descripcion-<?= $aid ?>" name="actividad_manual[<?= $aid ?>][descripcion]"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '')) ?></textarea>
+                <?php $respaldo($actividad); ?>
             </section>
         <?php } ?>
 
@@ -60,6 +117,7 @@ ob_start(); ?>
                           aria-describedby="guardado-<?= $oid ?>"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '')) ?></textarea>
                 <span class="ayuda" id="guardado-<?= $oid ?>" aria-live="polite"></span>
                 <button class="boton-secundario" type="button" data-limpiar="actividad-<?= $oid ?>">Limpiar</button>
+                <?php $respaldo($actividad); ?>
             </section>
         <?php } ?>
     <?php } ?>

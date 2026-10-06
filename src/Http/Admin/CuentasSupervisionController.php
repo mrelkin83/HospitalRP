@@ -10,6 +10,7 @@ use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Modules\CuentasCobro\Entity\ModalidadPeriodos;
 use App\Modules\CuentasCobro\Repository\ContratoRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Modules\CuentasCobro\Repository\SupervisorRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
 use App\Modules\CuentasCobro\Service\CalculosCuenta;
@@ -40,6 +41,7 @@ final readonly class CuentasSupervisionController
         private PantallaAdmin $pantalla,
         private Vistas $vistas,
         private CuentaRepository $cuentas,
+        private EvidenciaActividadRepository $evidencias,
         private ContratoRepository $contratos,
         private SupervisorRepository $supervisores,
         private SupervisionCuentaService $supervision,
@@ -144,6 +146,7 @@ final readonly class CuentasSupervisionController
             'cuenta' => $cuenta,
             'contrato' => $contrato,
             'actividades' => $this->cuentas->actividades((int) $cuenta['id']),
+            'evidencias' => $this->evidencias->porCuenta((int) $cuenta['id']),
             'ss' => $ss,
             'sugeridos' => $sugeridos,
             'adjuntos' => $this->cuentas->adjuntos((int) $cuenta['id']),
@@ -295,6 +298,80 @@ final readonly class CuentasSupervisionController
     }
 
     /** Visor de anexos (la planilla PILA y demás) para el supervisor. */
+    /**
+     * Uno de los documentos del contratista, para quien certifica la
+     * cuenta.
+     *
+     * Son los mismos archivos que administra Contratación; aquí se sirven
+     * con el vínculo de esta bandeja, porque quien firma el cumplimiento
+     * necesita poder comprobar contra qué firma.
+     */
+    public function documentoContratista(Request $peticion): Response
+    {
+        $supervisor = $this->supervisorActual();
+
+        if ($supervisor === null) {
+            return $this->sinVinculo();
+        }
+
+        $contexto = $this->cuentaDelDocumento($peticion);
+
+        if ($contexto instanceof Response) {
+            return $contexto;
+        }
+
+        [$contrato, $columna] = $contexto;
+
+        // El documento es de un contratista concreto: solo lo ve el
+        // supervisor de ESE contrato, igual que los demás anexos.
+        if ((int) ($contrato['supervisor_id'] ?? 0) !== (int) $supervisor['id']) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+        $ruta = (string) ($contrato[$columna] ?? '');
+
+        if ($ruta === '' || !$this->archivos->existe($ruta)) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return new Response((string) file_get_contents($this->archivos->rutaAbsoluta($ruta)), Response::HTTP_OK, [
+            'Content-Type' => str_ends_with($ruta, '.pdf') ? 'application/pdf' : 'image/jpeg',
+            'Content-Disposition' => 'inline; filename="' . $peticion->attributes->getString('documento') . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * El contrato de la cuenta pedida y la columna del documento, con el
+     * vínculo ya comprobado.
+     *
+     * @return array{0: array<string, mixed>, 1: string}|Response
+     */
+    private function cuentaDelDocumento(Request $peticion): array|Response
+    {
+        $columnas = [
+            'cedula' => 'cedula_archivo',
+            'cedula-reverso' => 'cedula_reverso_archivo',
+            'rut' => 'rut_archivo',
+            'certificacion-bancaria' => 'certificacion_bancaria_archivo',
+            'firma' => 'firma_archivo',
+        ];
+        $columna = $columnas[$peticion->attributes->getString('documento')] ?? null;
+        $cuenta = $this->cuentas->porId($peticion->attributes->getInt('id'));
+
+        if ($columna === null || $cuenta === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $contrato = $this->contratos->porId((int) $cuenta['contrato_id']);
+
+        if ($contrato === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return [$contrato, $columna];
+    }
+
     public function adjunto(Request $peticion): Response
     {
         $supervisor = $this->supervisorActual();
@@ -312,6 +389,36 @@ final readonly class CuentasSupervisionController
         return new Response((string) file_get_contents($this->archivos->rutaAbsoluta((string) $adjunto['archivo'])), Response::HTTP_OK, [
             'Content-Type' => (string) $adjunto['mime'],
             'Content-Disposition' => 'inline; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', (string) $adjunto['nombre_original']) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * Sirve una evidencia de actividad al supervisor que la debe
+     * certificar, y solo a él: la comprobación de que el contrato es suyo
+     * va antes de leer el archivo, igual que con los demás anexos.
+     */
+    public function evidencia(Request $peticion): Response
+    {
+        $supervisor = $this->supervisorActual();
+
+        if ($supervisor === null) {
+            return $this->sinVinculo();
+        }
+
+        $evidencia = $this->evidencias->porIdConContexto($peticion->attributes->getInt('evidencia'));
+
+        if ($evidencia === null
+            || (int) $evidencia['supervisor_id'] !== (int) $supervisor['id']
+            || (string) $evidencia['tipo'] !== 'ARCHIVO'
+            || !$this->archivos->existe((string) $evidencia['archivo'])) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return new Response((string) file_get_contents($this->archivos->rutaAbsoluta((string) $evidencia['archivo'])), Response::HTTP_OK, [
+            'Content-Type' => (string) ($evidencia['mime'] ?? 'application/octet-stream'),
+            'Content-Disposition' => 'inline; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', (string) ($evidencia['nombre_original'] ?? 'evidencia')) . '"',
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ]);

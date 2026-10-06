@@ -68,6 +68,62 @@ final readonly class ParametrosCuentasRepository
         return $this->conexion->fetchAllAssociative('SELECT * FROM cc_arl_clases ORDER BY clase');
     }
 
+    /**
+     * Los bancos que se le ofrecen al contratista.
+     *
+     * @param ?string $incluir Un banco guardado que ya no esté activo: se
+     *        añade igual, porque quitarlo de la lista no puede borrarle el
+     *        dato a quien ya lo tenía.
+     *
+     * @return list<string>
+     */
+    public function bancos(?string $incluir = null): array
+    {
+        /** @var list<string> $nombres */
+        $nombres = $this->conexion->fetchFirstColumn(
+            'SELECT nombre FROM cc_bancos WHERE activo = 1 ORDER BY orden, nombre',
+        );
+
+        $incluir = $incluir === null ? '' : trim($incluir);
+
+        if ($incluir !== '' && !in_array($incluir, $nombres, true)) {
+            $nombres[] = $incluir;
+        }
+
+        return $nombres;
+    }
+
+    /** @return list<array<string, mixed>> El catálogo completo, para administrarlo. */
+    public function catalogoBancos(): array
+    {
+        return $this->conexion->fetchAllAssociative('SELECT id, nombre, orden, activo FROM cc_bancos ORDER BY orden, nombre');
+    }
+
+    public function crearBanco(string $nombre): int
+    {
+        $ultimo = (int) $this->conexion->fetchOne('SELECT COALESCE(MAX(orden), 0) FROM cc_bancos');
+        $this->conexion->insert('cc_bancos', ['nombre' => $nombre, 'orden' => $ultimo + 10]);
+
+        return (int) $this->conexion->lastInsertId();
+    }
+
+    /**
+     * Activa o retira un banco. No se borra: los contratistas que lo
+     * tengan guardado seguirían mostrándolo, y una lista sin él haría
+     * parecer que el dato está mal.
+     */
+    public function alternarBanco(int $id): bool
+    {
+        $this->conexion->executeStatement('UPDATE cc_bancos SET activo = 1 - activo WHERE id = ?', [$id]);
+
+        return (bool) $this->conexion->fetchOne('SELECT activo FROM cc_bancos WHERE id = ?', [$id]);
+    }
+
+    public function bancoExiste(string $nombre): bool
+    {
+        return $this->conexion->fetchOne('SELECT id FROM cc_bancos WHERE nombre = ?', [trim($nombre)]) !== false;
+    }
+
     /** La tarifa de una clase, como decimal exacto («0.02436»), o nula. */
     public function tarifaClase(int $clase): ?string
     {

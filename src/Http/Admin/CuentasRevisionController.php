@@ -9,6 +9,7 @@ use App\Core\Support\Vistas;
 use App\Http\Admin\Soporte\PantallaAdmin;
 use App\Modules\CuentasCobro\Repository\ContratoRepository;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Modules\CuentasCobro\Repository\RevisorRepository;
 use App\Modules\CuentasCobro\Service\ArchivosCuentas;
 use App\Modules\CuentasCobro\Service\FechasCuenta;
@@ -36,6 +37,7 @@ final readonly class CuentasRevisionController
         private PantallaAdmin $pantalla,
         private Vistas $vistas,
         private CuentaRepository $cuentas,
+        private EvidenciaActividadRepository $evidencias,
         private ContratoRepository $contratos,
         private RevisorRepository $revisores,
         private RevisionCuentaService $revision,
@@ -121,6 +123,7 @@ final readonly class CuentasRevisionController
             'cuenta' => $cuenta,
             'contrato' => $contrato,
             'actividades' => $this->cuentas->actividades((int) $cuenta['id']),
+            'evidencias' => $this->evidencias->porCuenta((int) $cuenta['id']),
             'ss' => $this->cuentas->seguridadSocial((int) $cuenta['id']),
             'adjuntos' => $this->cuentas->adjuntos((int) $cuenta['id']),
             'periodoTexto' => FechasCuenta::periodo(
@@ -223,6 +226,99 @@ final readonly class CuentasRevisionController
     }
 
     /** Visor de anexos (la planilla PILA y demás) para el revisor. */
+    /**
+     * La evidencia de una actividad, para el revisor que la va a
+     * certificar. Mismo control que los demás anexos: sin vínculo de
+     * revisor no se sirve el archivo.
+     */
+    public function evidencia(Request $peticion): Response
+    {
+        if ($this->revisorActual() === null) {
+            return $this->sinVinculo();
+        }
+
+        $evidencia = $this->evidencias->porIdConContexto($peticion->attributes->getInt('evidencia'));
+
+        if ($evidencia === null
+            || (string) $evidencia['tipo'] !== 'ARCHIVO'
+            || !$this->archivos->existe((string) $evidencia['archivo'])) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return new Response((string) file_get_contents($this->archivos->rutaAbsoluta((string) $evidencia['archivo'])), Response::HTTP_OK, [
+            'Content-Type' => (string) ($evidencia['mime'] ?? 'application/octet-stream'),
+            'Content-Disposition' => 'inline; filename="' . preg_replace('/[^A-Za-z0-9._-]/', '_', (string) ($evidencia['nombre_original'] ?? 'evidencia')) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * Uno de los documentos del contratista, para quien certifica la
+     * cuenta.
+     *
+     * Son los mismos archivos que administra Contratación; aquí se sirven
+     * con el vínculo de esta bandeja, porque quien firma el cumplimiento
+     * necesita poder comprobar contra qué firma.
+     */
+    public function documentoContratista(Request $peticion): Response
+    {
+        if ($this->revisorActual() === null) {
+            return $this->sinVinculo();
+        }
+
+        $contexto = $this->cuentaDelDocumento($peticion);
+
+        if ($contexto instanceof Response) {
+            return $contexto;
+        }
+
+        [$contrato, $columna] = $contexto;
+        $ruta = (string) ($contrato[$columna] ?? '');
+
+        if ($ruta === '' || !$this->archivos->existe($ruta)) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return new Response((string) file_get_contents($this->archivos->rutaAbsoluta($ruta)), Response::HTTP_OK, [
+            'Content-Type' => str_ends_with($ruta, '.pdf') ? 'application/pdf' : 'image/jpeg',
+            'Content-Disposition' => 'inline; filename="' . $peticion->attributes->getString('documento') . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * El contrato de la cuenta pedida y la columna del documento, con el
+     * vínculo ya comprobado.
+     *
+     * @return array{0: array<string, mixed>, 1: string}|Response
+     */
+    private function cuentaDelDocumento(Request $peticion): array|Response
+    {
+        $columnas = [
+            'cedula' => 'cedula_archivo',
+            'cedula-reverso' => 'cedula_reverso_archivo',
+            'rut' => 'rut_archivo',
+            'certificacion-bancaria' => 'certificacion_bancaria_archivo',
+            'firma' => 'firma_archivo',
+        ];
+        $columna = $columnas[$peticion->attributes->getString('documento')] ?? null;
+        $cuenta = $this->cuentas->porId($peticion->attributes->getInt('id'));
+
+        if ($columna === null || $cuenta === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        $contrato = $this->contratos->porId((int) $cuenta['contrato_id']);
+
+        if ($contrato === null) {
+            return new RedirectResponse(self::RUTA, Response::HTTP_SEE_OTHER);
+        }
+
+        return [$contrato, $columna];
+    }
+
     public function adjunto(Request $peticion): Response
     {
         $revisor = $this->revisorActual();

@@ -6,6 +6,7 @@ namespace App\Modules\CuentasCobro\Service;
 
 use App\Modules\CuentasCobro\Entity\EstadoCuenta;
 use App\Modules\CuentasCobro\Repository\CuentaRepository;
+use App\Modules\CuentasCobro\Repository\EvidenciaActividadRepository;
 use App\Ports\NotificadorCorreo;
 use Doctrine\DBAL\Connection;
 
@@ -26,6 +27,7 @@ final readonly class SupervisionCuentaService
         private GeneradorDocumentosCuenta $generador,
         private CombinadorPaquete $combinador,
         private NotificadorCorreo $correo,
+        private EvidenciaActividadRepository $evidencias,
     ) {
     }
 
@@ -237,6 +239,21 @@ final readonly class SupervisionCuentaService
 
         foreach ($adjuntos as $adjunto) {
             $documentos[] = ['ruta' => (string) $adjunto['archivo'], 'mime' => (string) $adjunto['mime']];
+        }
+
+        // Las evidencias de las actividades van al final y en el orden de
+        // las obligaciones, para que el paquete se lea igual que el
+        // informe: fila 3 del informe, tercer bloque de anexos. Los
+        // enlaces no se anexan —no son un archivo— y quedan en el informe.
+        foreach ($this->evidencias->porCuenta((int) $cuenta['id']) as $deLaActividad) {
+            foreach ($deLaActividad as $evidencia) {
+                if ((string) $evidencia['tipo'] === 'ARCHIVO' && is_string($evidencia['archivo'])) {
+                    $documentos[] = [
+                        'ruta' => (string) $evidencia['archivo'],
+                        'mime' => (string) ($evidencia['mime'] ?? 'application/pdf'),
+                    ];
+                }
+            }
         }
 
         return $documentos;

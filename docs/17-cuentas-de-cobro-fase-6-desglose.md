@@ -30,7 +30,7 @@ La fase cierra tres huecos que aparecieron al planear la puesta en marcha real:
 | A5 | Detector de capa de texto: `pdftotext` sobre el PDF; con texto suficiente → parser determinista por cláusulas; sin texto → ruta IA/OCR actual | Un PDF exportado de Word se extrae sin gastar un token | ✅ |
 | A6 | Bandeja de revisión para cuatro personas: asignación con `asignado_a`, agrupación por similitud de objeto y filtros por estado | Dos revisores nunca abren la misma extracción | ✅ |
 | A7 | Purga: al aplicar la extracción a un contrato se borran sus imágenes `extracciones-N` | La carpeta queda vacía y el visor deja de ofrecer páginas | ✅ |
-| A8 | Tarea programada en el servidor: el comando corre cada 2 minutos | Una minuta subida a las 10:00 está lista hacia las 10:05 sin intervención | ⬜ |
+| A8 | Tarea programada en el servidor: el comando corre cada 2 minutos | Una minuta subida a las 10:00 está lista hacia las 10:05 sin intervención | ✅ |
 
 **La tarea programada (A8)**
 
@@ -79,14 +79,14 @@ fijos. El supervisor está certificando cumplimiento contra texto libre.
 
 | # | Paso | Verificable cuando… | Estado |
 |---|---|---|---|
-| B1 | Tabla `cc_productos_actividad` (clave, nombre, orden, activo) + semilla de los 18 productos institucionales | El catálogo se administra desde el panel, sin migración | ⬜ |
-| B2 | `producto_id` en `cc_cuenta_actividades` | Una actividad sin producto impide radicar la cuenta | ⬜ |
-| B3 | Tabla `cc_actividad_evidencias` (actividad, `tipo` ARCHIVO/ENLACE, archivo, enlace, nombre original, mime, tamaño) | Se adjuntan varias evidencias a una misma obligación (tope 5) | ⬜ |
-| B4 | Reglas de radicación: producto obligatorio siempre; **evidencia obligatoria salvo `NO APLICA`**; `LINK DE ACCESO` pide URL válida en lugar de archivo | El sistema rechaza el envío y señala la obligación incompleta | ⬜ |
-| B5 | Compresión al subir: imágenes a 1600 px de lado largo, JPEG 80 | Una foto de 2 MB queda en ~250 KB sin perder legibilidad | ⬜ |
-| B6 | Portal, paso 2: por obligación, el textarea + selector de producto + zona de carga con contador, conservando el guardado automático | Un contratista completa las tres cosas sin salir de la pantalla | ⬜ |
-| B7 | Informe de actividades: tercera columna **PRODUCTO**; el paquete final anexa las evidencias en el orden de las obligaciones | El PDF del informe muestra el producto de cada fila | ⬜ |
-| B8 | Supervisión: el supervisor ve producto y abre las evidencias antes de marcar SI/NO/PARCIAL | Ninguna actividad se certifica a ciegas | ⬜ |
+| B1 | Tabla `cc_productos_actividad` + semilla de los 18, administrable en Parámetros (agregar y retirar) | El catálogo se administra desde el panel, sin migración | ✅ |
+| B2 | `producto_id` en `cc_cuenta_actividades` | Una actividad sin producto impide radicar la cuenta | ✅ |
+| B3 | Tabla `cc_actividad_evidencias` (actividad, `tipo` ARCHIVO/ENLACE, archivo, enlace, nombre original, mime, tamaño) | Se adjuntan varias evidencias a una misma obligación (tope 5) | ✅ |
+| B4 | Reglas de radicación: producto obligatorio siempre; **evidencia obligatoria salvo `NO APLICA`**; `LINK DE ACCESO` pide URL válida en lugar de archivo | El sistema rechaza el envío y señala la obligación incompleta | ✅ |
+| B5 | Compresión al subir: imágenes a 1600 px de lado largo, JPEG 80 | Medido: una imagen de 2,6 MB queda en 578 KB (22 %) en el peor caso —ruido puro—; una foto real baja bastante más | ✅ |
+| B6 | Portal, paso 2: por obligación, el textarea + selector de producto + zona de carga con contador, conservando el guardado automático | Un contratista completa las tres cosas sin salir de la pantalla | ✅ |
+| B7 | Informe de actividades: tercera columna **PRODUCTO** con el conteo de anexos; el paquete anexa las evidencias en el orden de las obligaciones | El PDF del informe muestra el producto de cada fila | ✅ |
+| B8 | Revisión y supervisión: **ambas** bandejas muestran producto y abren las evidencias antes de certificar | Ninguna actividad se certifica a ciegas | ✅ |
 
 **Catálogo sembrado (18)**
 
@@ -107,6 +107,19 @@ fijos. El supervisor está certificando cumplimiento contra texto libre.
 - **Sin retroactividad.** Las actividades ya radicadas quedan con
   `producto_id` nulo; la regla solo rige para cuentas nuevas. No se puede
   exigir un dato que no se pidió cuando se radicó.
+- **La regla vive en `EnvioCuentaService`, no en la pantalla.** La radicación
+  tiene una sola puerta; una validación que solo estuviera en el formulario se
+  esquiva con una petición a mano.
+- **El GJ-FR-004 no se toca.** El formato de supervisión es institucional, con
+  código y versión; meterle una columna sería alterar un documento del SGC. El
+  producto sale en el informe de actividades (que no tiene código) y en la
+  pantalla de quien certifica, que es donde hace falta para decidir.
+- **Las evidencias entran al paquete al final**, en el orden de las
+  obligaciones, para que se lea igual que el informe. Los enlaces no se anexan
+  —no son un archivo— y quedan citados en la pantalla.
+- **La compresión nunca hace fallar una radicación**: si GD no sabe leer la
+  foto, se guarda tal cual. Un contratista que no pueda radicar porque su
+  cámara guarda un JPEG raro es un fallo peor que un archivo grande.
 
 ---
 
@@ -144,12 +157,19 @@ que 40 salteados.
 |---|---|
 | Carga inicial: 1.500 minutas + imágenes de extracción | ≈ 8 GB, y las imágenes se purgan al aplicar (A7) |
 | Operación mensual: PDF de las 1.500 cuentas | ≈ 1,5 GB/mes |
-| Operación mensual: evidencias por actividad, **comprimidas** (B5) | ≈ 4–6 GB/mes |
+| Operación mensual: evidencias por actividad, **comprimidas** (B5) | ≈ 6–10 GB/mes |
 | ″ sin comprimir | 20–30 GB/mes |
 
 Con 4 TB el disco deja de ser un riesgo —incluso sin comprimir aguanta más de
 diez años—, pero B5 se mantiene: abarata los respaldos y hace que el paquete
-PDF se arme en segundos en vez de minutos.
+PDF se arme en segundos en vez de minutos. Las cifras de evidencias se
+recalcularon tras medir la compresión real (ver B5).
+
+**Estado a 2026-09-20**
+
+Bloques A y B construidos y probados. Falta ejecutar la carga real: programar
+la tarea del servidor (A8) y correr la extracción de los 1.500 con la clave del
+proveedor ya cargada en el panel.
 
 **Orden de ejecución**
 
@@ -177,7 +197,9 @@ PDF se arme en segundos en vez de minutos.
    puede radicar; con `LINK DE ACCESO` exige una URL válida.
 10. El informe de actividades en PDF muestra la columna PRODUCTO y el paquete
     trae las evidencias anexas en el orden de las obligaciones.
-11. Una foto de 2 MB queda almacenada en ~250 KB y se abre legible.
+11. Una imagen de 2,6 MB queda almacenada en 578 KB o menos, a 1600 px de
+    lado largo, y se abre legible. (Medido sobre ruido sintético, que es el
+    peor caso posible: una fotografía real comprime mucho mejor.)
 
 ---
 

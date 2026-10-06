@@ -482,9 +482,15 @@ final class CuentasSupervisionTest extends TestCase
             [$this->contratoId],
         );
 
+        // Fase 6: sin producto por actividad la cuenta no se radica. Aquí
+        // se usa NO APLICA —la única exención de evidencia— porque lo que
+        // esta prueba ejercita es la supervisión, no el respaldo.
+        $noAplica = (int) self::$conexion->fetchOne("SELECT id FROM cc_productos_actividad WHERE clave = 'no-aplica'");
+
         foreach (self::$conexion->fetchFirstColumn('SELECT obligacion_id FROM cc_cuenta_actividades WHERE cuenta_id = ?', [$cuentaId]) as $oid) {
             self::$conexion->update('cc_cuenta_actividades', [
                 'descripcion_ejecucion' => 'Actividades ejecutadas del periodo frente a la obligación ' . $oid . '.',
+                'producto_id' => $noAplica,
             ], ['cuenta_id' => $cuentaId, 'obligacion_id' => $oid]);
         }
 

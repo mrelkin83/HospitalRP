@@ -34,6 +34,7 @@ final readonly class EnvioCuentaService
         private GeneradorDocumentosCuenta $generador,
         private GeneradorRadicado $radicados,
         private NotificadorCorreo $correo,
+        private ValidadorEvidencias $evidencias,
     ) {
     }
 
@@ -62,6 +63,20 @@ final readonly class EnvioCuentaService
 
         if ($this->cuentas->adjuntos($cuentaId, 'PLANILLA_PILA') === []) {
             return ['ok' => false, 'mensaje' => 'Falta adjuntar la planilla PILA (paso 3). Sin soporte no hay cuenta que enviar.'];
+        }
+
+        // Producto y evidencia por actividad: la puerta está aquí y no en
+        // la pantalla porque el supervisor va a firmar el cumplimiento de
+        // cada obligación, y firmar contra un texto libre sin entregable
+        // es justo lo que el formato del SGC busca evitar.
+        $faltantes = $this->evidencias->problemas($cuentaId);
+
+        if ($faltantes !== []) {
+            return [
+                'ok' => false,
+                'mensaje' => 'Falta respaldar lo que hizo (paso 2). ' . implode(' ', array_slice($faltantes, 0, 3))
+                    . (count($faltantes) > 3 ? ' …y ' . (count($faltantes) - 3) . ' más.' : ''),
+            ];
         }
 
         $radicado = is_string($cuenta['radicado'] ?? null) && $cuenta['radicado'] !== ''

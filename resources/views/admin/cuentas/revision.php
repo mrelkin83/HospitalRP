@@ -25,6 +25,47 @@ $desviado = static function (mixed $reportado, string $campo) use ($sugeridos, $
 <?php if ($mensaje !== null) { ?><div class="alerta alerta-exito mt-4" role="status"><?= $e($mensaje) ?></div><?php } ?>
 <?php if ($error !== null) { ?><div class="alerta alerta-error mt-4" role="alert"><?= $e($error) ?></div><?php } ?>
 
+<?php /* Los documentos del contratista: se cargan UNA vez al inicio del
+         contrato y sirven para toda su vigencia. Quien certifica la cuenta
+         necesita poder abrirlos —la certificación bancaria contra el número
+         de cuenta, el RUT contra el régimen— sin salir de esta pantalla. */ ?>
+<section class="tarjeta mt-4">
+    <h2 class="text-lg font-semibold texto-titular">Documentos del contratista</h2>
+    <p class="mt-1 text-sm texto-suave">
+        Se cargan una sola vez al inicio del contrato; no se piden cada mes.
+    </p>
+    <ul class="mt-2 flex flex-wrap gap-3 text-sm">
+        <?php
+        $documentosContratista = [
+            'cedula' => ['Cédula', 'cedula_archivo'],
+            'cedula-reverso' => ['Cédula (reverso)', 'cedula_reverso_archivo'],
+            'rut' => ['RUT', 'rut_archivo'],
+            'certificacion-bancaria' => ['Certificación bancaria', 'certificacion_bancaria_archivo'],
+            'firma' => ['Firma registrada', 'firma_archivo'],
+        ];
+
+        foreach ($documentosContratista as $claveDoc => [$rotuloDoc, $columnaDoc]) {
+            $hayDoc = ($contrato[$columnaDoc] ?? null) !== null;
+            // El reverso solo se echa de menos si la cédula es una foto: en
+            // PDF vienen las dos caras en el mismo archivo.
+            $cedulaPdf = str_ends_with((string) ($contrato['cedula_archivo'] ?? ''), '.pdf');
+
+            if ($claveDoc === 'cedula-reverso' && !$hayDoc && $cedulaPdf) {
+                continue;
+            }
+            ?>
+            <li>
+                <?php if ($hayDoc) { ?>
+                    <a class="enlace" target="_blank" rel="noopener"
+                       href="/admin/cuentas-cobro/bandeja/<?= $id ?>/documento/<?= $e($claveDoc) ?>"><?= $e($rotuloDoc) ?></a>
+                <?php } else { ?>
+                    <span class="texto-suave"><?= $e($rotuloDoc) ?>: sin subir</span>
+                <?php } ?>
+            </li>
+        <?php } ?>
+    </ul>
+</section>
+
 <section class="tarjeta mt-4">
     <h2 class="text-lg font-semibold texto-titular">Avance financiero</h2>
     <dl class="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
@@ -68,7 +109,7 @@ $desviado = static function (mixed $reportado, string $campo) use ($sugeridos, $
                 <thead>
                     <tr class="text-left texto-suave">
                         <th class="p-2">N°</th><th class="p-2">Obligación</th><th class="p-2">Ejecución reportada</th>
-                        <th class="p-2">Cumplimiento</th>
+                        <th class="p-2">Producto y evidencia</th><th class="p-2">Cumplimiento</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,6 +118,27 @@ $desviado = static function (mixed $reportado, string $campo) use ($sugeridos, $
                             <td class="p-2"><?= (int) $actividad['orden'] ?></td>
                             <td class="p-2"><?= $e((string) $actividad['texto']) ?></td>
                             <td class="p-2"><?= $e((string) ($actividad['descripcion_ejecucion'] ?? '— sin descripción —')) ?></td>
+                            <td class="p-2">
+                                <?php // Certificar a ciegas es lo que esta columna viene a impedir. ?>
+                                <?= $e((string) ($actividad['producto_nombre'] ?? '— sin producto —')) ?>
+                                <?php $suyas = $evidencias[(int) $actividad['id']] ?? []; ?>
+                                <?php if ($suyas !== []) { ?>
+                                    <ul class="mt-1">
+                                        <?php foreach ($suyas as $evidencia) { ?>
+                                            <li>
+                                                <?php if ((string) $evidencia['tipo'] === 'ENLACE') { ?>
+                                                    <a class="enlace" href="<?= $e((string) $evidencia['enlace']) ?>"
+                                                       target="_blank" rel="noopener noreferrer">Abrir enlace</a>
+                                                <?php } else { ?>
+                                                    <a class="enlace" href="/admin/cuentas-cobro/bandeja/<?= $id ?>/evidencia/<?= (int) $evidencia['id'] ?>">
+                                                        <?= $e((string) ($evidencia['nombre_original'] ?? 'archivo')) ?>
+                                                    </a>
+                                                <?php } ?>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                <?php } ?>
+                            </td>
                             <td class="p-2 whitespace-nowrap">
                                 <?php foreach (['SI' => 'Sí', 'NO' => 'No', 'PARCIAL' => 'Parcial'] as $valor => $etiqueta) { ?>
                                     <label class="mr-2 inline-flex items-center gap-1">

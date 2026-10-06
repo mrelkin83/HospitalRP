@@ -2,9 +2,13 @@
 /**
  * El marco del portal del contratista: minimalista a propósito (§2 del
  * documento del módulo). Logo, título grande, contenido y nada más; sin
- * menús anidados ni distracciones. Tipografía 18px+, botones de 56px.
+ * menús anidados ni distracciones. Tipografía 18px+, botones de 56px, y
+ * el mismo lenguaje visual del ingreso (degradado de marca y tarjetas
+ * blancas redondeadas).
  * Espera: $titulo, $contenido, $paso (?int 1..4), $conSesion (bool).
  */
+use App\Core\Support\Recursos;
+
 $conSesion = $conSesion ?? false;
 $paso = $paso ?? null;
 ?>
@@ -15,12 +19,18 @@ $paso = $paso ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title><?= $e($titulo) ?> — Cuentas de cobro · Hospital Rosario Pumarejo de López</title>
-    <link rel="stylesheet" href="/css/cuentas.css">
+    <?php /* Con huella de versión: sin ella el navegador se queda con
+             la hoja vieja y la pantalla mezcla marcado nuevo con
+             estilos de ayer. */ ?>
+    <link rel="stylesheet" href="<?= $e(Recursos::url('/css/cuentas.css')) ?>">
 </head>
 <body>
 <a class="saltar" href="#contenido">Saltar al contenido</a>
 <header class="cabecera">
-    <img src="/img/logo.png" alt="E.S.E. Hospital Rosario Pumarejo de López" width="160" height="48">
+    <?php /* El mismo logo compacto del ingreso al panel y del portal: una
+             sola marca en toda la plataforma. */ ?>
+    <img src="<?= $e(Recursos::url('/img/logo_compacto.jpg')) ?>"
+         alt="E.S.E. Hospital Rosario Pumarejo de López" width="64" height="64">
     <?php if ($conSesion) { ?>
         <form method="post" action="/cuentas/salir">
             <input type="hidden" name="_token" value="<?= $e($tokenCsrf) ?>">

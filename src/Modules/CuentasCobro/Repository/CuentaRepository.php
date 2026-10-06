@@ -248,9 +248,11 @@ final readonly class CuentaRepository
     {
         return $this->conexion->fetchAllAssociative(
             'SELECT a.id, a.obligacion_id, a.titulo_manual, a.descripcion_ejecucion, a.cumplimiento,
+                    a.producto_id, p.nombre AS producto_nombre, p.clave AS producto_clave,
                     o.orden, COALESCE(o.texto, a.titulo_manual) AS texto
                FROM cc_cuenta_actividades a
                LEFT JOIN cc_contrato_obligaciones o ON o.id = a.obligacion_id
+               LEFT JOIN cc_productos_actividad p ON p.id = a.producto_id
               WHERE a.cuenta_id = ?
               ORDER BY COALESCE(o.orden, 100000), a.id',
             [$cuentaId],
@@ -289,6 +291,21 @@ final readonly class CuentaRepository
             'DELETE FROM cc_cuenta_actividades
               WHERE id = ? AND cuenta_id = ? AND obligacion_id IS NULL',
             [$actividadId, $cuentaId],
+        );
+    }
+
+    /**
+     * El producto que respalda una actividad.
+     *
+     * Se identifica por el id de la ACTIVIDAD y no por el de la
+     * obligación: las actividades escritas a mano no tienen obligación, y
+     * también deben respaldarse.
+     */
+    public function guardarProducto(int $cuentaId, int $actividadId, ?int $productoId): void
+    {
+        $this->conexion->executeStatement(
+            'UPDATE cc_cuenta_actividades SET producto_id = ? WHERE id = ? AND cuenta_id = ?',
+            [$productoId, $actividadId, $cuentaId],
         );
     }
 

@@ -58,7 +58,10 @@ final readonly class ContratoRepository
     {
         $fila = $this->conexion->fetchAssociative(
             'SELECT k.*, c.nombre_completo AS contratista_nombre, c.numero_documento, c.tipo_documento,
-                    c.clase_riesgo_arl, s.nombre_completo AS supervisor_nombre, s.cargo AS supervisor_cargo
+                    c.clase_riesgo_arl, c.banco, c.tipo_cuenta, c.numero_cuenta,
+                    c.cedula_archivo, c.cedula_reverso_archivo, c.rut_archivo,
+                    c.certificacion_bancaria_archivo, c.firma_archivo,
+                    s.nombre_completo AS supervisor_nombre, s.cargo AS supervisor_cargo
                FROM cc_contratos k
                JOIN cc_contratistas c ON c.id = k.contratista_id
                LEFT JOIN cc_supervisores s ON s.id = k.supervisor_id

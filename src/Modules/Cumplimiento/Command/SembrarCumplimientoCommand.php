@@ -110,6 +110,51 @@ final class SembrarCumplimientoCommand extends Command
             . 'tu solicitud por <a href="/atencion-ciudadania/pqrsdf">PQRSDF</a>.</p>'
             . '<p><strong>Versión provisional</strong>, vigente mientras la oficina jurídica adopta el texto definitivo.</p>',
         ],
+        // Anexo 3 de la Res. 1519 (ITA 15.1.a). Esta NO es provisional: es la
+        // política realmente adoptada, transcrita de la Resolución 501 del 27
+        // de noviembre de 2024 que el hospital publica en su sitio vigente.
+        //
+        // El PDF firmado es un escaneo sin capa de texto, así que un lector de
+        // pantalla no puede leerlo —incumple el criterio 1.1.i del Anexo 1—.
+        // Por eso aquí va la versión en HTML: el documento firmado sigue siendo
+        // el original, pero esta es la que cualquiera puede leer.
+        'seguridad' => [
+            'Política de Seguridad de la Información (PSI)',
+            '<p>Adoptada mediante la <strong>Resolución N.º 501 del 27 de noviembre de 2024</strong>, '
+            . 'suscrita por la Agente Especial Interventora de la E.S.E. Hospital Rosario Pumarejo '
+            . 'de López, en desarrollo de la Ley 1273 de 2009 y del Anexo 3 de la Resolución MinTIC '
+            . '1519 de 2020.</p>'
+            . '<h2>Objeto</h2>'
+            . '<p>Adoptar los lineamientos de la Ley 1273 de 2009 (artículos 269A a 269H) que '
+            . 'permitan proteger los activos informáticos de la entidad, garantizando la '
+            . 'confidencialidad, integridad y disponibilidad de la información crítica relacionada '
+            . 'con pacientes y con los procesos clínicos, administrativos y financieros. La política '
+            . 'busca prevenir accesos no autorizados, asegurar el cumplimiento normativo y mitigar '
+            . 'los riesgos que puedan afectar la prestación de los servicios de salud.</p>'
+            . '<h2>Definición</h2>'
+            . '<p>Es el conjunto de principios, normas y procedimientos que rigen la protección de '
+            . 'los activos tecnológicos y de la información digital del hospital. Establece '
+            . 'lineamientos para la gestión de riesgos informáticos, la prevención de accesos no '
+            . 'autorizados y el cumplimiento de la normativa vigente.</p>'
+            . '<h2>Alcance</h2>'
+            . '<p>Aplica a todos los sistemas, equipos, aplicaciones y datos utilizados en la '
+            . 'entidad, y abarca los procesos clínicos, administrativos y financieros. Su '
+            . 'cumplimiento es <strong>obligatorio para empleados, contratistas, proveedores y '
+            . 'terceros</strong> con acceso a los activos informáticos del hospital. Incluye la '
+            . 'protección de redes, bases de datos, historias clínicas electrónicas, correos '
+            . 'electrónicos y demás recursos tecnológicos.</p>'
+            . '<h2>Responsable</h2>'
+            . '<p>El Profesional Universitario de Sistemas de la E.S.E. es el referente de esta '
+            . 'política.</p>'
+            . '<h2>Divulgación y vigencia</h2>'
+            . '<p>La resolución se divulga por la página web institucional y en los procesos de '
+            . 'inducción y reinducción, y permanece exhibida en los espacios oficiales de la '
+            . 'entidad. Rige a partir de su publicación.</p>'
+            . '<p>Esta página transcribe la resolución firmada para que pueda leerse con cualquier '
+            . 'tecnología de apoyo. <strong>El documento oficial es la resolución firmada</strong>, '
+            . 'disponible en el buscador de documentos junto con el Plan de Seguridad y Privacidad '
+            . 'de la Información (MSPI).</p>',
+        ],
     ];
 
     /** Normativa que el hospital ya publica (inventario del sitio actual). */

@@ -26,6 +26,7 @@ use App\Modules\Indicadores\Command\SembrarIndicadoresCommand;
 use App\Modules\Contenido\Command\SembrarPaginasCommand;
 use App\Modules\Contenido\Service\ProgramadorPublicacionService;
 use App\Modules\Cumplimiento\Command\SembrarCumplimientoCommand;
+use App\Modules\Documentos\Command\SembrarDocumentosSeguridadCommand;
 use App\Modules\Directorio\Command\SembrarDirectorioCommand;
 use App\Modules\Directorio\Command\SembrarPortafolioCommand;
 use App\Adapters\Correo\NotificadorSymfonyMailer;
@@ -135,6 +136,11 @@ $aplicacion->add(new RecordatoriosCuentasCommand(
     new CalculadoraDiasHabiles($conexion),
 ));
 $aplicacion->add(new SembrarCumplimientoCommand($conexion, $auditoria));
+$aplicacion->add(new SembrarDocumentosSeguridadCommand(
+    $conexion,
+    new AlmacenArchivos($conexion, dirname(__DIR__) . '/storage/uploads'),
+    $auditoria,
+));
 $aplicacion->add(new AlertasVencimientoCommand(
     new TramiteRepository($conexion),
     NotificadorSymfonyMailer::desde($env),

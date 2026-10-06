@@ -1,6 +1,7 @@
 <?php
 /**
- * /servicios — Espera: $servicios (list<Servicio>), $sedes (list<Sede>).
+ * /servicios — Espera: $servicios (list<Servicio>), $sedes (list<Sede>),
+ *              $imagenes (array<int, Archivo> indexado por id).
  */
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
@@ -49,34 +50,65 @@
         </p>
     <?php } else { ?>
         <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="lista-servicios">
-            <?php foreach ($servicios as $servicio) { ?>
+            <?php foreach ($servicios as $servicio) {
+                $foto = $imagenes[$servicio->imagenId] ?? null;
+                ?>
                 <li data-valores="<?= implode(',', $servicio->sedeIds) ?>" class="transform transition duration-300 hover:-translate-y-2">
-                    <article class="tarjeta h-full flex flex-col justify-between group border-primario-100/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm p-6">
-                        <div>
-                            <!-- Icono Clínico Ilustrativo -->
-                            <span class="grid h-12 w-12 place-items-center rounded-2xl bg-primario-50 text-primario-600 dark:bg-primario-800 dark:text-primario-200 group-hover:scale-110 transition-transform mb-4">
-                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                </svg>
-                            </span>
-                            <h2 class="text-xl font-bold leading-tight">
-                                <a class="texto-titular no-underline group-hover:text-primario-600 transition-colors" href="/servicios/<?= $e($servicio->slug) ?>">
-                                    <?= $e($servicio->nombre) ?>
+                    <article class="tarjeta h-full flex flex-col justify-between group border-primario-100/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm overflow-hidden p-0">
+                        <?php if ($foto !== null) { ?>
+                            <?php /* Relación fija: las fotos del portafolio vienen en formatos
+                                     distintos y sin altura reservada la rejilla salta al cargar
+                                     (CLAUDE.md §6, Frontend: cero layout shift). */ ?>
+                            <div class="aspect-[16/10] overflow-hidden bg-primario-50 dark:bg-primario-900">
+                                <img class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                     src="/archivos/<?= $foto->id ?>" alt="<?= $e($foto->textoAlt ?? '') ?>"
+                                     width="<?= $foto->ancho ?? 1600 ?>" height="<?= $foto->alto ?? 1000 ?>" loading="lazy" decoding="async">
+                            </div>
+                        <?php } ?>
+                        <div class="flex flex-1 flex-col justify-between p-6">
+                            <div>
+                                <?php if ($foto === null) { ?>
+                                    <!-- Icono Clínico Ilustrativo -->
+                                    <span class="grid h-12 w-12 place-items-center rounded-2xl bg-primario-50 text-primario-600 dark:bg-primario-800 dark:text-primario-200 group-hover:scale-110 transition-transform mb-4">
+                                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </span>
+                                <?php } ?>
+                                <h2 class="text-xl font-bold leading-tight">
+                                    <a class="texto-titular no-underline group-hover:text-primario-600 transition-colors" href="/servicios/<?= $e($servicio->slug) ?>">
+                                        <?= $e($servicio->nombre) ?>
+                                    </a>
+                                </h2>
+                                <?php if ($servicio->descripcion !== null) { ?>
+                                    <p class="mt-3 text-sm texto-suave"><?= $e(mb_strimwidth($servicio->descripcion, 0, 160, '…')) ?></p>
+                                <?php } ?>
+                                <?php if ($servicio->destacados !== []) { ?>
+                                    <ul class="mt-4 flex flex-wrap gap-2">
+                                        <?php foreach (array_slice($servicio->destacados, 0, 3) as $destacado) { ?>
+                                            <li class="rounded-xl bg-primario-50 dark:bg-primario-800/60 px-3 py-1.5 text-xs leading-tight">
+                                                <?php if ($destacado['cifra'] !== '') { ?>
+                                                    <strong class="text-primario-700 dark:text-primario-200"><?= $e($destacado['cifra']) ?></strong>
+                                                <?php } ?>
+                                                <span class="texto-suave"><?= $e($destacado['texto']) ?></span>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                <?php } ?>
+                                <?php if ($servicio->horario !== null) { ?>
+                                    <p class="mt-3 text-sm texto-suave flex items-center gap-2">
+                                        <svg class="h-4 w-4 text-primario-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        <?= $e($servicio->horario) ?>
+                                    </p>
+                                <?php } ?>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-primario-100 dark:border-primario-800 flex justify-between items-center">
+                                <span class="text-xs text-primario-500 font-bold uppercase tracking-wider">Atención Especializada</span>
+                                <a class="text-sm font-semibold text-primario-600 dark:text-primario-400 group-hover:translate-x-1 transition-transform inline-flex items-center no-underline" href="/servicios/<?= $e($servicio->slug) ?>">
+                                    Ver Detalle
+                                    <svg class="ml-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </a>
-                            </h2>
-                            <?php if ($servicio->horario !== null) { ?>
-                                <p class="mt-3 text-sm texto-suave flex items-center gap-2">
-                                    <svg class="h-4 w-4 text-primario-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                    <?= $e($servicio->horario) ?>
-                                </p>
-                            <?php } ?>
-                        </div>
-                        <div class="mt-6 pt-4 border-t border-primario-100 dark:border-primario-800 flex justify-between items-center">
-                            <span class="text-xs text-primario-500 font-bold uppercase tracking-wider">Atención Especializada</span>
-                            <a class="text-sm font-semibold text-primario-600 dark:text-primario-400 group-hover:translate-x-1 transition-transform inline-flex items-center no-underline" href="/servicios/<?= $e($servicio->slug) ?>">
-                                Ver Detalle
-                                <svg class="ml-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </a>
+                            </div>
                         </div>
                     </article>
                 </li>

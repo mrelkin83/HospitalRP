@@ -1,6 +1,7 @@
 <?php
 /**
- * /servicios/{slug} — Espera: $servicio (Servicio), $sedes (list<Sede>).
+ * /servicios/{slug} — Espera: $servicio (Servicio), $sedes (list<Sede>),
+ *                     $imagen (?Archivo).
  */
 $soloTelefono = preg_replace('/\D+/', '', $servicio->telefono ?? '');
 ?>
@@ -11,8 +12,31 @@ $soloTelefono = preg_replace('/\D+/', '', $servicio->telefono ?? '');
 
     <h1 class="mt-4"><?= $e($servicio->nombre) ?></h1>
 
+    <?php if ($imagen !== null) { ?>
+        <?php /* `width`/`height` reales para que el navegador reserve el hueco
+                 antes de descargar la foto (CLAUDE.md §6: cero layout shift).
+                 Sin `lazy`: en el detalle esta es la imagen principal y suele
+                 ser el LCP, así que retrasarla lo empeoraría. */ ?>
+        <img class="mt-6 w-full rounded-2xl object-cover max-h-[28rem]"
+             src="/archivos/<?= $imagen->id ?>" alt="<?= $e($imagen->textoAlt ?? '') ?>"
+             width="<?= $imagen->ancho ?? 1600 ?>" height="<?= $imagen->alto ?? 1000 ?>" decoding="async">
+    <?php } ?>
+
+    <?php if ($servicio->destacados !== []) { ?>
+        <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <?php foreach ($servicio->destacados as $destacado) { ?>
+                <li class="tarjeta p-5">
+                    <?php if ($destacado['cifra'] !== '') { ?>
+                        <p class="text-3xl font-extrabold text-primario-600 dark:text-primario-300"><?= $e($destacado['cifra']) ?></p>
+                    <?php } ?>
+                    <p class="mt-1 text-sm texto-suave"><?= $e($destacado['texto']) ?></p>
+                </li>
+            <?php } ?>
+        </ul>
+    <?php } ?>
+
     <?php if ($servicio->descripcion !== null) { ?>
-        <p class="mt-4 max-w-prose"><?= $e($servicio->descripcion) ?></p>
+        <div class="mt-8 max-w-prose"><?= nl2br($e($servicio->descripcion)) ?></div>
     <?php } ?>
 
     <div class="mt-8 grid gap-8 lg:grid-cols-2">

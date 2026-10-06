@@ -40,7 +40,14 @@
                         <?php if ($especialidad->descripcion !== null) { ?>
                             <p class="mt-2 text-sm texto-suave"><?= $e(mb_substr($especialidad->descripcion, 0, 160)) ?></p>
                         <?php } ?>
-                        <p class="mt-2 text-sm texto-suave"><?= count($especialidad->sedeIds) ?> sede(s)</p>
+                        <?php /* El conteo de sedes solo informa si hay más de una. Con sede
+                                 única (docs/08) repetir «1 sede(s)» en cada una de las
+                                 cuarenta y seis fichas es ruido, y «0 sede(s)» —lo que salía
+                                 antes de atarlas— además era falso. Mismo criterio que el
+                                 filtro de arriba: lo decide el dato, no el código. */ ?>
+                        <?php if (count($sedes) > 1) { ?>
+                            <p class="mt-2 text-sm texto-suave"><?= count($especialidad->sedeIds) ?> sedes</p>
+                        <?php } ?>
                     </article>
                 </li>
             <?php } ?>

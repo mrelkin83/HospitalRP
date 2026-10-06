@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Web;
 
+use App\Core\Storage\AlmacenArchivos;
 use App\Core\Support\Vistas;
 use App\Modules\Directorio\Repository\SedeRepository;
 use App\Modules\Directorio\Repository\ServicioRepository;
@@ -17,17 +18,26 @@ final readonly class ServiciosPublicoController
         private Vistas $vistas,
         private ServicioRepository $servicios,
         private SedeRepository $sedes,
+        private AlmacenArchivos $almacen,
     ) {
     }
 
     public function listado(Request $peticion): Response
     {
+        $servicios = $this->servicios->activosConSedes();
+
         return $this->layout->responder(
             titulo: 'Servicios',
             descripcion: 'Servicios asistenciales de la E.S.E. Hospital Rosario Pumarejo de López: horarios, requisitos y sedes.',
             contenido: $this->vistas->render('publico/servicios/listado', [
-                'servicios' => $this->servicios->activosConSedes(),
+                'servicios' => $servicios,
                 'sedes' => $this->sedes->activasPublicas(),
+                // Una sola consulta para las fotos de toda la rejilla, no una
+                // por tarjeta.
+                'imagenes' => $this->almacen->porIds(array_values(array_filter(array_map(
+                    static fn ($s): ?int => $s->imagenId,
+                    $servicios,
+                )))),
             ]),
         );
     }
@@ -60,6 +70,7 @@ final readonly class ServiciosPublicoController
             contenido: $this->vistas->render('publico/servicios/detalle', [
                 'servicio' => $servicio,
                 'sedes' => $sedes,
+                'imagen' => $servicio->imagenId !== null ? $this->almacen->porId($servicio->imagenId) : null,
             ]),
         );
     }

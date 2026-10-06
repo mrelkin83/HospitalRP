@@ -20,6 +20,8 @@ viven en su desglose (`docs/03` a `docs/12`); esto es el mapa.
 | 9 · Cierre de brechas del sitio vigente | ✅ Terminada | `docs/15` | Bloques A–D completos el 2026-09-14, panel incluido |
 | 9.1 · Estadísticas y trámites del personal | ✅ Terminada | este documento | Pedido del hospital el 2026-09-14 |
 | 9.2 · Portada: fuera Alpine, datos reales | ✅ Terminada | §2.x | Resuelto el 2026-09-15 |
+| 9.3 · Portafolio de Servicios 2026 al sitio | ✅ Terminada | §1.3 | Volcado el 2026-10-06 desde el PDF institucional |
+| 9.4 · Criterios del ITA 2026 que dependían de código | ✅ Terminada | §1.4 | 62 criterios cerrados el 2026-10-06 |
 | 10 · Migración y lanzamiento | ⏳ **Pendiente** | — | Ver sección 5 |
 
 **Suite al corte: 640 tests, 1244 aserciones, en verde.**
@@ -114,7 +116,7 @@ la minuta real del 1407: forma de pago completa, plazo exacto y 11/14
 obligaciones. PENDIENTE: la medición 6/7 con las minutas reales exige
 `IA_CLAVE_ANTHROPIC` en el `.env` (hoy está vacía); el arnés quedó listo.
 
-**Módulo de cuentas de cobro — fase 6 planificada (2026-09-20).** Desglose en
+**Módulo de cuentas de cobro — fase 6, bloques A y B CONSTRUIDOS (2026-09-20).** Desglose en
 `docs/17-cuentas-de-cobro-fase-6-desglose.md`. Sale de una revisión de la
 puesta en marcha real: 1.500 contratos vigentes, ya escaneados, cuatro
 revisores y 4 TB de disco. Tres bloques: (A) cola de extracción con carga de
@@ -122,9 +124,23 @@ hasta 20 minutas por lote y comando de consola reanudable, (B) producto
 asociado y evidencia por actividad —hoy el supervisor certifica cada
 obligación contra texto libre, sin entregable ni soporte—, y (C) el
 procedimiento de la carga masiva (≈US$ 165 en extracción con Sonnet 5, dos
-noches de proceso, una a semana y media de revisión entre los cuatro). Los
-datos de prueba del módulo se borraron ese mismo día: la base queda limpia
-para la carga real y `semillas:cuentas-cobro` los repone si hacen falta.
+noches de proceso, una a semana y media de revisión entre los cuatro).
+
+Bloques A y B terminados y probados (suite: 1242 pruebas, 3 fallos
+preexistentes ajenos al módulo). A: cola de extracción con lote de 20,
+comando `cuentas:extraer-minutas` reanudable con `SKIP LOCKED`, lectura de
+la capa de texto con `pdftotext` antes de pagar IA, bandeja con asignación
+(`cc_extracciones.asignado_a`) y purga de imágenes al aplicar. B: catálogo
+`cc_productos_actividad` (18 sembrados, administrable en Parámetros),
+`producto_id` por actividad, `cc_actividad_evidencias` (archivo o enlace),
+regla dura en `EnvioCuentaService`, compresión de imágenes, columna
+PRODUCTO en el informe de actividades y evidencias visibles para revisor y
+supervisor y anexadas al paquete. FALTA (bloque C): programar la tarea del
+servidor y correr la carga real de los 1.500.
+
+Los datos de prueba del módulo se borraron ese mismo día: la base queda
+limpia para la carga real y `semillas:cuentas-cobro` los repone si hacen
+falta.
 
 **Módulo de cuentas de cobro — seis ajustes de flujo (2026-09-20).** Pedidos
 tras probar el módulo con el proceso real del hospital:
@@ -162,6 +178,96 @@ tras probar el módulo con el proceso real del hospital:
    `cuentas.supervisar`): quien solo revisa o solo supervisa ve únicamente su
    bandeja en el menú. Los revisores se vinculan en Panel → Cuentas de cobro →
    Revisores (pantalla del administrador).
+
+### 1.3 Qué entró en la 9.3 — Portafolio de Servicios 2026
+
+El hospital entregó el **Portafolio de Servicios HRPL 2026** (24 láminas,
+firmado por la Agente Especial Interventora). Venía aplanado: texto y fotos
+horneados en una imagen por página, de modo que nada era enlazable, buscable
+ni legible con lector de pantalla. Se volcó a la sección que le corresponde a
+cada dato, no a una página nueva que lo duplicara.
+
+- **`servicios`** pasó de 6 fichas de muestra a **15 servicios reales** con
+  descripción, horario, teléfono, foto y las cifras del portafolio (269 camas,
+  8 quirófanos, 21 consultorios, 5 ambulancias…). Columna nueva `destacados`
+  (JSON) en `Version20261006160000`.
+- **`especialidades`** pasó de 8 provisionales a **46**: las 31 especialidades
+  y 14 subespecialidades de la lámina 9, en castellano corriente y no en la
+  nomenclatura del REPS («Otras consultas Ortopedia de mano» → «Ortopedia de
+  mano»).
+- **Páginas:** misión y visión con el texto oficial 2026 (sustituye el raspado
+  del Joomla, que arrastraba enlaces «Ant/Siguiente» y un PDF muerto), quiénes
+  somos, banco de leche humana, madre canguro y los 18 convenios de docencia.
+- **Contacto:** call center, línea alterna, horario, CitaBot y la línea del
+  banco de leche.
+- **Fotos:** 17 recortes de las láminas, en WebP, en
+  `database/seeders/portafolio/`. Entran por `AlmacenArchivos`, así que se
+  reemplazan desde Panel → Medios como cualquier otra.
+- **Panel → Servicios** ahora permite subir la foto (con texto alternativo
+  obligatorio) y escribir las cifras destacadas.
+- Se arreglaron de paso dos cosas que el volcado destapó: ni los servicios ni
+  las especialidades estaban atados a la sede (el detalle mostraba «Dónde se
+  presta» vacío y el listado anunciaba «0 sede(s)»).
+
+Comando: `bin/consola semillas:portafolio`. Idempotente: el volcado completo
+ocurre una sola vez —queda la marca `portafolio.volcado_en`— y a partir de ahí
+solo rellena campos vacíos. Las páginas y la configuración únicamente se tocan
+si `actualizado_por` sigue nulo, es decir, si nadie las editó desde el panel.
+`--rehacer` fuerza el volcado entero.
+
+### 1.4 Qué entró en la 9.4 — criterios del ITA 2026
+
+La Procuraduría bajó el índice de 98 a 75 puntos (certificado ITA 2025 y
+oficio de Supersalud `20264200002708501`). El diagnóstico sobre los 266
+criterios del formulario MinTIC Res. 1519 mostró que **las seis áreas que el
+informe de Control Interno reporta como pérdida son exactamente las seis
+secciones que quedaron sin evidencia diligenciada**: el problema de fondo es
+carga de evidencia, no la página. De los 266, 62 exigían además cosas que el
+sitio no sabía publicar; esos 62 están cerrados.
+
+Matriz criterio por criterio, con el responsable de cada pendiente, en
+`docs/ita-2026-matriz-consolidada.csv`.
+
+Lo construido, con su número de criterio:
+
+- **9.1 — Instrumentos de gestión de la información** (14 % del peso, la mayor
+  pérdida). El ITA pide TABLAS con columnas nombradas, no un PDF adjunto:
+  Registro de Activos con sus 7 columnas, Índice de Información Clasificada
+  con 13 y Esquema de Publicación con 9. `TipoInstrumento::columnas()` es la
+  única fuente de verdad para la vista pública, el CSV y el panel.
+- **5.3 — Ejecución contractual**, calculada desde `cc_contratos` por el
+  servicio público `EjecucionContractualPublica`, para no acoplar módulos
+  (CLAUDE.md §4). No publica el nombre del contratista: el criterio no lo pide
+  y ya está en el directorio por el 3.5.j.
+- **3.13 — Entes que vigilan**, con sus siete literales y panel propio.
+- **6.10 — Informe de acceso a la información**, que antes se redactaba a mano
+  cada trimestre y ahora se calcula solo. Se alimenta de la marca «acceso
+  negado / trasladada» del detalle del trámite.
+- **3.5 — Directorio de servidores públicos** completo. Por decisión del
+  2026-10-06 se adoptó el criterio 3.5.b tal cual (país, departamento y ciudad
+  de nacimiento), revirtiendo la exclusión que razonaba
+  `Version20260914140000`. NO se captura fecha de nacimiento: lugar y fecha
+  juntos reconstruyen un dato identificador.
+- **2.3 — Términos y condiciones y política de derechos de autor**, enlazadas
+  desde el pie; **7.1 — costos de trámites**, el único «No» de 2025
+  recuperable por código; **13.3.c — anti-SPAM** con campo trampa y límite por
+  IP, sin captcha de terceros (rompería la CSP y filtraría la IP del
+  ciudadano); **13.3.g — dirección completa**; **10.1.c — otros grupos de
+  interés**; **15.1 — política de seguridad y MSPI** publicados.
+
+**Orden 8 del oficio de Supersalud.** Sección «Informes de seguimiento de
+Control Interno» con el nombre que cita el expediente, redirección 1:1 desde
+la URL del Joomla y ancla propia por subsección, para que la orden 9 pueda
+certificar un enlace directo criterio por criterio.
+
+**Lo que NO depende del sitio** y debe resolver el hospital: 91 criterios
+esperando el documento del área, y 6 bloqueados fuera (TRD sin convalidar por
+el AGN, semáforo de Participa pendiente de Supersalud, certificado de
+accesibilidad por reemitir, planes de mejoramiento de rendición de cuentas).
+Además, dos defectos documentales detectados al descargar los originales: el
+MSPI vigente trae el encabezado de la versión 002 de 2024 cuando su control de
+cambios registra la 004 de 2026, y la Política de Seguridad es un escaneo sin
+capa de texto —por eso se publica también transcrita en HTML—.
 
 ## 2. Pendientes técnicos (código por hacer)
 
@@ -403,7 +509,11 @@ selector compartido, no un parche del héroe.
    persona; guion de 5 rutas en `docs/11`.
 8. **Producción:** dominio (hrplopez.gov.co), servidor con HTTPS,
    credenciales de BD y correo SMTP institucional.
-9. **Cargar los indicadores estadísticos** (Panel → Indicadores). La página
+9. **Confirmar el call center.** El portafolio 2026 trae `317 5153642` y
+   `300 7533534`; el sitio tenía `(+57) 304 3251875`, heredado del Joomla. Se
+   adoptó el del portafolio por ser el documento vigente y firmado, pero
+   conviene que Atención al Usuario lo confirme (Panel → Ajustes → Contacto).
+10. **Cargar los indicadores estadísticos** (Panel → Indicadores). La página
    `/estadisticas` existe y funciona, pero sale vacía a propósito: no se
    sembró ninguna cifra porque inventar datos de contratación u ocupación de
    un hospital público no es una opción. Cada carga es un mes, con su fuente.

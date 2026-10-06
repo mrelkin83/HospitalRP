@@ -47,3 +47,15 @@ desktop.ini
 # referencia que se regenera, no código: pesan y no aportan historia.
 /stitch*.zip
 /stitch_hospital_digital_experience_home/
+
+# Documentos fuente que entregan el hospital y los entes de control
+# (requerimientos, certificados ITA, matrices, portafolio). No son código y
+# algunos traen datos de contacto personales de funcionarios: git es
+# permanente, así que se quedan fuera. El contenido que importa ya está
+# volcado al sitio y a docs/.
+/*.pdf
+/*.docx
+/*.xlsx
+
+# Ajustes de Claude Code propios de cada máquina.
+/.claude/settings.local.json

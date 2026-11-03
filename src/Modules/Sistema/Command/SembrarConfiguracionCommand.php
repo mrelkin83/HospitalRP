@@ -40,17 +40,20 @@ final class SembrarConfiguracionCommand extends Command
             '892.300.445-1',
             'texto', 'entidad', 'NIT', null,
         ],
+        // Los teléfonos llevan SIEMPRE el prefijo +57: el Anexo 2, numeral
+        // 2.2.1(4) de la Res. 1519 lo exige y la Auditoría Visual V9 señaló
+        // los números que iban sin él (secciones 6-7 y 16).
         'contacto.pbx' => [
-            '(605) 5712339',
-            'texto', 'contacto', 'PBX', null,
+            '+57 605 5712339',
+            'texto', 'contacto', 'PBX', 'Con el prefijo +57 (Anexo 2, 2.2.1(4))',
         ],
         'contacto.emergencias' => [
-            '(605) 5712339',
+            '+57 605 5712339',
             'texto', 'contacto', 'Teléfono de emergencias', 'Verificar extensión directa de urgencias',
         ],
         'contacto.call_center' => [
-            '(+57) 304 3251875',
-            'texto', 'contacto', 'Call center (citas)', 'También 311 4232493 y 311 4131075',
+            '+57 304 3251875',
+            'texto', 'contacto', 'Call center (citas)', 'También 311 4232493 y 311 4131075. Con el prefijo +57',
         ],
         'contacto.correo' => [
             'contacto@hrplopez.gov.co',
@@ -73,7 +76,7 @@ final class SembrarConfiguracionCommand extends Command
             'texto', 'contacto', 'Línea ética anticorrupción (correo)', null,
         ],
         'contacto.linea_etica_telefono' => [
-            '(+57) 318 3546240',
+            '+57 318 3546240',
             'texto', 'contacto', 'Línea ética anticorrupción (teléfono)', null,
         ],
         'contacto.direccion' => [
@@ -111,9 +114,12 @@ final class SembrarConfiguracionCommand extends Command
         // varias y cada una dice lo suyo. Lo que queda en Ajustes es lo que es
         // único y no se repite por diapositiva: el buscador, la tarjeta
         // ilustrada y los dos avisos flotantes.
+        // Corta a propósito: la leyenda anterior («Buscar trámites, médicos,
+        // noticias...») salía truncada en el recorte que midió la Auditoría
+        // V9 (sección 15), que pidió una indicación más breve.
         'hero.buscador_leyenda' => [
-            'Buscar trámites, médicos, noticias...',
-            'texto', 'hero', 'Texto guía del buscador', 'Lo que se lee dentro de la caja de búsqueda mientras está vacía',
+            'Buscar en el portal',
+            'texto', 'hero', 'Texto guía del buscador', 'Lo que se lee dentro de la caja de búsqueda mientras está vacía. Corto, para que no se trunque en móvil',
         ],
         // La tarjeta ilustrada de la derecha es adorno, pero adorno con
         // palabras: si el hospital le cambia el nombre al portal, esto también.
@@ -167,9 +173,11 @@ final class SembrarConfiguracionCommand extends Command
         // una columna del pie exigía un despliegue. Lo que es texto o imagen
         // pasa aquí; la maqueta (cuántas columnas, dónde va cada bloque) sigue
         // en la plantilla, que es diseño y no contenido.
+        // PNG con transparencia y no el JPEG: la Auditoría V9 (sección 12)
+        // señaló la placa blanca del JPEG como integración deficiente.
         'marca.logo' => [
-            '/img/logo_pequeno.jpeg',
-            'texto', 'entidad', 'Logotipo de la entidad', 'Ruta del archivo. Se usa en el encabezado y en el pie',
+            '/img/logo_icono.png',
+            'texto', 'entidad', 'Logotipo de la entidad', 'Ruta del archivo, con transparencia. Se usa en el encabezado y en el pie',
         ],
         'pie.titulo_marca' => [
             'República de Colombia',
@@ -215,6 +223,17 @@ final class SembrarConfiguracionCommand extends Command
         'govco.logo' => [
             '/img/logo_gov.co.png',
             'texto', 'pie', 'Logotipo GOV.CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
+        ],
+        // Marca País CO–Colombia en el pie: obligatoria junto a GOV.CO según
+        // el Anexo 2, numeral 2.2.1(1) de la Res. 1519 (Auditoría V9,
+        // secciones 5, 10 y 16).
+        'marca_pais.logo' => [
+            '/img/marca_co.svg',
+            'texto', 'pie', 'Logotipo Marca País CO', 'Marca oficial del Estado: no cambiar salvo indicación de MinTIC',
+        ],
+        'marca_pais.url' => [
+            'https://www.colombia.co/',
+            'texto', 'pie', 'Enlace de la Marca País', 'Sitio oficial de la Marca País Colombia',
         ],
         'redes.facebook' => ['https://www.facebook.com/Hospital-Rosario-Pumarejo-De-Lopez', 'texto', 'redes', 'Facebook (URL)', 'Verificar URL exacta'],
         'redes.instagram' => ['https://www.instagram.com/hospitalrosariovalledupar', 'texto', 'redes', 'Instagram (URL)', null],

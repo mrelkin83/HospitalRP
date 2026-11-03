@@ -16,7 +16,7 @@ $categoriaActiva ??= null;
     <div class="relative overflow-hidden rounded-[2.5rem] cabecera-seccion p-10 text-white mb-10 shadow-2xl border border-white/10">
         <span class="mancha h-64 w-64 -right-16 -top-16 bg-[color:var(--color-marca-cian)] opacity-30 blur-3xl" aria-hidden="true"></span>
         <div class="relative z-10 max-w-2xl">
-            <span class="text-xs font-bold uppercase tracking-widest text-[color:var(--color-marca-cian)] bg-white/10 px-3 py-1 rounded-full border border-white/10">Actualidad Hospitalaria</span>
+            <span class="text-xs font-bold uppercase tracking-widest text-white bg-white/10 px-3 py-1 rounded-full border border-white/10">Actualidad Hospitalaria</span>
             <h1 class="text-white mt-4 text-4xl lg:text-5xl font-extrabold tracking-tight">
                 <?= $e($categoriaActiva === null ? 'Noticias y Prensa' : 'Categoría: ' . $categoriaActiva['nombre']) ?>
             </h1>

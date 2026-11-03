@@ -5,22 +5,35 @@
  */
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
+    <?php /* Miga de pan: la Auditoría V9 (sección 22) no la encontró en esta
+             página interior. */ ?>
+    <nav aria-label="Miga de pan" class="text-sm texto-suave mb-4">
+        <a href="/">Inicio</a> › <span aria-current="page">Transparencia y Acceso a la Información Pública</span>
+    </nav>
+
     <!-- Cabecera de Transparencia Premium -->
     <div class="relative overflow-hidden rounded-[2.5rem] cabecera-seccion p-10 text-white mb-10 shadow-2xl border border-white/10">
         <span class="mancha h-64 w-64 -right-16 -top-16 bg-[color:var(--color-marca-cian)] opacity-30 blur-3xl" aria-hidden="true"></span>
         <div class="relative z-10 max-w-2xl">
-            <span class="text-xs font-bold uppercase tracking-widest text-[color:var(--color-marca-cian)] bg-white/10 px-3 py-1 rounded-full border border-white/10">Ley 1712 de 2014</span>
-            <h1 class="text-white mt-4 text-4xl lg:text-5xl font-extrabold tracking-tight">Transparencia</h1>
+            <span class="text-xs font-bold uppercase tracking-widest text-white bg-white/10 px-3 py-1 rounded-full border border-white/10">Ley 1712 de 2014</span>
+            <?php /* Denominación completa (Anexo 2, 2.4) y sin tamaño propio:
+                     hereda la jerarquía del sistema (30 px en escritorio),
+                     que es la que la Auditoría V9 pidió ajustar. */ ?>
+            <h1 class="text-white mt-4 font-extrabold tracking-tight">Transparencia y Acceso a la Información Pública</h1>
             <p class="mt-4 text-lg text-primario-100 leading-relaxed">
                 Acceso a la información pública, rendición de cuentas y datos abiertos de la E.S.E. Hospital Rosario Pumarejo de López en cumplimiento de la Resolución 1519 de 2020.
             </p>
         </div>
     </div>
 
-    <!-- Contenedor Asimétrico Bento Grid -->
-    <div class="grid gap-8 lg:grid-cols-2">
+    <?php /* Columnas CSS en vez de rejilla de 2 columnas: las secciones del
+             Anexo 2 tienen largos muy distintos y la rejilla dejaba una
+             columna con un vacío considerable (Auditoría V9, sección 27).
+             `columns` reparte las tarjetas equilibrando la altura total y
+             `break-inside-avoid` impide que una tarjeta se parta en dos. */ ?>
+    <div class="lg:columns-2 lg:gap-8">
         <?php foreach ($arbol as $seccion) { ?>
-            <section class="tarjeta flex flex-col justify-between border-primario-100/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm p-8" aria-labelledby="tp-<?= $seccion['id'] ?>" id="seccion-<?= $e((string) $seccion['codigo']) ?>">
+            <section class="tarjeta break-inside-avoid mb-8 flex flex-col justify-between border-primario-100/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm p-8" aria-labelledby="tp-<?= $seccion['id'] ?>" id="seccion-<?= $e((string) $seccion['codigo']) ?>">
                 <div>
                     <div class="flex items-center gap-3 border-b border-primario-100 dark:border-primario-800 pb-4 mb-6">
                         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primario-50 text-primario-600 dark:bg-primario-800 dark:text-primario-200 font-extrabold text-sm shadow-sm" aria-hidden="true">

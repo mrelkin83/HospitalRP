@@ -15,8 +15,11 @@ $error = static function (string $campo) use ($errores, $e): string {
 $anonimoMarcado = $enviado?->anonimo ?? false;
 ?>
 <div class="mx-auto max-w-6xl px-4 py-10">
+    <?php /* Con el nivel actual al final: la Auditoría V9 (sección 22) señaló
+             que la miga terminaba en «Trámites» y dejaba fuera la página en
+             la que el ciudadano está parado. */ ?>
     <nav aria-label="Miga de pan" class="text-sm texto-suave">
-        <a href="/">Inicio</a> › <a href="/atencion-ciudadania/tramites">Trámites</a>
+        <a href="/">Inicio</a> › <a href="/atencion-ciudadania/tramites">Trámites</a> › <span aria-current="page"><?= $e($tipo->nombre) ?></span>
     </nav>
 
     <h1 class="mt-4 max-w-3xl"><?= $e($tipo->nombre) ?></h1>

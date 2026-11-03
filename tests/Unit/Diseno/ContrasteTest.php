@@ -67,7 +67,15 @@ final class ContrasteTest extends TestCase
         yield 'oscuro: degradado, extremo claro' => ['#AFC9E8', '#090E1A'];
         yield 'oscuro: degradado, extremo medio' => ['#66CDF0', '#090E1A'];
 
-
+        // --- Auditoría Visual V9 (2026-10-26): barra superior y pie ---
+        // El cian de marca (#35BDE9) sobre el azul 700 medía 3,09:1 y la
+        // auditoría lo marcó como no conformidad (CC5 / WCAG 1.4.3). El
+        // texto sobre ese fondo va ahora en primario-100 (teléfonos de la
+        // barra) y primario-200 (títulos del pie); ambos pares se fijan
+        // aquí para que nadie los devuelva al cian sin medir.
+        yield 'teléfonos de la barra sobre azul 700' => ['#CDF1F9', '#1D5BA7'];
+        yield 'títulos del pie sobre azul 700' => ['#9CE0F5', '#1D5BA7'];
+        yield 'blanco sobre azul 700 oficial (pie y barra)' => ['#FFFFFF', '#1D5BA7'];
     }
 
     #[DataProvider('paresDeTextoYFondo')]

@@ -108,9 +108,9 @@ $enlaceNav = static fn (array $item): string => sprintf(
 
     <a class="salto-contenido" href="#contenido">Saltar al contenido</a>
 
-    <?php /* --- Barra superior: accesibilidad + teléfonos (prototipo) ---
-             El cian solo aparece aquí y en el pie, sobre el azul: es el
-             único fondo donde alcanza contraste AA. --- */ ?>
+    <?php /* --- Barra superior: accesibilidad + teléfonos ---
+             Sobre este azul 700 el cian de marca mide 3,09:1 (Auditoría V9):
+             aquí el texto va en blanco o primario-100, nunca en cian. --- */ ?>
     <div class="bg-primario-700 text-white border-b border-white/10">
         <div class="mx-auto max-w-7xl px-4 py-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <?php /* Las etiquetas largas se abrevian en móvil con un <span>
@@ -135,12 +135,16 @@ $enlaceNav = static fn (array $item): string => sprintf(
                     <a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a>
                 <?php } ?>
             </nav>
+            <?php /* El número en cian sobre este azul medía 3,09:1 (Auditoría
+                     V9, CC5/WCAG 1.4.3): el texto va ahora en primario-100
+                     (5,6:1). Los valores llegan con el +57 que exige el Anexo
+                     2, 2.2.1(4); el href lo conserva en formato E.164. */ ?>
             <p class="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
                 <span class="text-primario-100">Citas:
-                    <a class="text-[color:var(--color-marca-cian)] font-bold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.call_center'))) ?>"><?= $e($config->texto('contacto.call_center')) ?></a>
+                    <a class="text-primario-100 font-bold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.call_center'))) ?>"><?= $e($config->texto('contacto.call_center')) ?></a>
                 </span>
                 <span class="text-primario-100">PBX:
-                    <a class="text-white font-semibold" href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.pbx'))) ?>"><?= $e($config->texto('contacto.pbx')) ?></a>
+                    <a class="text-white font-semibold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.pbx'))) ?>"><?= $e($config->texto('contacto.pbx')) ?></a>
                 </span>
             </p>
         </div>
@@ -156,8 +160,13 @@ $enlaceNav = static fn (array $item): string => sprintf(
             <div class="panel-vidrio rounded-2xl px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
                 <?php /* Logotipo y PQRSDF comparten fila en móvil: separados,
                          la cabecera crecía hasta media pantalla. */ ?>
+                <?php /* Logotipo en PNG transparente, sin placa blanca: la
+                         Auditoría V9 (sección 12) pidió integrarlo al panel.
+                         Sube de 48 a 56 px para que el detalle de la marca se
+                         lea; el máximo del estándar 2022 es 80-90 px. En tema
+                         oscuro, .logo-entidad le da un halo claro (app.css). */ ?>
                 <a href="/" class="no-underline flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-                    <img src="<?= $e($logoEntidad) ?>" alt="Logotipo <?= $e($nombreEntidad) ?>" class="h-12 w-auto object-contain rounded-lg" width="48" height="48">
+                    <img src="<?= $e($logoEntidad) ?>" alt="Logotipo <?= $e($nombreEntidad) ?>" class="logo-entidad h-14 w-auto object-contain" width="56" height="56">
                     <span class="min-w-0">
                         <span class="block font-bold leading-tight texto-titular"><?= $e($nombreEntidad) ?></span>
                         <span class="hidden text-sm texto-suave sm:block"><?= $e($config->texto('entidad.eslogan')) ?></span>
@@ -180,8 +189,20 @@ $enlaceNav = static fn (array $item): string => sprintf(
                          envolver: envolviendo once ítems la cabecera crecía a
                          332 px —más de un tercio de la pantalla— y tapaba el
                          contenido por el que la persona entró. */ ?>
-                <nav aria-label="Navegación principal" class="order-3 w-full min-w-0">
-                    <ul class="flex flex-nowrap gap-x-1 overflow-x-auto lg:flex-wrap lg:gap-y-0.5 lg:overflow-x-visible">
+                <nav aria-label="Navegación principal" class="order-3 w-full min-w-0" data-menu-principal>
+                    <?php /* Botón «Menú» (Auditoría V9, sección 11): en 390 px
+                             la fila horizontal mostraba completas 3 de las 9
+                             categorías y el resto exigía descubrir el gesto de
+                             deslizar. El botón —visible, con icono y texto—
+                             despliega la lista completa en vertical. Lo
+                             gestiona /js/menu.js con aria-expanded; sin
+                             JavaScript no se pinta y queda la fila original. */ ?>
+                    <button type="button" class="menu-movil-boton" aria-expanded="false" aria-controls="menu-principal-lista" data-menu-movil>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" data-icono="abrir"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" data-icono="cerrar" hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        Menú
+                    </button>
+                    <ul id="menu-principal-lista" class="menu-principal-lista flex flex-nowrap gap-x-1 overflow-x-auto lg:flex-wrap lg:gap-y-0.5 lg:overflow-x-visible">
                         <?php foreach ($menuPrincipal as $item) { ?>
                             <?php if (($item['hijos'] ?? []) === []) { ?>
                                 <li><?= $enlaceNav($item) ?></li>
@@ -207,9 +228,14 @@ $enlaceNav = static fn (array $item): string => sprintf(
                                             <svg class="h-3.5 w-3.5 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                                         </summary>
                                         <ul class="menu-submenu absolute start-0 top-full z-40 mt-1 w-64 rounded-2xl border borde-suave fondo-superficie p-2 shadow-xl">
+                                            <?php /* Mismo rótulo que el control que lo abre: la
+                                                     Auditoría V9 pidió unificar las denominaciones
+                                                     de los enlaces que llevan al mismo destino
+                                                     (Anexo 2, 2.4; Anexo 1, CC7). El «Ver …»
+                                                     creaba un segundo nombre para la misma página. */ ?>
                                             <li>
                                                 <a class="block rounded-lg px-3 py-2 text-sm font-semibold no-underline texto-titular hover:bg-primario-50 dark:hover:bg-primario-800" href="<?= $e($item['url']) ?>">
-                                                    Ver <?= $e($item['etiqueta']) ?>
+                                                    <?= $e($item['etiqueta']) ?>
                                                 </a>
                                             </li>
                                             <?php foreach ($item['hijos'] as $hijo) { ?>
@@ -239,7 +265,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <p class="mt-2 max-w-3xl"><?= $e($aviso->mensaje) ?></p>
                 <p class="mt-4 flex flex-wrap gap-3">
                     <a class="boton bg-white text-error-600 font-bold"
-                       href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.emergencias'))) ?>">
+                       href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.emergencias'))) ?>">
                         Emergencias: <?= $e($config->texto('contacto.emergencias')) ?>
                     </a>
                     <?php if ($aviso->url !== null) { ?>
@@ -274,7 +300,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <div class="flex items-center gap-3">
                     <img src="<?= $e($logoEntidad) ?>" alt="Logotipo <?= $e($nombreEntidad) ?>" class="h-14 w-auto object-contain rounded-xl bg-white p-1.5 shadow-md shrink-0" width="56" height="56">
                     <div>
-                        <h2 class="text-[color:var(--color-marca-cian)] text-base font-bold leading-tight"><?= $e($config->texto('pie.titulo_marca', 'República de Colombia')) ?></h2>
+                        <h2 class="text-primario-200 text-base font-bold leading-tight"><?= $e($config->texto('pie.titulo_marca', 'República de Colombia')) ?></h2>
                         <span class="text-xs text-primario-200">E.S.E. Hospital Rosario Pumarejo</span>
                     </div>
                 </div>
@@ -286,7 +312,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 </p>
             </div>
             <nav aria-labelledby="pie-enlaces">
-                <h2 id="pie-enlaces" class="text-[color:var(--color-marca-cian)] text-base font-bold"><?= $e($config->texto('pie.titulo_enlaces', 'Enlaces de interés')) ?></h2>
+                <h2 id="pie-enlaces" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_enlaces', 'Enlaces de interés')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie1 as $item) { ?>
                         <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
@@ -294,7 +320,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 </ul>
             </nav>
             <nav aria-labelledby="pie-normatividad">
-                <h2 id="pie-normatividad" class="text-[color:var(--color-marca-cian)] text-base font-bold"><?= $e($config->texto('pie.titulo_normatividad', 'Normatividad')) ?></h2>
+                <h2 id="pie-normatividad" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_normatividad', 'Normatividad')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie2 as $item) { ?>
                         <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
@@ -302,7 +328,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 </ul>
             </nav>
             <div>
-                <h2 class="text-[color:var(--color-marca-cian)] text-base font-bold"><?= $e($config->texto('pie.titulo_atencion', 'Atención al ciudadano')) ?></h2>
+                <h2 class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_atencion', 'Atención al ciudadano')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm text-primario-100">
                     <li>PBX: <?= $e($config->texto('contacto.pbx')) ?></li>
                     <li>Citas (call center): <?= $e($config->texto('contacto.call_center')) ?></li>
@@ -346,7 +372,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                     <div class="mt-4 flex flex-wrap gap-2.5" role="group" aria-label="Redes sociales oficiales del hospital">
                         <?php foreach ($redes as $red => $url) { ?>
                             <?php if (isset($iconosRedes[$red])) { ?>
-                                <a class="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 text-primario-100 hover:text-[color:var(--color-marca-cian)] hover:bg-white/10 hover:border-white/25 transition-all duration-300 hover:scale-110 shadow-md" 
+                                <a class="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 border border-white/10 text-primario-100 hover:text-white hover:bg-white/10 hover:border-white/25 transition-all duration-300 hover:scale-110 shadow-md" 
                                    href="<?= $e($url) ?>" rel="noopener" target="_blank" title="Visitar nuestro perfil de <?= $e($red) ?> en una nueva pestaña">
                                     <?= $iconosRedes[$red] ?>
                                     <span class="sr-only"><?= $e($red) ?></span>
@@ -357,16 +383,29 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <?php } ?>
             </div>
         </div>
-        <!-- Barra Inferior de Derechos y Logotipo de GOV.CO Obligatorio en el Footer -->
+        <!-- Barra Inferior de Derechos con GOV.CO y Marca País CO (Anexo 2, 2.2.1(1)) -->
         <div class="border-t border-primario-800">
             <div class="mx-auto max-w-7xl px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
                 <p class="text-sm text-primario-200 flex flex-col gap-1 text-center md:text-left">
                     <span>© <?= date('Y') ?> <?= $e($nombreEntidad) ?>. <?= $e($config->texto('pie.derechos', 'Todos los derechos reservados.')) ?></span>
                     <span><?= $e($config->texto('pie.leyenda_normativa', 'Cumplimos con la Ley 1712 de 2014 y la Resolución 1519 de 2020.')) ?></span>
                 </p>
-                <a href="<?= $e($govcoUrl) ?>" target="_blank" rel="noopener" class="hover:opacity-85 transition-opacity" title="Ir a <?= $e($govcoLeyenda) ?> GOV.CO">
-                    <img src="<?= $e($govcoLogo) ?>" alt="Logotipo Oficial GOV.CO" class="h-8 w-auto object-contain" width="160" height="32">
-                </a>
+                <?php /* GOV.CO + Marca País CO–Colombia + «Conoce a GOV.CO»:
+                         la Auditoría V9 (secciones 10 y 16) señaló la Marca
+                         País ausente, con sustento en el Anexo 2, numeral
+                         2.2.1(1), y el enlace textual del estándar gráfico de
+                         2022. La marca va sobre una pastilla blanca porque su
+                         versión oficial es multicolor y sobre el azul del pie
+                         perdería sus colores institucionales. */ ?>
+                <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+                    <a href="<?= $e($govcoUrl) ?>" target="_blank" rel="noopener" class="hover:opacity-85 transition-opacity" title="Ir a <?= $e($govcoLeyenda) ?> GOV.CO">
+                        <img src="<?= $e($govcoLogo) ?>" alt="Logotipo Oficial GOV.CO" class="h-8 w-auto object-contain" width="160" height="32">
+                    </a>
+                    <a href="<?= $e($config->texto('marca_pais.url', 'https://www.colombia.co/')) ?>" target="_blank" rel="noopener" class="inline-flex items-center rounded-lg bg-white p-1 hover:opacity-85 transition-opacity" title="Ir al sitio oficial de la Marca País Colombia">
+                        <img src="<?= $e($config->texto('marca_pais.logo', '/img/marca_co.svg')) ?>" alt="Marca País CO Colombia" class="h-9 w-auto object-contain" width="37" height="36">
+                    </a>
+                    <a class="text-sm font-semibold text-primario-100 no-underline hover:underline" href="<?= $e($govcoUrl) ?>" target="_blank" rel="noopener">Conoce a GOV.CO</a>
+                </div>
             </div>
         </div>
     </footer>

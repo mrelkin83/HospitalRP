@@ -16,6 +16,12 @@
    Dos colores de marca son SOLO decorativos sobre fondo claro y nunca se
    usan para texto ahí: el verde (#2F9A72, 3.5:1) y el cian (#00F2FE,
    1.39:1). El cian sí es texto válido sobre el azul 900 (12,7:1).
+
+   OJO con el cian de marca (#35BDE9) como TEXTO sobre el azul 700
+   (#1D5BA7): mide 3,09:1 y la Auditoría Visual V9 lo señaló como no
+   conformidad (CC5 / WCAG 1.4.3). Sobre ese fondo el texto va en
+   primario-200 (#9CE0F5, 4,63:1) o primario-100 (#CDF1F9, 5,64:1); el
+   cian puro queda para usos decorativos (puntos, manchas, bordes).
    ===================================================================== */
 
 @import "tailwindcss";
@@ -23,15 +29,40 @@
 @source "../views";
 @source "../../src/Http";
 
+/* --- Tipografía institucional (Auditoría Visual V9, secciones 18-19) ---
+   Montserrat para títulos y Work Sans para texto corrido: las familias del
+   estándar de diseño gráfico para sedes electrónicas (MinTIC, nov. 2022,
+   Anexo 2.1 de la Res. 2893 de 2020). Autoalojadas en /fuentes porque la CSP
+   es `default-src 'self'` y un CDN de fuentes vería la IP de cada visitante.
+   Son las variantes variables (un archivo cubre todos los pesos), subconjunto
+   latino. `font-display: swap` pinta con la pila del sistema mientras cargan. */
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('/fuentes/montserrat-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 300 800;
+    font-display: swap;
+    src: url('/fuentes/worksans-latin.woff2') format('woff2');
+}
+
 /* El modo oscuro lo activa el visitante (barra de accesibilidad), no solo
    el sistema operativo. `data-tema` manda; sin él, decide el sistema. */
 @custom-variant dark (&:where([data-tema="oscuro"], [data-tema="oscuro"] *));
 
 @theme {
     /* --- Tipografía ---
-       Pila del sistema, provisional hasta el manual de identidad: carga en
-       0 ms y no filtra visitas a un CDN de fuentes (CLAUDE.md §6). */
-    --font-sans: 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+       Work Sans en el texto corrido y Montserrat en los títulos, conforme al
+       estándar gráfico de sedes electrónicas (MinTIC 2022). La pila del
+       sistema queda de respaldo mientras la fuente variable carga. */
+    --font-sans: 'Work Sans', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-titulos: 'Montserrat', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
 
     /* --- Marca (del prototipo hospital-prototype, 2026-09-14) ---
        Azul corporativo del prototipo, extendido a una escala 50–900.
@@ -197,14 +228,20 @@
 
     h1, h2, h3, h4 {
         color: var(--titular);
+        font-family: var(--font-titulos);
         font-weight: 700;
-        line-height: 1.15;
+        line-height: 1.17;
         text-wrap: balance;
     }
 
-    h1 { font-size: clamp(2rem, 1.5rem + 3vw, 4rem); letter-spacing: -0.025em; }
-    h2 { font-size: clamp(1.5rem, 1.25rem + 1.5vw, 2.5rem); letter-spacing: -0.02em; }
-    h3 { font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem); }
+    /* Jerarquía ajustada al estándar gráfico de sedes electrónicas y a la
+       Auditoría Visual V9 (sección 19): el H1 medía 64 px en Inicio frente a
+       los 30/35 px de referencia a 1366 px. El tope es ahora 1.875rem = 30 px
+       (35 px de interlineado con el 1.17 de arriba); los demás niveles bajan
+       en proporción. */
+    h1 { font-size: clamp(1.625rem, 1.45rem + 0.65vw, 1.875rem); letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.375rem, 1.25rem + 0.45vw, 1.5625rem); letter-spacing: -0.015em; }
+    h3 { font-size: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem); }
 
     a {
         color: var(--enlace);
@@ -1160,6 +1197,91 @@ html:not([data-js]) .encuesta-paso {
         position: static;
         width: 100%;
         box-shadow: none;
+    }
+}
+
+/* =====================================================================
+   Menú móvil con botón «Menú» (Auditoría Visual V9, sección 11)
+   =====================================================================
+
+   En 390 px la fila horizontal mostraba completas solo 3 de las 9
+   categorías y las demás exigían descubrir un gesto de desplazamiento
+   lateral. El botón «Menú» —icono + texto, aria-expanded— despliega la
+   lista COMPLETA en vertical; /js/menu.js alterna `data-menu-abierto` en
+   el <nav> y el estado del botón.
+
+   Sin JavaScript el botón no existe (no haría nada) y la fila horizontal
+   original sigue siendo el respaldo navegable. Fuera de @layer porque
+   pelea contra utilidades de Tailwind y lo sin capa gana a todas. */
+@media (max-width: 1023px) {
+    [data-js] .menu-principal-lista {
+        display: none;
+    }
+
+    [data-js] nav[data-menu-abierto] .menu-principal-lista {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: visible;
+        padding-block: 0.25rem;
+    }
+
+    [data-js] nav[data-menu-abierto] .menu-principal-lista > li {
+        width: 100%;
+        border-bottom: 1px solid color-mix(in srgb, var(--borde) 60%, transparent);
+    }
+
+    [data-js] nav[data-menu-abierto] .menu-principal-lista > li:last-child {
+        border-bottom: 0;
+    }
+
+    [data-js] nav[data-menu-abierto] .menu-principal-lista a,
+    [data-js] nav[data-menu-abierto] .menu-principal-lista summary {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        padding-block: 0.75rem;
+    }
+
+    /* Solo existe en móvil y con JavaScript: en escritorio la fila entera ya
+       se ve, y sin JS el botón no haría nada. El display va DENTRO de esta
+       media query a propósito: una regla base posterior lo pisaría. */
+    [data-js] .menu-movil-boton {
+        display: inline-flex;
+    }
+}
+
+.menu-movil-boton {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: var(--titular);
+    background-color: color-mix(in srgb, var(--superficie) 70%, transparent);
+    cursor: pointer;
+}
+
+/* =====================================================================
+   Logotipo institucional en la cabecera (Auditoría V9, sección 12)
+   =====================================================================
+
+   La variante es un PNG con transparencia: en tema claro se integra al
+   panel de vidrio sin la placa blanca que señaló la auditoría. En tema
+   oscuro el trazo azul del manual perdería legibilidad, así que se le da
+   un halo claro con drop-shadow —no una placa—, que conserva la forma de
+   la marca sin encerrarla en un recuadro. */
+[data-tema="oscuro"] .logo-entidad {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-tema]) .logo-entidad {
+        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
     }
 }
 

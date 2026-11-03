@@ -92,4 +92,65 @@
             }
         });
     });
+
+    // --- Botón «Menú» del móvil (Auditoría Visual V9, sección 11) ---
+    //
+    // En pantallas angostas la fila horizontal mostraba completas solo 3 de
+    // las 9 categorías. El botón despliega la lista entera en vertical
+    // (app.css pinta el estado según `data-menu-abierto` del <nav>), anuncia
+    // su estado con aria-expanded y se maneja igual por toque y por teclado:
+    // es un <button> de verdad, así que Enter y espacio ya funcionan solos.
+    // Escape lo cierra y devuelve el foco al botón, el mismo contrato que los
+    // submenús de arriba. En el panel admin no existe [data-menu-movil] y
+    // este bloque no hace nada.
+    document.addEventListener('DOMContentLoaded', function () {
+        var boton = document.querySelector('[data-menu-movil]');
+        var nav = document.querySelector('[data-menu-principal]');
+
+        if (boton === null || nav === null) {
+            return;
+        }
+
+        var iconoAbrir = boton.querySelector('[data-icono="abrir"]');
+        var iconoCerrar = boton.querySelector('[data-icono="cerrar"]');
+
+        function abierto() {
+            return nav.hasAttribute('data-menu-abierto');
+        }
+
+        function pintar(estado) {
+            if (estado) {
+                nav.setAttribute('data-menu-abierto', '');
+            } else {
+                nav.removeAttribute('data-menu-abierto');
+            }
+
+            boton.setAttribute('aria-expanded', estado ? 'true' : 'false');
+
+            if (iconoAbrir !== null && iconoCerrar !== null) {
+                iconoAbrir.hidden = estado;
+                iconoCerrar.hidden = !estado;
+            }
+        }
+
+        boton.addEventListener('click', function () {
+            pintar(!abierto());
+        });
+
+        document.addEventListener('keydown', function (evento) {
+            if (evento.key === 'Escape' && abierto()) {
+                pintar(false);
+                boton.focus();
+            }
+        });
+
+        // Al pulsar un enlace del menú abierto se cierra: el bfcache conserva
+        // el DOM tal cual quedó y, si no, al volver con el historial la página
+        // cargaría con media pantalla de menú desplegado.
+        nav.addEventListener('click', function (evento) {
+            if (evento.target instanceof Element && evento.target.closest('a') !== null) {
+                pintar(false);
+            }
+        });
+    });
 })();

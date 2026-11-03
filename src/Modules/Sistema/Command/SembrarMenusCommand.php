@@ -56,7 +56,8 @@ final class SembrarMenusCommand extends Command
         ['Trámites', '/atencion-ciudadania/tramites', 'Información y requisitos', 'documento'],
         ['Consulta tu trámite', '/atencion-ciudadania/pqrsdf/consultar', 'Sigue tu radicado en línea', 'lupa'],
         ['PQRSDF', '/atencion-ciudadania/pqrsdf', 'Peticiones, quejas, reclamos y más', 'mensaje'],
-        ['Transparencia', '/transparencia', 'Información pública y rendición de cuentas', 'escudo'],
+        // Denominación completa del numeral 2.4 del Anexo 2 (Auditoría V9, sección 16)
+        ['Transparencia y Acceso a la Información Pública', '/transparencia', 'Información pública y rendición de cuentas', 'escudo'],
     ];
 
     private const array MENUS = [
@@ -94,7 +95,9 @@ final class SembrarMenusCommand extends Command
                 ['Espacio etnocultural', '/programas/etnocultural', 0],
                 ['Banco de sangre', '/programas/banco-de-sangre', 0],
             ]],
-            ['Atención a la Ciudadanía', '/atencion-ciudadania', 1, [
+            // Mismo nombre que en la barra superior: dos rótulos distintos para
+            // el mismo destino era lo que la Auditoría V9 pidió unificar (CC7).
+            ['Atención y Servicios a la Ciudadanía', '/atencion-ciudadania', 1, [
                 ['Radicar PQRSDF', '/atencion-ciudadania/pqrsdf', 1],
                 ['Consultar un radicado', '/atencion-ciudadania/pqrsdf/consultar', 0],
                 ['Trámites y servicios', '/atencion-ciudadania/tramites', 0],
@@ -105,7 +108,9 @@ final class SembrarMenusCommand extends Command
                 ['Encuestas de satisfacción', '/encuestas', 0],
                 ['Contáctenos', '/contacto', 0],
             ]],
-            ['Transparencia', '/transparencia', 1, [
+            // Denominación completa que exige el numeral 2.4 del Anexo 2 de la
+            // Res. 1519 (Auditoría V9, secciones 3 y 16).
+            ['Transparencia y Acceso a la Información Pública', '/transparencia', 1, [
                 ['Información de la entidad', '/transparencia/informacion-de-la-entidad', 0],
                 ['Directorio de servidores públicos', '/servidores-publicos', 0],
                 ['Normativa', '/transparencia/normatividad', 0],
@@ -149,10 +154,16 @@ final class SembrarMenusCommand extends Command
             ['Contacto', '/contacto', 0, []],
         ]],
         'superior' => ['Barra superior', 'superior', 1, [
-            ['Transparencia', '/transparencia', 1, []],
+            // Denominación completa que exige el numeral 2.4 del Anexo 2 de la
+            // Res. 1519 (Auditoría V9, secciones 3 y 16).
+            ['Transparencia y Acceso a la Información Pública', '/transparencia', 1, []],
             ['Atención y Servicios a la Ciudadanía', '/atencion-ciudadania', 1, []],
             ['Participa', '/participa', 1, []],
             ['Buscar', '/buscar', 0, []],
+            // Servicio de interpretación para personas sordas del MinTIC: la barra
+            // de accesibilidad del estándar gráfico 2022 lo incluye (Auditoría V9,
+            // secciones 20-21 lo echaron en falta).
+            ['Centro de Relevo', 'https://www.centroderelevo.gov.co/', 0, []],
             // Sistema externo con login propio: el sitio nuevo NO muestra
             // resultados (dato clínico, CLAUDE.md §2.6), solo enlaza.
             ['Resultados de imagenología', 'https://resultadosrx.hrplopez.gov.co:444/login/index.php', 0, []],

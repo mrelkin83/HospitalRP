@@ -86,7 +86,7 @@ $secciones = [
     <meta name="csrf" content="<?= $e($tokenCsrf) ?>">
     <title><?= $e($titulo) ?> — Panel · E.S.E. Hospital Rosario Pumarejo de López</title>
     <link rel="stylesheet" href="<?= $e(Recursos::url('/build/app.css')) ?>">
-    <script src="/js/menu.js" defer></script>
+    <script src="<?= $e(Recursos::url('/js/menu.js')) ?>" defer></script>
     <script src="/js/ia.js" defer></script>
     <?php if ($conEditor) { ?>
         <link rel="stylesheet" href="/vendor/ckeditor5/ckeditor5.css">

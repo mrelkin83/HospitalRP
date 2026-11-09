@@ -93,6 +93,134 @@
         });
     });
 
+    // --- Apertura automática al pasar el cursor por encima ---
+    //
+    // El desplegable se abre con solo posar el cursor en su cabecera, sin
+    // pulsar. Se limita a escritorio con ratón de verdad (`hover: hover` y
+    // `pointer: fine`) y a partir de 1024 px, por dos razones concretas:
+    //
+    //   - En pantalla táctil el navegador simula el hover con el primer
+    //     toque: ese mismo toque abriría el menú y el <summary> lo cerraría
+    //     acto seguido, dejándolo inservible.
+    //   - Por debajo de 1024 px el submenú se abre en flujo (app.css) dentro
+    //     del menú vertical; abrirlo al pasar empujaría hacia abajo la lista
+    //     que la persona está recorriendo con el dedo o el cursor.
+    //
+    // El clic sigue mandando: pulsar la cabecera de un menú abierto por hover
+    // lo cierra —comportamiento nativo de <details>— y no se reabre hasta que
+    // el cursor salga y vuelva a entrar. El teclado no se toca.
+    //
+    // Los dos retardos no son adorno:
+    //
+    //   - Abrir con espera evita que la barra se dispare cuando el cursor
+    //     solo cruza de paso hacia otra cosa. Si ya hay un menú abierto el
+    //     relevo es instantáneo, que es como se comporta una barra de menús.
+    //   - Cerrar con gracia cubre los 4 px de hueco (`mt-1`) entre la
+    //     cabecera y el panel flotante: sin esa holgura el menú se cerraba
+    //     justo en el camino hacia sus propios enlaces. Es, además, lo que
+    //     pide la WCAG 2.1 en 1.4.13 («hoverable»); el «dismissible» del
+    //     mismo criterio ya lo cubre Escape, más arriba.
+    var APUNTADOR_RATON = '(hover: hover) and (pointer: fine)';
+    var ANCHO_ESCRITORIO = '(min-width: 1024px)';
+    var RETARDO_ABRIR = 120;
+    var RETARDO_CERRAR = 300;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var desplegables = menus();
+
+        if (desplegables.length === 0 || typeof window.matchMedia !== 'function') {
+            return;
+        }
+
+        var raton = window.matchMedia(APUNTADOR_RATON);
+        var escritorio = window.matchMedia(ANCHO_ESCRITORIO);
+
+        // Un solo temporizador compartido: salir de un menú y entrar en otro
+        // debe cancelar el cierre pendiente, no acumular dos relojes que
+        // compitan. El relevo lo resuelve `cerrarTodos` al abrir el nuevo.
+        var reloj = null;
+
+        function conRaton() {
+            return raton.matches && escritorio.matches;
+        }
+
+        function cancelar() {
+            if (reloj !== null) {
+                window.clearTimeout(reloj);
+                reloj = null;
+            }
+        }
+
+        function programar(accion, espera) {
+            cancelar();
+
+            reloj = window.setTimeout(function () {
+                reloj = null;
+                accion();
+            }, espera);
+        }
+
+        desplegables.forEach(function (details) {
+            // mouseenter/mouseleave y no mouseover/mouseout: no burbujean, así
+            // que moverse por dentro del submenú no repite el disparo. Y como
+            // el panel flotante es descendiente del <details>, entrar en él
+            // cuenta como seguir dentro aunque geométricamente no lo esté.
+            details.addEventListener('mouseenter', function () {
+                if (!conRaton()) {
+                    return;
+                }
+
+                // Entrar anula lo que estuviera pendiente. Importa sobre todo
+                // al pasar de la cabecera al panel flotante: entre los dos hay
+                // 4 px de aire, así que el navegador dispara un `mouseleave`
+                // en el camino. Si ese cierre no se anulara aquí, el menú se
+                // cerraría solo con el cursor dentro de sus propios enlaces.
+                cancelar();
+
+                if (details.open) {
+                    return;
+                }
+
+                var huboRelevo = desplegables.some(function (otro) {
+                    return otro.open;
+                });
+
+                programar(function () {
+                    cerrarTodos(details);
+                    details.open = true;
+                }, huboRelevo ? 0 : RETARDO_ABRIR);
+            });
+
+            details.addEventListener('mouseleave', function () {
+                if (!conRaton()) {
+                    return;
+                }
+
+                // Salir también anula: si el cursor se va antes de que venza
+                // la espera de apertura, el menú no debe abrirse a espaldas de
+                // nadie.
+                cancelar();
+
+                if (!details.open) {
+                    return;
+                }
+
+                programar(function () {
+                    // Si el foco está dentro, el menú no se abrió al pasar:
+                    // lo abrió un clic o el teclado. Ahí el cursor no es quien
+                    // manda y cerrarlo le quitaría de las manos un menú que la
+                    // persona abrió a propósito. Lo cierran Escape, el clic
+                    // fuera y el tabulador, como siempre.
+                    if (details.contains(document.activeElement)) {
+                        return;
+                    }
+
+                    details.open = false;
+                }, RETARDO_CERRAR);
+            });
+        });
+    });
+
     // --- Botón «Menú» del móvil (Auditoría Visual V9, sección 11) ---
     //
     // En pantallas angostas la fila horizontal mostraba completas solo 3 de

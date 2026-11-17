@@ -1320,6 +1320,30 @@ html:not([data-js]) .encuesta-paso {
     color: inherit;
 }
 
+/* Con el menú al lado del logotipo le quedan unos 645 px, y los nueve
+   rótulos completos que exige la Res. 1519 suman 1591 a tamaño base: serían
+   TRES líneas. Medido, a 0,82rem con el relleno recortado bajan a ~1269, o
+   sea dos líneas justas. No se puede bajar más sin que «Transparencia y
+   Acceso a la Información Pública» —el rótulo más largo, 457 px él solo—
+   deje de caber en una línea.
+
+   Solo afecta a las raíces: los desplegables conservan su tamaño. */
+@media (min-width: 1024px) {
+    .cabecera-institucional .menu-principal-lista {
+        font-size: 0.82rem;
+    }
+
+    .cabecera-institucional .menu-principal-lista > li > a,
+    .cabecera-institucional .menu-principal-lista > li > details > summary {
+        padding-inline: 0.5rem;
+    }
+
+    /* El panel desplegable no hereda ese cuerpo: es contenido, no barra. */
+    .cabecera-institucional .menu-submenu {
+        font-size: 1rem;
+    }
+}
+
 /* Botón «Menú» y lista desplegada, ya sobre azul. */
 .cabecera-institucional .menu-movil-boton {
     color: #fff;

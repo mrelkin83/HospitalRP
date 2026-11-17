@@ -178,7 +178,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                     </span>
                 </a>
 
-                <a class="boton boton-sobre-azul shrink-0 order-2 lg:ms-auto" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
+                <a class="boton boton-sobre-azul shrink-0 order-2 lg:order-3 lg:ms-auto" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
 
                 <?php /* `min-w-0` no es cosmético: sin él este <nav> es un ítem
                          flex que no puede encoger por debajo de su contenido, el
@@ -194,7 +194,23 @@ $enlaceNav = static fn (array $item): string => sprintf(
                          envolver: envolviendo once ítems la cabecera crecía a
                          332 px —más de un tercio de la pantalla— y tapaba el
                          contenido por el que la persona entró. */ ?>
-                <nav aria-label="Navegación principal" class="order-3 w-full min-w-0" data-menu-principal>
+                <?php /* Rediseño 2026-11-17, petición de la gerencia: el
+                         logotipo va a la IZQUIERDA y el menú A SU LADO, no
+                         debajo.
+
+                         En escritorio el <nav> deja de ocupar fila propia y
+                         pasa a ser la columna central: logotipo | menú |
+                         PQRSDF. El menú de nueve raíces con los nombres
+                         completos que exige la Res. 1519 no cabe en una sola
+                         línea junto al logotipo —pide del orden de 1100 px y
+                         quedan unos 750—, así que ENVUELVE en dos líneas
+                         dentro de su columna (`lg:flex-wrap`, más abajo). Es
+                         eso o encoger la letra por debajo de lo legible.
+
+                         En móvil no cambia nada: el menú sigue ocupando el
+                         ancho completo bajo el logotipo, que es donde el
+                         cajón de /js/menu.js lo despliega. */ ?>
+                <nav aria-label="Navegación principal" class="order-3 w-full min-w-0 lg:order-2 lg:w-auto lg:flex-1" data-menu-principal>
                     <?php /* Botón «Menú» (Auditoría V9, sección 11): en 390 px
                              la fila horizontal mostraba completas 3 de las 9
                              categorías y el resto exigía descubrir el gesto de

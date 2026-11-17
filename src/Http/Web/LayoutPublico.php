@@ -64,6 +64,11 @@ final readonly class LayoutPublico
             'menuPrincipal' => $this->menus->itemsPorUbicacion('principal'),
             'menuPie1' => $this->menus->itemsPorUbicacion('pie_1'),
             'menuPie2' => $this->menus->itemsPorUbicacion('pie_2'),
+            // El orientador enruta a los mismos accesos que la portada, así
+            // que sale del mismo menú administrable y no de una lista escrita
+            // en código: el hospital cambia una ruta en Panel → Menús y el
+            // orientador queda al día sin tocar nada más (CLAUDE.md §2.2).
+            'menuAccesos' => $this->menus->itemsPorUbicacion('accesos'),
             'config' => $this->config,
             'urlCanonica' => $this->aplicacion->url . ($rutaActual === '/' ? '/' : $rutaActual),
         ]);

@@ -498,5 +498,83 @@ $enlaceNav = static fn (array $item): string => sprintf(
         </dialog>
         <script src="<?= $e(Recursos::url('/js/popup.js')) ?>" defer></script>
     <?php } ?>
+
+    <?php /* --- Orientador del portal (rediseño 2026-11-17) ---
+             Qué es y qué NO es, porque la diferencia importa:
+
+             Es un enrutador guiado. Enseña los mismos accesos que administra
+             el hospital en Panel → Menús (ubicación «accesos») y, si nada
+             sirve, el teléfono de Atención al Usuario. Nada más.
+
+             NO es un chatbot. No hay modelo de lenguaje, no hay campo de
+             texto libre, no pregunta síntomas y no responde consultas
+             clínicas. `CLAUDE.md` §7 deja «chatbot de cara al ciudadano»
+             fuera de v1 y §2.6 prohíbe que un dato clínico entre al sistema:
+             un árbol de decisión cerrado sobre rutas ya publicadas no cruza
+             ninguna de las dos líneas.
+
+             Sin JavaScript no se pinta: sería un botón que no abre nada. Los
+             mismos accesos ya están en la portada y en el pie, así que no se
+             pierde ninguna ruta. */ ?>
+    <?php if ($menuAccesos !== []) { ?>
+        <div class="orientador" id="orientador" data-abierto="no" hidden
+             role="dialog" aria-label="Orientador del portal" aria-modal="false">
+            <div class="orientador-cabeza">
+                <img src="<?= $e($logoEntidad) ?>" alt="" width="38" height="38">
+                <span class="orientador-rotulo">
+                    <b>Orientador del portal</b>
+                    <span>Te ayuda a encontrar lo que buscas</span>
+                </span>
+                <button type="button" aria-label="Cerrar el orientador" data-orientador-cerrar>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+
+            <div class="orientador-hilo" id="orientador-hilo" aria-live="polite">
+                <p class="burbuja asistente">
+                    Hola. Te ayudo a encontrar un trámite, un teléfono o una página
+                    de este portal. <strong>No doy información médica ni resultados.</strong>
+                    ¿Qué necesitas?
+                </p>
+            </div>
+
+            <?php /* Las opciones se pintan en el HTML, no desde JavaScript:
+                     así el contenido lo manda el servidor —y el panel— y el
+                     JS solo mueve lo que ya está escrito. */ ?>
+            <div class="orientador-opciones" id="orientador-opciones">
+                <?php foreach ($menuAccesos as $acceso) { ?>
+                    <button type="button"
+                            data-orientador-opcion
+                            data-url="<?= $e($acceso['url']) ?>"
+                            data-detalle="<?= $e($acceso['descripcion'] ?? '') ?>">
+                        <?= $e($acceso['etiqueta']) ?>
+                    </button>
+                <?php } ?>
+                <?php /* Salida siempre disponible: cuando ninguna ruta sirve,
+                         lo que toca es una persona, no otra pantalla. */ ?>
+                <button type="button"
+                        data-orientador-opcion
+                        data-url="/contacto"
+                        data-detalle="Atención al Usuario (SIAU) te atiende en el PBX <?= $e($config->texto('contacto.pbx')) ?> y en <?= $e($config->texto('contacto.correo')) ?>. <?= $e($config->texto('contacto.horario')) ?>">
+                    Hablar con una persona
+                </button>
+            </div>
+
+            <p class="orientador-aviso">
+                Canal de orientación, no de atención en salud. Si se trata de una
+                urgencia médica, llama al
+                <a href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.emergencias'))) ?>"><?= $e($config->texto('contacto.emergencias')) ?></a>
+                o acude al servicio de urgencias.
+            </p>
+        </div>
+
+        <button class="orientador-boton" type="button" id="orientador-abrir" hidden
+                aria-expanded="false" aria-controls="orientador">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 15a2 2 0 01-2 2H8l-4 4V5a2 2 0 012-2h12a2 2 0 012 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9h7M8.5 12.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span class="orientador-boton-texto">¿Te orientamos?</span>
+        </button>
+
+        <script src="<?= $e(Recursos::url('/js/orientador.js')) ?>" defer></script>
+    <?php } ?>
 </body>
 </html>

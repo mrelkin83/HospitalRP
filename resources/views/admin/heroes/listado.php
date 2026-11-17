@@ -94,6 +94,19 @@ $campos = static function (array $f, string $tokenCsrf, int $siguienteOrden) use
                 <input class="campo" id="alt-<?= $e($id) ?>" type="text" name="imagen_alt" maxlength="255">
             </div>
         </div>
+
+        <?php /* La gerencia pidió (2026-11-17) que pulsar la fotografía lleve
+                 a algún sitio: es el gesto más evidente de la portada y hasta
+                 ahora no hacía nada. Déjalo vacío y la imagen se queda sin
+                 enlace, como siempre. */ ?>
+        <div class="mt-4">
+            <label class="etiqueta" for="enlimg-<?= $e($id) ?>">Al pulsar la imagen, ir a
+                <span class="texto-suave font-normal">— opcional; vacío = la imagen no enlaza</span>
+            </label>
+            <input class="campo" id="enlimg-<?= $e($id) ?>" type="text" name="enlace_imagen" maxlength="255"
+                   placeholder="/servicios/urgencias"
+                   value="<?= $e((string) ($f['enlace_imagen'] ?? '')) ?>">
+        </div>
     </fieldset>
 
     <div class="mt-4 grid gap-4 sm:grid-cols-3">

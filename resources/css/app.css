@@ -162,22 +162,13 @@
     --anillo: #8FC3F5;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root:not([data-tema]) {
-        --fondo: #090E1A;
-        --superficie: #121A2E;
-        --gradiente-fondo: linear-gradient(135deg, #090E1A 0%, #121A2E 100%) fixed;
-        --borde: #202D42;
-        --texto: #E7ECF5;
-        --texto-suave: #A9B4C6;
-        --titular: #E7ECF5;
-        --enlace: #8FC3F5;
-        --accion: #225A96;
-        --accion-intensa: #2B6CB0;
-        --texto-sobre-accion: #FFFFFF;
-        --anillo: #8FC3F5;
-    }
-}
+/* --- El tema del sistema NO altera el portal (gerencia, 2026-11-17) ---
+   Aquí había un bloque `@media (prefers-color-scheme: dark)` que ponía el
+   sitio en oscuro cuando Windows o el navegador estaban en oscuro. La
+   gerencia pidió que la página se vea igual en todos los equipos, así que
+   el modo oscuro queda SOLO como opción de accesibilidad: lo activa el
+   visitante con el botón de la barra superior, que escribe `data-tema`.
+   No reintroducir `prefers-color-scheme` sin revisar esa decisión. */
 
 /* --- Modo de alto contraste (barra de accesibilidad, Res. 1519) --- */
 [data-contraste="alto"] {
@@ -388,11 +379,7 @@
     --velo-fondo: rgb(9 14 26 / 0.5); /* --fondo oscuro (#090E1A) al 50 % */
 }
 
-@media (prefers-color-scheme: dark) {
-    :root:not([data-tema]) .fondo-degradado-marca {
-        --velo-fondo: rgb(9 14 26 / 0.5);
-    }
-}
+/* Sin variante por tema del sistema: ver la nota de la escala de color. */
 
 /* En alto contraste el degradado estorba: el fondo vuelve a ser plano. */
 [data-contraste="alto"] .fondo-degradado-marca {
@@ -1267,6 +1254,282 @@ html:not([data-js]) .encuesta-paso {
 }
 
 /* =====================================================================
+   Cabecera institucional azul (rediseño aprobado el 2026-11-17)
+   =====================================================================
+
+   Sustituye al panel de vidrio flotante. La gerencia rechazó aquel
+   tratamiento: leía como panel de control de un producto de software, no
+   como el encabezado de un hospital público. El referente aprobado es el
+   Hospital San Vicente Fundación: una barra sólida, sobria, con el
+   logotipo a la izquierda y el menú debajo.
+
+   La paleta NO cambia: es el azul oscuro oficial, primario-700 (#1D5BA7).
+
+   Fuera de @layer porque tiene que ganarle a las utilidades de Tailwind
+   que pintan color y fondo en la propia plantilla. */
+.cabecera-institucional {
+    background: var(--color-primario-700);
+    color: #fff;
+    box-shadow: 0 6px 20px -12px rgb(10 27 58 / 0.9);
+}
+
+[data-tema="oscuro"] .cabecera-institucional {
+    background: var(--color-primario-900);
+}
+
+/* En alto contraste el azul medio no da los 7:1 que pide el modo. */
+[data-contraste="alto"] .cabecera-institucional {
+    background: #0A1B3A;
+}
+
+/* Sobre el azul, los tokens de texto claro no sirven: se fuerzan a blanco
+   y a primario-200, que mide 4,63:1 sobre este fondo (la Auditoría V9
+   descartó el cian de marca, que solo llegaba a 3,09:1). */
+.cabecera-institucional .texto-titular,
+.cabecera-institucional .menu-principal-enlace,
+.cabecera-institucional summary {
+    color: #fff;
+}
+
+.cabecera-institucional .texto-suave {
+    color: var(--color-primario-200);
+}
+
+.cabecera-institucional .menu-principal-enlace:hover,
+.cabecera-institucional summary:hover {
+    color: #fff;
+    background-color: rgb(255 255 255 / 0.14);
+}
+
+.cabecera-institucional .menu-principal-enlace::after {
+    background: var(--color-primario-200);
+}
+
+/* El desplegable sigue siendo un panel claro: es contenido, no barra.
+   Sin esto heredaría el blanco de la cabecera sobre fondo claro. */
+.cabecera-institucional .menu-submenu .texto-titular {
+    color: var(--titular);
+}
+
+.cabecera-institucional .menu-submenu .texto-suave {
+    color: var(--texto-suave);
+}
+
+.cabecera-institucional .menu-submenu summary,
+.cabecera-institucional .menu-submenu a {
+    color: inherit;
+}
+
+/* Botón «Menú» y lista desplegada, ya sobre azul. */
+.cabecera-institucional .menu-movil-boton {
+    color: #fff;
+    border-color: rgb(255 255 255 / 0.35);
+    background-color: rgb(255 255 255 / 0.14);
+}
+
+@media (max-width: 1023px) {
+    .cabecera-institucional [data-menu-abierto] .menu-principal-lista > li {
+        border-bottom-color: rgb(255 255 255 / 0.2);
+    }
+}
+
+/* =====================================================================
+   Velo del héroe (rediseño 2026-11-17)
+   =====================================================================
+
+   Antes eran dos capas que sumaban entre 0,88 y 0,97 sobre la zona de
+   lectura. Cumplía de sobra el contraste, pero la gerencia rechazó el
+   resultado: la fotografía quedaba irreconocible y el hospital no se veía.
+
+   Ahora es una sola capa de azul marino de marca a 0,62. El cálculo del
+   peor caso —una zona BLANCA de la fotografía— compone #666D7D, que mide
+   5,17:1 con el texto blanco. WCAG 1.4.3 exige 4,5:1, así que hay margen.
+   Por debajo de 0,58 el párrafo ya no cumple: 0,62 es el suelo, no una
+   preferencia. Del 68 % hacia la derecha el velo cae a 0,08 y la imagen se
+   ve casi limpia, porque ahí no hay texto que leer.
+
+   Lo comprueba tests/Unit/Diseno/ContrasteTest.php. */
+.velo-heroe {
+    background: linear-gradient(95deg,
+        rgb(8 20 45 / 0.66) 0%,
+        rgb(8 20 45 / 0.62) 46%,
+        rgb(8 20 45 / 0.30) 68%,
+        rgb(8 20 45 / 0.08) 100%);
+}
+
+/* En una columna el texto cruza toda la foto, así que el velo deja de ser
+   lateral: pasa a vertical y parejo, con el mismo suelo de 0,62. */
+@media (max-width: 1023px) {
+    .velo-heroe {
+        background: linear-gradient(180deg,
+            rgb(8 20 45 / 0.62) 0%,
+            rgb(8 20 45 / 0.64) 55%,
+            rgb(8 20 45 / 0.66) 100%);
+    }
+}
+
+/* En alto contraste manda la legibilidad sobre la fotografía. */
+[data-contraste="alto"] .velo-heroe {
+    background: rgb(5 13 31 / 0.92);
+}
+
+/* El enlace de la fotografía cubre la diapositiva pero va DETRÁS del texto:
+   envolviendo todo se tragaría el clic de «Solicitar cita». */
+.enlace-heroe {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* Y el contenedor del texto, que va por encima, deja pasar el clic donde no
+   hay nada escrito: si no, su caja —que ocupa el ancho de la retícula— se
+   comía el enlace en toda la mitad derecha de la fotografía. Los hijos lo
+   recuperan, así que botones y texto siguen respondiendo con normalidad. */
+.heroe-capa-texto {
+    pointer-events: none;
+}
+
+.heroe-capa-texto > * {
+    pointer-events: auto;
+}
+
+/* =====================================================================
+   Banda de servicio: horarios, urgencias y sede
+   =====================================================================
+
+   Lo que el ciudadano entra a buscar en los primeros treinta segundos
+   (CLAUDE.md §1), montado sobre el borde inferior del héroe para que se
+   vea sin desplazar la página y sin robarle sitio a la fotografía. */
+.banda-servicio {
+    position: relative;
+    z-index: 5;
+    margin-top: -2.5rem;
+}
+
+.banda-servicio > ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 1.25rem;
+    box-shadow: 0 2px 4px rgb(16 52 99 / 0.08), 0 24px 48px -24px rgb(16 52 99 / 0.35);
+    overflow: hidden;
+}
+
+.banda-servicio li {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0.15rem 1rem;
+    padding: 1.3rem 1.5rem;
+    align-content: center;
+}
+
+.banda-servicio li + li {
+    border-inline-start: 1px solid var(--borde);
+}
+
+.banda-servicio .destacada {
+    background: var(--color-primario-700);
+    border-inline-start-color: transparent;
+}
+
+.banda-servicio svg {
+    grid-row: span 3;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-self: center;
+    color: var(--color-primario-500);
+}
+
+.banda-servicio .destacada svg {
+    color: var(--color-primario-200);
+}
+
+.banda-servicio h3 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-weight: 800;
+    color: var(--accion);
+}
+
+.banda-servicio .destacada h3 {
+    color: var(--color-primario-200);
+}
+
+.banda-servicio .dato {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--titular);
+    line-height: 1.25;
+    text-decoration: none;
+    display: block;
+}
+
+.banda-servicio .destacada .dato {
+    color: #fff;
+}
+
+.banda-servicio p {
+    font-size: 0.84rem;
+    color: var(--texto-suave);
+    line-height: 1.45;
+}
+
+.banda-servicio .destacada p {
+    color: var(--color-primario-100);
+}
+
+.banda-servicio .destacada a {
+    color: #fff;
+}
+
+@media (max-width: 1049px) {
+    .banda-servicio > ul {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .banda-servicio li:nth-child(3) {
+        grid-column: 1 / -1;
+        border-inline-start: 0;
+        border-top: 1px solid var(--borde);
+    }
+}
+
+@media (max-width: 767px) {
+    .banda-servicio {
+        margin-top: -1.75rem;
+    }
+
+    .banda-servicio > ul {
+        grid-template-columns: 1fr;
+    }
+
+    .banda-servicio li + li {
+        border-inline-start: 0;
+        border-top: 1px solid var(--borde);
+    }
+
+    .banda-servicio .destacada {
+        border-top-color: transparent;
+    }
+}
+
+/* El PQRSDF deja de ser un degradado azul sobre azul —se perdía— y pasa a
+   blanco sólido, que es el contraste máximo disponible sobre la barra. */
+.boton-sobre-azul {
+    background: #fff;
+    color: var(--color-primario-700);
+    box-shadow: 0 4px 12px rgb(10 27 58 / 0.25);
+}
+
+.boton-sobre-azul:hover {
+    background: var(--color-primario-100);
+    color: var(--color-primario-800);
+    transform: translateY(-1px);
+}
+
+/* =====================================================================
    Logotipo institucional en la cabecera (Auditoría V9, sección 12)
    =====================================================================
 
@@ -1279,11 +1542,7 @@ html:not([data-js]) .encuesta-paso {
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
 }
 
-@media (prefers-color-scheme: dark) {
-    :root:not([data-tema]) .logo-entidad {
-        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
-    }
-}
+/* Sin variante por tema del sistema: ver la nota de la escala de color. */
 
 
 /* =====================================================================

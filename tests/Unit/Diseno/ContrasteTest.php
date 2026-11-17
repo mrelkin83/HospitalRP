@@ -161,6 +161,73 @@ final class ContrasteTest extends TestCase
         }
     }
 
+    /**
+     * El velo del héroe no puede aclararse más, por bonito que quede.
+     *
+     * La gerencia pidió (2026-11-17) que se viera la fotografía, y el velo
+     * bajó de ~0,90 a 0,62. Ese 0,62 no es una preferencia estética: es el
+     * suelo aritmético. El hospital sube la fotografía que quiera desde el
+     * panel, así que el peor caso posible es una zona BLANCA, y sobre blanco
+     * el texto del héroe —que es blanco— solo cumple si el velo carga lo
+     * suficiente.
+     *
+     * Esta prueba lee las paradas del degradado en app.css, se queda con la
+     * MÁS CLARA de las que caen sobre la columna de texto y comprueba que
+     * aun así el texto blanco llega al 4,5:1 de la WCAG 1.4.3. Si alguien
+     * vuelve a aclararlo «para que se vea mejor la foto», esto lo frena.
+     */
+    public function testElVeloDelHeroeCumpleSobreUnaFotografiaBlanca(): void
+    {
+        $css = self::hojaDeTokens();
+
+        self::assertSame(
+            1,
+            preg_match('/\.velo-heroe\s*\{(.+?)\}/s', $css, $bloque),
+            'No se encontró la regla .velo-heroe en app.css.',
+        );
+
+        // Paradas del degradado lateral: rgb(8 20 45 / 0.66) 0%, … 0.62 46%, …
+        self::assertNotSame(
+            0,
+            preg_match_all(
+                '/rgb\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\/\s*([0-9.]+)\s*\)\s+(\d+)%/',
+                $bloque[1],
+                $paradas,
+                PREG_SET_ORDER,
+            ),
+            'El degradado de .velo-heroe no tiene la forma esperada.',
+        );
+
+        // La columna de texto ocupa la mitad izquierda: solo mandan las
+        // paradas hasta el 50 %. Más a la derecha no hay nada que leer.
+        $sobreElTexto = array_filter($paradas, static fn (array $p): bool => (int) $p[5] <= 50);
+
+        self::assertNotEmpty($sobreElTexto, 'Ninguna parada del velo cubre la zona de texto.');
+
+        foreach ($sobreElTexto as $parada) {
+            [, $r, $g, $b, $alfa, $posicion] = $parada;
+
+            $tinte = sprintf('#%02X%02X%02X', (int) $r, (int) $g, (int) $b);
+            // Peor caso: la fotografía es blanca justo debajo del párrafo.
+            $resultante = self::mezclar($tinte, '#FFFFFF', (float) $alfa);
+            $ratio = self::ratioDeContraste('#FFFFFF', $resultante);
+
+            self::assertGreaterThanOrEqual(
+                self::MINIMO_AA,
+                $ratio,
+                sprintf(
+                    'El velo del héroe al %s en la parada del %s%% compone %s sobre una '
+                    . 'fotografía blanca, y el texto blanco encima queda en %.2f:1. '
+                    . 'No bajes de 0.62: por debajo de 0.58 deja de cumplir.',
+                    $alfa,
+                    $posicion,
+                    $resultante,
+                    $ratio,
+                ),
+            );
+        }
+    }
+
     /** Mezcla alfa de dos colores opacos, como hace el navegador al componer. */
     private static function mezclar(string $frente, string $fondo, float $alfa): string
     {

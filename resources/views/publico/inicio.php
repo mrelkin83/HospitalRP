@@ -111,20 +111,28 @@ $heroAviso2Texto = $config->texto('hero.aviso2_texto', 'Agendar en 2 minutos');
                          width="<?= (int) $heroe['imagen_ancho'] ?>" height="<?= (int) $heroe['imagen_alto'] ?>"
                      <?php } ?>
                      <?= $indiceHeroe === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?>>
-                <?php /* Velo en dos capas, y no es adorno: el hospital sube la
-                         fotografía que quiera, y sobre una foto clara un velo
-                         de un solo degradado dejaba el párrafo en 3,4:1, por
-                         debajo del 4,5:1 que pide la WCAG 2.2 (1.4.3).
+                <?php /* Velo de una sola capa a 0,62 (rediseño 2026-11-17).
+                         Antes eran dos capas que sumaban entre 0,88 y 0,97 en
+                         la zona de lectura: cumplía el contraste de sobra, pero
+                         la gerencia rechazó el resultado porque la fotografía
+                         quedaba irreconocible.
 
-                         Una capa pareja del 40 % pone un suelo mínimo de
-                         oscuridad pase lo que pase, y encima el degradado que
-                         carga la izquierda, que es donde va el texto. En la
-                         zona de lectura la opacidad combinada no baja del 88 %:
-                         incluso sobre blanco puro, el texto blanco queda en
-                         5,9:1. A la derecha el velo se abre y la fotografía se
-                         ve, porque ahí no hay nada que leer. */ ?>
-                <div class="absolute inset-0 bg-primario-950/40" aria-hidden="true"></div>
-                <div class="absolute inset-0 bg-gradient-to-r from-primario-950/95 via-primario-950/80 to-transparent" aria-hidden="true"></div>
+                         0,62 es el suelo, no una preferencia: sobre una zona
+                         blanca de la foto compone #666D7D, que mide 5,17:1 con
+                         el texto blanco, y por debajo de 0,58 el párrafo ya no
+                         llega al 4,5:1 de la WCAG 1.4.3. El degradado y su
+                         variante móvil viven en .velo-heroe (app.css). */ ?>
+                <div class="velo-heroe absolute inset-0" aria-hidden="true"></div>
+
+                <?php if ($heroe['enlace_imagen'] !== '') { ?>
+                    <?php /* El enlace cubre la diapositiva pero va DETRÁS del
+                             texto (z-index en .enlace-heroe): envolviendo todo
+                             se tragaría el clic de los botones y «Solicitar
+                             cita» acabaría llevando al destino de la foto. */ ?>
+                    <a class="enlace-heroe" href="<?= $e($heroe['enlace_imagen']) ?>">
+                        <span class="sr-only"><?= $e($heroe['titulo']) ?></span>
+                    </a>
+                <?php } ?>
             <?php } else { ?>
                 <div class="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden="true">
                     <span class="mancha h-[500px] w-[500px] -top-20 -left-20 bg-[color:var(--color-marca-cian)] opacity-20"></span>
@@ -132,7 +140,10 @@ $heroAviso2Texto = $config->texto('hero.aviso2_texto', 'Agendar en 2 minutos');
                 </div>
             <?php } ?>
 
-            <div class="relative mx-auto max-w-7xl px-4 py-16 lg:py-24 grid gap-10 <?= $conTarjeta ? 'lg:grid-cols-2 lg:items-center' : '' ?>">
+            <?php /* z-2 deja el texto y los botones POR ENCIMA del enlace de
+                     la fotografía, que va en z-1. Sin esto el enlace de la
+                     imagen se comería el clic de los botones. */ ?>
+            <div class="relative z-[2] mx-auto max-w-7xl px-4 py-16 lg:py-24 grid gap-10 <?= $heroe['enlace_imagen'] !== '' ? 'heroe-capa-texto ' : '' ?><?= $conTarjeta ? 'lg:grid-cols-2 lg:items-center' : '' ?>">
                 <div class="animar-fade-in-up [animation-delay:0.1s] <?= $conImagen ? 'max-w-2xl' : '' ?>">
                     <?php if ($heroe['pildora'] !== '') { ?>
                         <p class="inline-flex items-center gap-2 rounded-full border backdrop-blur-md px-4 py-1.5 text-sm font-semibold shadow-sm <?= $clasePildora ?>">
@@ -338,9 +349,46 @@ $heroAviso2Texto = $config->texto('hero.aviso2_texto', 'Agendar en 2 minutos');
 </section>
 <?php } ?>
 
+<?php /* --- Banda de servicio (rediseño aprobado el 2026-11-17) ---
+         Las tres cosas que el ciudadano entra a buscar primero (CLAUDE.md §1):
+         cuándo atienden, a qué número llamar si es urgente y dónde queda la
+         sede. Va montada sobre el borde inferior del héroe para que se lea sin
+         desplazar la página y sin quitarle sitio a la fotografía.
+
+         Los tres datos salen de Ajustes, no del código: el hospital cambia un
+         horario o un teléfono desde el panel (CLAUDE.md §2.2). */ ?>
+<?php
+$telUrgencias = $config->texto('contacto.emergencias');
+$telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
+?>
+<section class="banda-servicio mx-auto max-w-7xl px-4 <?= $heroes === [] ? 'mt-10' : '' ?>" aria-labelledby="banda-servicio-titulo">
+    <h2 class="sr-only" id="banda-servicio-titulo">Horarios, urgencias y ubicación</h2>
+    <ul>
+        <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <h3>Horarios de atención</h3>
+            <span class="dato">Consulta externa</span>
+            <p><?= $e($config->texto('contacto.horario')) ?></p>
+        </li>
+        <li class="destacada">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <h3>Urgencias 24 / 7</h3>
+            <a class="dato" href="tel:+<?= $e($telUrgenciasE164) ?>"><?= $e($telUrgencias) ?></a>
+            <p>Atención ininterrumpida, todos los días del año</p>
+        </li>
+        <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.6" stroke="currentColor" stroke-width="1.8"/></svg>
+            <h3>Nuestra sede</h3>
+            <span class="dato">Sede principal</span>
+            <p><?= $e($config->texto('contacto.direccion')) ?><br><a href="/sedes">Ver cómo llegar →</a></p>
+        </li>
+    </ul>
+</section>
+
 <?php /* El buscador va fuera de las diapositivas a propósito: si rotara con
-         ellas, desaparecería en mitad de lo que alguien está escribiendo. */ ?>
-<div class="relative z-10 mx-auto max-w-7xl px-4 <?= $heroes === [] ? 'pt-10' : '-mt-8' ?>">
+         ellas, desaparecería en mitad de lo que alguien está escribiendo.
+         Ya no monta sobre el héroe: ese solape lo hace ahora la banda. */ ?>
+<div class="relative z-10 mx-auto max-w-7xl px-4 pt-10">
     <form class="flex max-w-md bg-[color:var(--fondo)] rounded-2xl shadow-lg border border-primario-100 dark:border-primario-800 p-1 focus-within:ring-2 focus-within:ring-primario-500 transition-shadow" action="/buscar" method="get" role="search">
         <label class="sr-only" for="buscar-q">¿Qué estás buscando?</label>
         <div class="flex-1 flex items-center px-4">

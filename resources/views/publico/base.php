@@ -111,28 +111,33 @@ $enlaceNav = static fn (array $item): string => sprintf(
     <?php /* --- Barra superior: accesibilidad + teléfonos ---
              Sobre este azul 700 el cian de marca mide 3,09:1 (Auditoría V9):
              aquí el texto va en blanco o primario-100, nunca en cian. --- */ ?>
-    <div class="bg-primario-700 text-white border-b border-white/10">
+    <?php /* Rediseño 2026-11-17: esta barra deja el azul 700 y pasa a claro.
+             Pegada a la nueva cabecera azul, dos franjas del mismo azul se
+             fundían en un bloque y el encabezado perdía su borde. Claro
+             entre el azul marino de GOV.CO y el azul de la cabecera, las
+             tres franjas se leen como tres. */ ?>
+    <div class="bg-primario-50 dark:bg-primario-900 border-b borde-suave">
         <div class="mx-auto max-w-7xl px-4 py-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <?php /* Las etiquetas largas se abrevian en móvil con un <span>
                      oculto para lectores: ahí el nombre completo sigue
                      anunciándose y en pantalla caben las cinco opciones en una
                      línea en vez de tres. */ ?>
             <div class="flex shrink-0 items-center gap-1" role="group" aria-label="Opciones de accesibilidad">
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="contraste">
+                <button type="button" class="rounded px-2 py-1 font-semibold texto-suave hover:bg-primario-100 hover:texto-titular dark:hover:bg-primario-800" data-alternar="contraste">
                     <span class="sr-only sm:not-sr-only">Alto contraste</span><span aria-hidden="true" class="sm:hidden">◐</span>
                 </button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-menos" aria-label="Reducir tamaño de letra">A−</button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="fuente-mas" aria-label="Aumentar tamaño de letra">A+</button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="movimiento">
+                <button type="button" class="rounded px-2 py-1 font-semibold texto-suave hover:bg-primario-100 hover:texto-titular dark:hover:bg-primario-800" data-alternar="fuente-menos" aria-label="Reducir tamaño de letra">A−</button>
+                <button type="button" class="rounded px-2 py-1 font-semibold texto-suave hover:bg-primario-100 hover:texto-titular dark:hover:bg-primario-800" data-alternar="fuente-mas" aria-label="Aumentar tamaño de letra">A+</button>
+                <button type="button" class="rounded px-2 py-1 font-semibold texto-suave hover:bg-primario-100 hover:texto-titular dark:hover:bg-primario-800" data-alternar="movimiento">
                     <span class="sr-only sm:not-sr-only">Reducir movimiento</span><span aria-hidden="true" class="sm:hidden">⏸</span>
                 </button>
-                <button type="button" class="rounded px-2 py-1 hover:bg-primario-800" data-alternar="tema">
+                <button type="button" class="rounded px-2 py-1 font-semibold texto-suave hover:bg-primario-100 hover:texto-titular dark:hover:bg-primario-800" data-alternar="tema">
                     <span class="sr-only sm:not-sr-only">Tema oscuro</span><span aria-hidden="true" class="sm:hidden">☾</span>
                 </button>
             </div>
             <nav aria-label="Enlaces institucionales" class="hidden md:flex items-center gap-3">
                 <?php foreach ($menuSuperior as $item) { ?>
-                    <a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a>
+                    <a class="texto-suave font-semibold no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a>
                 <?php } ?>
             </nav>
             <?php /* El número en cian sobre este azul medía 3,09:1 (Auditoría
@@ -140,11 +145,11 @@ $enlaceNav = static fn (array $item): string => sprintf(
                      (5,6:1). Los valores llegan con el +57 que exige el Anexo
                      2, 2.2.1(4); el href lo conserva en formato E.164. */ ?>
             <p class="ms-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-                <span class="text-primario-100">Citas:
-                    <a class="text-primario-100 font-bold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.call_center'))) ?>"><?= $e($config->texto('contacto.call_center')) ?></a>
+                <span class="texto-suave">Citas:
+                    <a class="texto-titular font-bold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.call_center'))) ?>"><?= $e($config->texto('contacto.call_center')) ?></a>
                 </span>
-                <span class="text-primario-100">PBX:
-                    <a class="text-white font-semibold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.pbx'))) ?>"><?= $e($config->texto('contacto.pbx')) ?></a>
+                <span class="texto-suave">PBX:
+                    <a class="texto-titular font-semibold" href="tel:+<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.pbx'))) ?>"><?= $e($config->texto('contacto.pbx')) ?></a>
                 </span>
             </p>
         </div>
@@ -155,9 +160,9 @@ $enlaceNav = static fn (array $item): string => sprintf(
              fijo tapa el destino del «Saltar al contenido» y empuja fuera de
              pantalla el aviso de emergencia, que es lo más importante que
              puede mostrar este sitio. --- */ ?>
-    <header class="lg:sticky lg:top-0 z-40 pt-3 pb-2">
+    <header class="cabecera-institucional lg:sticky lg:top-0 z-40">
         <div class="mx-auto max-w-7xl px-4">
-            <div class="panel-vidrio rounded-2xl px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div class="px-0 py-2.5 flex flex-wrap items-center gap-x-6 gap-y-2">
                 <?php /* Logotipo y PQRSDF comparten fila en móvil: separados,
                          la cabecera crecía hasta media pantalla. */ ?>
                 <?php /* Logotipo en PNG transparente, sin placa blanca: la
@@ -173,7 +178,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                     </span>
                 </a>
 
-                <a class="boton boton-primario shrink-0 order-2 lg:ms-auto" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
+                <a class="boton boton-sobre-azul shrink-0 order-2 lg:ms-auto" href="/atencion-ciudadania/pqrsdf">PQRSDF</a>
 
                 <?php /* `min-w-0` no es cosmético: sin él este <nav> es un ítem
                          flex que no puede encoger por debajo de su contenido, el
@@ -315,7 +320,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <h2 id="pie-enlaces" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_enlaces', 'Enlaces de interés')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie1 as $item) { ?>
-                        <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
+                        <li><a class="texto-suave font-semibold no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
                     <?php } ?>
                 </ul>
             </nav>
@@ -323,7 +328,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <h2 id="pie-normatividad" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_normatividad', 'Normatividad')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie2 as $item) { ?>
-                        <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
+                        <li><a class="texto-suave font-semibold no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
                     <?php } ?>
                 </ul>
             </nav>

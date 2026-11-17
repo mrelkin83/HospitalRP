@@ -104,6 +104,9 @@ final readonly class HeroesController
             'orden' => max(0, min(999, $r->getInt('orden'))),
             'inicio' => $inicio,
             'fin' => $fin,
+            // Destino al pulsar la fotografía. Vacío = imagen sin enlace, que
+            // es como se comportaban todas las diapositivas hasta hoy.
+            'enlace_imagen' => $this->texto($r->getString('enlace_imagen'), 255),
             ...$botones,
         ];
 

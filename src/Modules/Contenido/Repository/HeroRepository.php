@@ -28,7 +28,7 @@ final readonly class HeroRepository
      */
     private const string COLUMNAS = 'h.id, h.pildora, h.titulo, h.titulo_degradado, h.eslogan,
                 h.boton1_texto, h.boton1_url, h.boton2_texto, h.boton2_url,
-                h.imagen_id, h.mostrar_tarjeta, h.orden, h.visible, h.inicio, h.fin,
+                h.imagen_id, h.enlace_imagen, h.mostrar_tarjeta, h.orden, h.visible, h.inicio, h.fin,
                 a.texto_alt AS imagen_alt, a.ancho AS imagen_ancho, a.alto AS imagen_alto';
 
     public function __construct(private Connection $conexion)
@@ -147,7 +147,7 @@ final readonly class HeroRepository
      */
     private function normalizar(array $fila): array
     {
-        foreach (['pildora', 'titulo', 'titulo_degradado', 'eslogan', 'boton1_texto', 'boton1_url', 'boton2_texto', 'boton2_url', 'imagen_alt'] as $texto) {
+        foreach (['pildora', 'titulo', 'titulo_degradado', 'eslogan', 'boton1_texto', 'boton1_url', 'boton2_texto', 'boton2_url', 'enlace_imagen', 'imagen_alt'] as $texto) {
             $fila[$texto] = $fila[$texto] === null ? '' : (string) $fila[$texto];
         }
 

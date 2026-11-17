@@ -1,0 +1,8 @@
+# Los binarios de la maqueta son copias de archivos que ya están versionados
+# en su origen, así que no se duplican aquí. El README explica cómo
+# regenerarlos con dos órdenes de copia.
+img/
+*.woff2
+
+# Previsualizaciones temporales con doctype, para abrir por file://
+_vp-*.html

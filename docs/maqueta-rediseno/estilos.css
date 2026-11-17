@@ -1,0 +1,1564 @@
+/* =====================================================================
+   Maqueta de rediseño — E.S.E. Hospital Rosario Pumarejo de López
+   Paleta institucional vigente (sin cambios): #1D5BA7 · #0065AE ·
+   #0997D5 · #35BDE9, verde de marca #2F9A72, tinta #103463.
+   Tipografías del estándar MinTIC 2022: Montserrat + Work Sans,
+   autoalojadas (CLAUDE.md §6 prohíbe Google Fonts por CDN).
+   ===================================================================== */
+
+@font-face {
+    font-family: 'Montserrat';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url('montserrat-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 300 800;
+    font-display: swap;
+    src: url('worksans-latin.woff2') format('woff2');
+}
+
+/* --- Tokens: el bloque :root define la paleta clara completa --- */
+:root {
+    --azul-50:  #EDF9FC;
+    --azul-100: #CDF1F9;
+    --azul-200: #9CE0F5;
+    --azul-300: #66CDF0;
+    --azul-400: #35BDE9;
+    --azul-500: #0997D5;
+    --azul-600: #0065AE;
+    --azul-700: #1D5BA7;
+    --azul-800: #12366E;
+    --azul-900: #0A1B3A;
+    --azul-950: #050D1F;
+    --verde:    #2F9A72;
+    --verde-oscuro: #166B4C;
+    --tinta:    #103463;
+
+    --fondo:        #FFFFFF;
+    --superficie:   #FFFFFF;
+    --superficie-2: #F5F7FB;
+    --superficie-3: #EDF9FC;
+    --texto:        #103463;
+    --texto-suave:  #46618A;
+    --borde:        #E1E8F2;
+    --acento:       #0065AE;
+    --sombra:       0 1px 2px rgb(16 52 99 / .06), 0 8px 24px -12px rgb(16 52 99 / .18);
+    --sombra-alta:  0 2px 4px rgb(16 52 99 / .08), 0 24px 48px -24px rgb(16 52 99 / .35);
+
+    --ancho: 1200px;
+    --radio: 14px;
+    --paso: clamp(3.5rem, 6vw, 5.5rem);
+}
+
+/* --- El tema del sistema NO altera el portal ---
+   Decisión de la gerencia (noviembre de 2026): la página debe verse igual
+   en todos los equipos. Por eso aquí NO hay `prefers-color-scheme`: ni el
+   tema de Windows ni el del navegador cambian un solo color.
+
+   El modo oscuro queda únicamente como opción de accesibilidad que el
+   visitante activa con el botón de la barra superior, y se marca con el
+   atributo propio `data-tema="oscuro"` —el mismo que ya usa
+   `resources/css/app.css`—, nunca con `data-theme`, que es el atributo que
+   estampan los contenedores externos. */
+:root[data-tema="oscuro"] {
+    --fondo:        #050D1F;
+    --superficie:   #0A1B3A;
+    --superficie-2: #0B2347;
+    --superficie-3: #12366E;
+    --texto:        #E7EEF8;
+    --texto-suave:  #9CE0F5;
+    --borde:        rgb(156 224 245 / .20);
+    --acento:       #66CDF0;
+    --sombra:       0 1px 2px rgb(0 0 0 / .4), 0 8px 24px -12px rgb(0 0 0 / .6);
+    --sombra-alta:  0 2px 4px rgb(0 0 0 / .5), 0 24px 48px -24px rgb(0 0 0 / .8);
+}
+
+/* --- Base --- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: 'Work Sans', 'Segoe UI', system-ui, Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+h1, h2, h3, h4 {
+    font-family: 'Montserrat', 'Segoe UI', system-ui, Arial, sans-serif;
+    color: var(--texto);
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+}
+
+p { margin: 0; }
+ul { margin: 0; }
+
+a { color: var(--acento); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+:focus-visible {
+    outline: 3px solid var(--azul-400);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.contenedor {
+    width: 100%;
+    max-width: var(--ancho);
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.oculto-visual {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.saltar {
+    position: absolute;
+    left: 1rem; top: -4rem;
+    z-index: 100;
+    background: var(--azul-700);
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 0 0 var(--radio) var(--radio);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top .15s;
+}
+.saltar:focus { top: 0; }
+
+/* --- 1. Barra GOV.CO obligatoria (Res. 1519 de 2020) --- */
+.barra-govco {
+    background: var(--azul-900);
+    color: #fff;
+    padding-block: .55rem;
+}
+.barra-govco .contenedor {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.barra-govco img { height: 26px; width: auto; }
+.barra-govco span {
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--azul-200);
+}
+
+/* --- 2. Barra de accesibilidad --- */
+.barra-acc {
+    background: var(--superficie-2);
+    border-bottom: 1px solid var(--borde);
+    font-size: .8rem;
+}
+.barra-acc .contenedor {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-block: .4rem;
+}
+.barra-acc ul {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    list-style: none;
+    padding: 0;
+    flex-wrap: wrap;
+}
+.barra-acc button {
+    font: inherit;
+    font-weight: 600;
+    color: var(--texto-suave);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: .3rem .55rem;
+    min-height: 32px;
+    cursor: pointer;
+}
+.barra-acc button:hover { background: var(--superficie-3); color: var(--acento); }
+.barra-acc .contactos {
+    display: flex;
+    gap: 1.25rem;
+    color: var(--texto-suave);
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+.barra-acc .contactos a { color: inherit; text-decoration: none; }
+.barra-acc .contactos a:hover { color: var(--acento); text-decoration: underline; }
+
+/* --- 3. Cabecera azul sólida --- */
+.cabecera {
+    background: var(--azul-700);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 6px 20px -12px rgb(10 27 58 / .9);
+}
+/* Dos filas: marca + acciones arriba, menú abajo.
+   Medido: en una sola fila el contenido pide 1303 px y la retícula del sitio
+   solo ofrece 1136, así que o se encogía la tipografía por debajo de lo
+   legible o se sacaba el menú de esa fila. Con su propia fila el menú
+   dispone de los 1136 px completos y le sobran 400. */
+.cabecera .contenedor {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem 1.25rem;
+    padding-block: .65rem .35rem;
+}
+.cabecera nav { order: 3; width: 100%; min-width: 0; }
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    text-decoration: none;
+    color: #fff;
+    flex-shrink: 0;
+}
+.marca img {
+    height: 46px;
+    width: 46px;
+    border-radius: 50%;
+    background: #fff;
+    padding: 3px;
+    object-fit: contain;
+}
+.marca .lockup { display: flex; flex-direction: column; line-height: 1.1; }
+.marca .eslabon {
+    font-size: .58rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--azul-200);
+    font-weight: 700;
+}
+.marca .nombre {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+}
+.marca .lema { font-size: .68rem; color: var(--azul-200); font-style: italic; }
+
+.menu {
+    /* -.5rem compensa el padding del primer enlace para que su texto quede
+       a plomo con el logotipo de la fila de arriba. */
+    margin-left: -.5rem;
+    display: flex;
+    align-items: center;
+    gap: .15rem;
+    list-style: none;
+    padding: 0;
+}
+.menu > li { position: relative; }
+.menu > li > a {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .55rem .5rem;
+    min-height: 44px;
+    color: #fff;
+    text-decoration: none;
+    font-size: .81rem;
+    font-weight: 600;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+.menu > li > a:hover,
+.menu > li:hover > a,
+.menu > li > a[aria-current] { background: rgb(255 255 255 / .14); }
+.menu .flecha { width: 9px; height: 9px; opacity: .8; }
+
+.submenu {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    min-width: 270px;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-alta);
+    padding: .5rem;
+    list-style: none;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity .16s, transform .16s, visibility .16s;
+}
+.menu > li:hover > .submenu,
+.menu > li:focus-within > .submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.submenu a {
+    display: block;
+    padding: .55rem .75rem;
+    border-radius: 8px;
+    color: var(--texto);
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 500;
+}
+.submenu a:hover { background: var(--superficie-3); color: var(--acento); }
+
+.boton-pqrsdf {
+    margin-left: auto;
+    background: #fff;
+    color: var(--azul-700);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: .78rem;
+    letter-spacing: .04em;
+    padding: .6rem 1.05rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.boton-pqrsdf:hover { background: var(--azul-100); }
+
+.icono-buscar {
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / .3);
+    color: #fff;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.icono-buscar:hover { background: rgb(255 255 255 / .14); }
+
+.abrir-menu { display: none; }
+
+/* --- 4. Hero --- */
+.hero {
+    position: relative;
+    isolation: isolate;
+    background: var(--azul-800);
+    min-height: clamp(460px, 58vw, 620px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+.hero-diapositivas { position: absolute; inset: 0; z-index: 0; }
+
+/* Cada diapositiva es un enlace: al hacer clic sobre la fotografía se va a
+   la página que corresponde (urgencias, citas, programas…). */
+.hero-diapositiva {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.1s ease;
+}
+.hero-diapositiva.activa { opacity: 1; pointer-events: auto; }
+.hero-diapositiva img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+}
+
+/* Velo al mínimo que admite la norma.
+   0,62 de azul marino de marca sobre el peor caso posible —una zona blanca
+   de la fotografía— compone #666D7D, que mide 5,17:1 con el texto blanco.
+   WCAG 1.4.3 exige 4,5:1, así que queda margen. Por debajo de 0,58 el
+   párrafo ya no cumple, de modo que 0,62 es el suelo real: más claro que
+   esto obliga a sacar el texto de encima de la foto.
+   Del 55 % hacia la derecha el velo se desvanece hasta 0,08 y la imagen
+   se ve prácticamente limpia. */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(95deg,
+            rgb(8 20 45 / .66) 0%,
+            rgb(8 20 45 / .62) 46%,
+            rgb(8 20 45 / .30) 68%,
+            rgb(8 20 45 / .08) 100%);
+}
+
+.hero .contenedor {
+    position: relative;
+    z-index: 2;
+    /* El contenedor no intercepta el clic: así la fotografía sigue siendo
+       enlazable en todo el espacio que el texto no ocupa. */
+    pointer-events: none;
+    padding-block: clamp(3.5rem, 8vw, 5.5rem) clamp(5rem, 9vw, 7.5rem);
+}
+
+/* El texto se queda en la mitad izquierda: es la zona que el velo cubre. */
+.hero-texto { max-width: min(620px, 52%); }
+
+/* Devuelve el clic a lo que sí debe ser interactivo o seleccionable. */
+.hero-texto,
+.hero-puntos { pointer-events: auto; }
+
+.hero-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgb(255 255 255 / .14);
+    border: 1px solid rgb(205 241 249 / .35);
+    color: var(--azul-100);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: .35rem .85rem;
+    border-radius: 999px;
+}
+.hero h1 {
+    color: #fff;
+    font-size: clamp(2.3rem, 5.2vw, 3.85rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    margin-top: 1.1rem;
+}
+.hero h1 em {
+    font-style: normal;
+    display: block;
+    color: var(--azul-200);
+}
+.hero .entradilla {
+    color: #DCEAF8;
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    max-width: 46ch;
+    margin-top: 1.1rem;
+}
+.hero-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1.9rem;
+}
+
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 48px;
+    padding: .75rem 1.5rem;
+    border-radius: 999px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    text-decoration: none;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.boton-solido { background: var(--azul-500); color: #fff; }
+.boton-solido:hover { background: var(--azul-400); color: var(--azul-900); }
+.boton-linea { border-color: rgb(255 255 255 / .55); color: #fff; }
+.boton-linea:hover { background: rgb(255 255 255 / .14); }
+
+/* --- Banda de servicio -------------------------------------------------
+   Horarios, urgencias y sede. Antes era una tarjeta superpuesta a la
+   derecha del hero y tapaba un tercio de la fotografía; ahora es una banda
+   de tres columnas que se monta sobre el borde inferior del hero. La
+   información sigue viéndose sin desplazar la página y la foto queda
+   libre. */
+.banda-servicio {
+    position: relative;
+    z-index: 5;
+    margin-top: calc(clamp(50px, 6vw, 86px) * -.62);
+}
+.banda-servicio ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+    padding: 0;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    box-shadow: var(--sombra-alta);
+    overflow: hidden;
+}
+.banda-servicio li {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: .15rem 1rem;
+    padding: 1.3rem 1.5rem;
+    align-content: center;
+}
+.banda-servicio li + li { border-left: 1px solid var(--borde); }
+.banda-servicio .destacada { background: var(--azul-700); border-left-color: transparent; }
+.banda-servicio .destacada h2 { color: var(--azul-200); }
+.banda-servicio .destacada .dato { color: #fff; }
+.banda-servicio .destacada p { color: var(--azul-100); }
+.banda-servicio .destacada a { color: #fff; }
+.banda-servicio svg { grid-row: span 3; width: 40px; height: 40px; align-self: center; }
+.banda-servicio h2 {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    font-weight: 800;
+    color: var(--acento);
+    font-family: 'Montserrat', sans-serif;
+}
+.banda-servicio .dato {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.08rem;
+    color: var(--texto);
+    line-height: 1.25;
+    text-decoration: none;
+    display: block;
+}
+.banda-servicio a.dato:hover { text-decoration: underline; }
+.banda-servicio p { font-size: .84rem; color: var(--texto-suave); line-height: 1.45; }
+.banda-servicio .mas {
+    font-size: .84rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+/* Puntos del carrusel */
+.hero-puntos {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: clamp(3.5rem, 7vw, 5.5rem);
+    display: flex;
+    gap: .5rem;
+    z-index: 4;
+}
+.hero-puntos button {
+    width: 36px; height: 4px;
+    border: 0;
+    padding: 0;
+    border-radius: 999px;
+    background: rgb(255 255 255 / .35);
+    cursor: pointer;
+}
+.hero-puntos button[aria-current="true"] { background: var(--azul-400); }
+
+/* Control de pausa del carrusel (WCAG 2.2.2). */
+.hero-puntos .hero-pausa {
+    width: 30px;
+    height: 30px;
+    margin-left: .35rem;
+    margin-top: -13px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / .18);
+    border: 1px solid rgb(255 255 255 / .4);
+    color: #fff;
+    display: grid;
+    place-items: center;
+}
+.hero-puntos .hero-pausa:hover { background: rgb(255 255 255 / .34); }
+.hero-puntos .hero-pausa svg { width: 13px; height: 13px; }
+.hero-pausa .icono-play { display: none; }
+.hero-pausa.pausado .icono-pausa { display: none; }
+.hero-pausa.pausado .icono-play { display: inline; }
+
+/* Onda decorativa que cierra el hero */
+.onda {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: clamp(50px, 6vw, 86px);
+    z-index: 3;
+    color: var(--fondo);
+    pointer-events: none;
+}
+
+/* --- 5. Accesos rápidos --- */
+.accesos {
+    position: relative;
+    z-index: 3;
+    padding-top: calc(var(--paso) * .55);
+    padding-bottom: calc(var(--paso) * .5);
+}
+.accesos ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+}
+.acceso {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1.25rem 1.1rem;
+    text-decoration: none;
+    box-shadow: var(--sombra);
+    transition: transform .18s, box-shadow .18s, border-color .18s;
+    min-height: 44px;
+}
+.acceso:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-alta);
+    border-color: var(--azul-300);
+}
+.acceso svg { width: 28px; height: 28px; color: var(--azul-500); }
+.acceso strong {
+    font-family: 'Montserrat', sans-serif;
+    font-size: .95rem;
+    color: var(--texto);
+    margin-top: .35rem;
+}
+.acceso span { font-size: .8rem; color: var(--texto-suave); line-height: 1.45; }
+.acceso.urgente { background: var(--azul-700); border-color: var(--azul-700); }
+.acceso.urgente svg { color: var(--azul-200); }
+.acceso.urgente strong { color: #fff; }
+.acceso.urgente span { color: var(--azul-100); }
+
+/* --- Pestaña de sección (lenguaje de San Vicente, color institucional) --- */
+.pestana {
+    display: inline-block;
+    background: var(--azul-700);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
+    letter-spacing: .01em;
+    padding: .55rem 2.6rem .55rem 1.4rem;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+    margin: 0;
+}
+.pestana.verde { background: var(--verde-oscuro); }
+.encabezado-seccion { margin-bottom: 2rem; }
+.encabezado-seccion .intro {
+    color: var(--texto-suave);
+    max-width: 68ch;
+    margin-top: 1rem;
+    font-size: 1.02rem;
+}
+.seccion { padding-block: var(--paso); }
+.seccion.suave { background: var(--superficie-2); }
+
+/* --- 6. Servicios --- */
+.rejilla-servicios {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+}
+.servicio {
+    display: flex;
+    flex-direction: column;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    overflow: hidden;
+    box-shadow: var(--sombra);
+    transition: transform .2s, box-shadow .2s;
+}
+.servicio:hover { transform: translateY(-4px); box-shadow: var(--sombra-alta); }
+.servicio figure { margin: 0; position: relative; aspect-ratio: 16 / 10; overflow: hidden; }
+.servicio figure img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.servicio:hover figure img { transform: scale(1.05); }
+.servicio .cuerpo {
+    padding: 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+    flex: 1;
+}
+.servicio h3 { font-size: 1.12rem; font-weight: 700; }
+.servicio p { font-size: .9rem; color: var(--texto-suave); flex: 1; }
+.servicio .leer {
+    font-weight: 700;
+    font-size: .85rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+}
+.servicio .leer:hover { text-decoration: underline; }
+
+/* --- 7. Misión / por qué elegirnos --- */
+.bloque-doble {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+}
+.marco-foto { position: relative; }
+.marco-foto img {
+    border-radius: 20px;
+    box-shadow: var(--sombra-alta);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    /* `height: auto` es obligatorio: sin él, el atributo height="" del <img>
+       gana sobre aspect-ratio y la foto sale estirada. */
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+/* Trama de puntos: la cita visual al referente de Valledupar */
+.marco-foto::before {
+    content: "";
+    position: absolute;
+    top: -26px;
+    left: -26px;
+    width: 180px;
+    height: 180px;
+    background-image: radial-gradient(var(--azul-400) 1.8px, transparent 1.8px);
+    background-size: 14px 14px;
+    opacity: .55;
+    z-index: 0;
+}
+.lista-valores {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .9rem;
+    margin-top: 1.5rem;
+}
+.lista-valores li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: .85rem;
+    align-items: start;
+    color: var(--texto-suave);
+}
+.lista-valores svg { width: 22px; height: 22px; color: var(--verde); margin-top: 3px; }
+.lista-valores strong { color: var(--texto); font-weight: 700; }
+
+/* --- Cifras --- */
+.cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    gap: 1.25rem;
+    list-style: none;
+    padding: 0;
+    margin-top: 3rem;
+}
+.cifra {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-left: 4px solid var(--azul-500);
+    border-radius: 12px;
+    padding: 1.25rem 1.35rem;
+}
+.cifra b {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+    font-weight: 800;
+    color: var(--acento);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.cifra span { font-size: .85rem; color: var(--texto-suave); }
+.cifra small { display: block; font-size: .7rem; color: var(--texto-suave); opacity: .8; margin-top: .4rem; }
+
+/* --- 8. Noticias --- */
+.rejilla-noticias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+}
+.noticia {
+    display: flex;
+    flex-direction: column;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    overflow: hidden;
+    box-shadow: var(--sombra);
+}
+.noticia figure { margin: 0; aspect-ratio: 16 / 9; overflow: hidden; }
+.noticia figure img { width: 100%; height: 100%; object-fit: cover; }
+.noticia .cuerpo { padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+.noticia time {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-weight: 700;
+    color: var(--azul-500);
+}
+.noticia h3 { font-size: 1.02rem; font-weight: 700; }
+.noticia h3 a { color: inherit; text-decoration: none; }
+.noticia h3 a:hover { color: var(--acento); text-decoration: underline; }
+.noticia p { font-size: .88rem; color: var(--texto-suave); flex: 1; }
+
+.enlace-seccion {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 700;
+    font-size: .88rem;
+    text-decoration: none;
+    min-height: 44px;
+}
+.enlace-seccion:hover { text-decoration: underline; }
+.fila-encabezado {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+/* --- 9. Programas (banda azul) --- */
+.banda-azul {
+    background:
+        linear-gradient(135deg, var(--azul-900) 0%, var(--azul-700) 55%, var(--azul-600) 100%);
+    color: #fff;
+    padding-block: var(--paso);
+}
+.banda-azul h2, .banda-azul h3 { color: #fff; }
+.banda-azul .intro { color: var(--azul-100); }
+.banda-azul .pestana { background: #fff; color: var(--azul-700); }
+.rejilla-programas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.25rem;
+    list-style: none;
+    padding: 0;
+}
+.programa {
+    background: rgb(255 255 255 / .08);
+    border: 1px solid rgb(205 241 249 / .22);
+    border-radius: var(--radio);
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+    text-decoration: none;
+}
+.programa:hover { background: rgb(255 255 255 / .16); border-color: var(--azul-400); }
+.programa svg { width: 30px; height: 30px; color: var(--azul-300); }
+.programa h3 { font-size: 1rem; font-weight: 700; margin-top: .3rem; }
+.programa p { font-size: .85rem; color: var(--azul-100); }
+
+/* --- 10. Galería --- */
+.galeria {
+    display: grid;
+    /* Cuatro columnas en escritorio: las ocho fotos llenan dos filas exactas. */
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    gap: .75rem;
+    list-style: none;
+    padding: 0;
+}
+.galeria li { overflow: hidden; border-radius: 10px; aspect-ratio: 4 / 3; }
+.galeria img { width: 100%; height: 100%; object-fit: cover; transition: transform .45s; }
+.galeria li:hover img { transform: scale(1.07); }
+
+/* --- 11. Transparencia --- */
+.rejilla-transparencia {
+    display: grid;
+    /* Cuatro columnas: los ocho enlaces de la Ley 1712 llenan dos filas. */
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+}
+.enlace-trans {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+    text-decoration: none;
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .9rem;
+    min-height: 44px;
+}
+.enlace-trans:hover { border-color: var(--azul-400); color: var(--acento); }
+.enlace-trans svg { width: 22px; height: 22px; color: var(--azul-500); flex-shrink: 0; }
+
+/* --- 12. Pie --- */
+.pie {
+    background: var(--azul-900);
+    color: #DCEAF8;
+    padding-top: var(--paso);
+    font-size: .88rem;
+}
+.pie a { color: #DCEAF8; text-decoration: none; }
+.pie a:hover { color: var(--azul-300); text-decoration: underline; }
+.pie h2 {
+    color: #fff;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .13em;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+.pie-rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+.pie-rejilla ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
+.pie .entidad { display: flex; flex-direction: column; gap: .9rem; }
+.pie .entidad img {
+    height: 60px; width: 60px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 5px;
+    object-fit: contain;
+}
+.pie .entidad p { color: #B9D2EA; line-height: 1.6; }
+.pie .vigilado {
+    border: 1px solid rgb(205 241 249 / .3);
+    border-radius: 8px;
+    padding: .5rem .8rem;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--azul-200);
+    align-self: flex-start;
+}
+.redes { display: flex; gap: .6rem; }
+.redes a {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / .1);
+    display: grid;
+    place-items: center;
+}
+.redes a:hover { background: var(--azul-600); }
+.redes svg { width: 18px; height: 18px; }
+
+.pie-legal {
+    border-top: 1px solid rgb(205 241 249 / .18);
+    padding-block: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: .8rem;
+    color: #B9D2EA;
+}
+.pie-marcas { display: flex; align-items: center; gap: 1.25rem; }
+.pie-marcas img { height: 30px; width: auto; }
+.pie-marcas .marca-pais {
+    background: #fff;
+    border-radius: 7px;
+    padding: 4px;
+    height: 38px;
+}
+
+/* --- Rail flotante de acciones --- */
+.rail {
+    position: fixed;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+.rail a {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--azul-700);
+    color: #fff;
+    box-shadow: var(--sombra-alta);
+    position: relative;
+}
+.rail a:hover { background: var(--azul-500); }
+.rail a.verde { background: var(--verde-oscuro); }
+.rail a.verde:hover { background: var(--verde); }
+.rail svg { width: 24px; height: 24px; }
+.rail .etiqueta {
+    position: absolute;
+    right: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--azul-900);
+    color: #fff;
+    font-size: .76rem;
+    font-weight: 600;
+    padding: .4rem .7rem;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+}
+.rail a:hover .etiqueta, .rail a:focus-visible .etiqueta { opacity: 1; }
+
+/* --- Menú móvil ---------------------------------------------------------
+   Cajón a pantalla completa con las siete raíces plegadas. Sin él, el botón
+   de hamburguesa no abre nada y el sitio queda inservible en el celular,
+   que es el primer criterio de éxito del proyecto. */
+.cajon {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--fondo);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform .25s ease, visibility .25s;
+}
+.cajon[data-abierto="si"] { transform: translateX(0); visibility: visible; }
+
+.cajon-cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .9rem clamp(1rem, 4vw, 2rem);
+    background: var(--azul-700);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.cajon-cabeza strong {
+    font-family: 'Montserrat', sans-serif;
+    font-size: .95rem;
+    font-weight: 800;
+}
+.cerrar-menu {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / .35);
+    background: transparent;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.cerrar-menu svg { width: 22px; height: 22px; }
+
+.cajon-cuerpo { padding: 1rem clamp(1rem, 4vw, 2rem) 2.5rem; }
+
+.cajon-busqueda {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+}
+.cajon-busqueda input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 1rem;
+    padding: .7rem .9rem;
+    min-height: 48px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie-2);
+    color: var(--texto);
+}
+.cajon-busqueda button {
+    min-height: 48px;
+    padding-inline: 1.1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--azul-700);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cajon-cuerpo > ul { list-style: none; padding: 0; }
+.cajon-cuerpo > ul > li { border-bottom: 1px solid var(--borde); }
+
+.cajon-cuerpo details > summary,
+.cajon-cuerpo > ul > li > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .95rem .25rem;
+    min-height: 48px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--texto);
+    text-decoration: none;
+    cursor: pointer;
+    list-style: none;
+}
+.cajon-cuerpo details > summary::-webkit-details-marker { display: none; }
+.cajon-cuerpo details > summary svg { width: 16px; height: 16px; color: var(--azul-500); transition: transform .2s; }
+.cajon-cuerpo details[open] > summary svg { transform: rotate(180deg); }
+.cajon-cuerpo details ul {
+    list-style: none;
+    padding: 0 0 .75rem .25rem;
+    display: flex;
+    flex-direction: column;
+}
+.cajon-cuerpo details ul a {
+    display: block;
+    padding: .7rem .75rem;
+    min-height: 44px;
+    color: var(--texto-suave);
+    text-decoration: none;
+    font-size: .95rem;
+    border-left: 2px solid var(--borde);
+}
+.cajon-cuerpo details ul a:hover { color: var(--acento); border-left-color: var(--azul-500); }
+
+.cajon-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-top: 1.75rem;
+}
+.cajon-acciones .boton { flex: 1 1 150px; }
+.cajon-acciones .boton-linea { border-color: var(--azul-600); color: var(--acento); }
+.cajon-acciones .boton-linea:hover { background: var(--superficie-3); }
+
+.cajon-contacto {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--borde);
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    font-size: .9rem;
+    color: var(--texto-suave);
+}
+
+/* --- Orientador (asistente guiado) -------------------------------------- */
+.orientador-boton {
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    z-index: 48;
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 56px;
+    padding: .6rem 1.2rem .6rem .75rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--azul-700);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: .92rem;
+    box-shadow: var(--sombra-alta);
+    cursor: pointer;
+}
+.orientador-boton:hover { background: var(--azul-600); }
+.orientador-boton svg { width: 26px; height: 26px; flex-shrink: 0; }
+.orientador-boton .punto {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--verde);
+    box-shadow: 0 0 0 3px rgb(47 154 114 / .3);
+}
+
+.orientador {
+    position: fixed;
+    /* A la izquierda del rail de acciones, que ocupa los 66 px del borde. */
+    right: 80px;
+    bottom: 80px;
+    z-index: 49;
+    width: min(370px, calc(100vw - 100px));
+    /* Topado para que no se monte sobre la cabecera ni la barra GOV.CO. */
+    max-height: min(520px, calc(100vh - 240px));
+    display: flex;
+    flex-direction: column;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    box-shadow: var(--sombra-alta);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .18s, transform .18s, visibility .18s;
+}
+.orientador[data-abierto="si"] { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.orientador-cabeza {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .9rem 1rem;
+    background: var(--azul-700);
+    color: #fff;
+}
+.orientador-cabeza img {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #fff;
+    padding: 3px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.orientador-cabeza b { font-family: 'Montserrat', sans-serif; font-size: .95rem; display: block; }
+.orientador-cabeza span { font-size: .75rem; color: var(--azul-200); }
+.orientador-cabeza button {
+    margin-left: auto;
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    border: 1px solid rgb(255 255 255 / .3);
+    background: transparent;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.orientador-cabeza button svg { width: 18px; height: 18px; }
+
+.orientador-hilo {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    background: var(--superficie-2);
+}
+.burbuja {
+    max-width: 85%;
+    padding: .7rem .9rem;
+    border-radius: 14px;
+    font-size: .9rem;
+    line-height: 1.55;
+}
+.burbuja.asistente {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-bottom-left-radius: 4px;
+    color: var(--texto);
+    align-self: flex-start;
+}
+.burbuja.visitante {
+    background: var(--azul-700);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+}
+.burbuja a { color: var(--acento); font-weight: 600; }
+.burbuja.visitante a { color: var(--azul-200); }
+
+.orientador-opciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    padding: .85rem 1rem;
+    border-top: 1px solid var(--borde);
+    background: var(--superficie);
+}
+.orientador-opciones button {
+    font: inherit;
+    font-size: .83rem;
+    font-weight: 600;
+    min-height: 40px;
+    padding: .45rem .85rem;
+    border: 1px solid var(--azul-300);
+    border-radius: 999px;
+    background: var(--superficie);
+    color: var(--acento);
+    cursor: pointer;
+}
+.orientador-opciones button:hover { background: var(--superficie-3); }
+
+.orientador-aviso {
+    padding: .6rem 1rem .85rem;
+    font-size: .72rem;
+    line-height: 1.5;
+    color: var(--texto-suave);
+    background: var(--superficie);
+    border-top: 1px solid var(--borde);
+}
+
+/* --- Páginas interiores --- */
+.miga {
+    background: var(--superficie-2);
+    border-bottom: 1px solid var(--borde);
+    font-size: .82rem;
+    padding-block: .8rem;
+}
+.miga ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--texto-suave);
+}
+.miga a { text-decoration: none; font-weight: 600; }
+.miga a:hover { text-decoration: underline; }
+.miga svg { width: 14px; height: 14px; opacity: .5; }
+.miga [aria-current] { font-weight: 600; color: var(--texto); }
+
+.titulo-pagina { padding-block: clamp(1.75rem, 4vw, 2.75rem) 1.5rem; }
+.titulo-pagina h1 {
+    font-size: clamp(1.9rem, 4.2vw, 3rem);
+    font-weight: 800;
+    color: var(--acento);
+    letter-spacing: -.02em;
+}
+.banner-interior {
+    width: 100%;
+    height: clamp(230px, 32vw, 420px);
+    object-fit: cover;
+}
+.contenido-interior {
+    max-width: 78ch;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    padding-block: var(--paso);
+}
+.contenido-interior p { color: var(--texto-suave); font-size: 1.02rem; }
+.contenido-interior .resaltado {
+    color: var(--verde-oscuro);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.45;
+}
+.contenido-interior .pestana { margin-top: 1.5rem; }
+.lista-puntos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.lista-puntos li {
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    gap: .85rem;
+    align-items: start;
+    color: var(--texto-suave);
+}
+.lista-puntos li::before {
+    content: "";
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--azul-500);
+    margin-top: .55rem;
+}
+
+/* --- Responsive --- */
+/* El menú en su propia fila mide 955 px con los nombres completos que exige
+   la Res. 1519. Medido: a 1011 px de cliente le faltan 8 px, y a 1087 le
+   sobran 68. Por eso el corte va en 1100: por debajo, el cajón, que además
+   es como mejor se navegan siete raíces con el pulgar. */
+@media (max-width: 1100px) {
+    .cabecera nav { display: none; }
+    .cabecera .contenedor { padding-block: .7rem; }
+    .abrir-menu {
+        display: grid;
+        place-items: center;
+        margin-left: auto;
+        width: 44px; height: 44px;
+        border-radius: 10px;
+        background: rgb(255 255 255 / .14);
+        border: 0;
+        color: #fff;
+        cursor: pointer;
+    }
+    .abrir-menu svg { width: 22px; height: 22px; }
+    /* Con hamburguesa el PQRSDF ya no empuja: pierde el margen automático. */
+    .boton-pqrsdf { margin-left: 0; }
+}
+
+@media (max-width: 1050px) {
+    /* La banda pasa a dos columnas y deja Urgencias ocupando el ancho. */
+    .banda-servicio ul { grid-template-columns: repeat(2, 1fr); }
+    .banda-servicio li:nth-child(3) { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--borde); }
+}
+
+@media (max-width: 900px) {
+    .hero-texto { max-width: none; }
+    .marco-foto::before { display: none; }
+
+    /* En una columna el texto cruza toda la foto, así que el velo deja de
+       ser lateral y pasa a ser vertical y parejo en 0,62: el mismo suelo de
+       contraste (5,17:1) aplicado a toda la superficie. */
+    .hero::before {
+        background: linear-gradient(180deg,
+            rgb(8 20 45 / .62) 0%,
+            rgb(8 20 45 / .64) 55%,
+            rgb(8 20 45 / .66) 100%);
+    }
+
+    .banda-servicio { margin-top: -1.75rem; }
+    .banda-servicio ul { grid-template-columns: 1fr; }
+    .banda-servicio li + li { border-left: 0; border-top: 1px solid var(--borde); }
+    .banda-servicio li:nth-child(3) { border-top: 1px solid var(--borde); }
+    .banda-servicio .destacada { border-top-color: transparent; }
+
+    /* La barra de accesibilidad se desliza en una sola fila en vez de
+       partirse en dos y robar 44 px de alto antes del contenido. */
+    .barra-acc .contenedor { flex-wrap: nowrap; }
+    .barra-acc ul {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .barra-acc ul::-webkit-scrollbar { display: none; }
+    .barra-acc button { white-space: nowrap; }
+
+    /* En el celular el rail deja de flotar al costado y se convierte en una
+       barra inferior fija con las tres acciones rotuladas. */
+    .rail {
+        flex-direction: row;
+        right: 0; left: 0; top: auto;
+        bottom: 0;
+        transform: none;
+        gap: 0;
+        padding: .35rem .5rem calc(.35rem + env(safe-area-inset-bottom));
+        background: var(--superficie);
+        border-top: 1px solid var(--borde);
+        box-shadow: 0 -6px 20px -14px rgb(10 27 58 / .7);
+    }
+    .rail a {
+        flex: 1;
+        width: auto;
+        height: auto;
+        min-height: 52px;
+        flex-direction: column;
+        gap: 2px;
+        padding: .35rem;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--acento);
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+    .rail a:hover { background: var(--superficie-3); }
+    .rail a.verde { background: transparent; color: var(--verde-oscuro); }
+    .rail a.verde:hover { background: var(--exito-100, var(--superficie-3)); }
+    .rail svg { width: 21px; height: 21px; }
+    .rail .etiqueta {
+        position: static;
+        transform: none;
+        opacity: 1;
+        pointer-events: none;
+        background: transparent;
+        color: inherit;
+        font-size: .66rem;
+        font-weight: 700;
+        padding: 0;
+        border-radius: 0;
+        white-space: nowrap;
+        order: 2;
+    }
+
+    /* En móvil el rail ya no ocupa el costado: el panel recupera el ancho
+       completo y sube por encima de la barra inferior. */
+    .orientador-boton { bottom: calc(74px + env(safe-area-inset-bottom)); padding-inline: .75rem 1rem; }
+    .orientador {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        bottom: calc(138px + env(safe-area-inset-bottom));
+        max-height: calc(100vh - 230px);
+    }
+
+    /* Sitio bajo el pie para que la barra fija no tape el último enlace. */
+    .pie-legal { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 640px) {
+    .barra-acc .contactos { display: none; }
+    .marca .lema,
+    .marca .eslabon { display: none; }
+    .boton-pqrsdf { display: none; }
+    .accesos { margin-top: 0; padding-top: 2rem; }
+
+    /* El nombre de la entidad debe poder encogerse: si no, empuja el botón
+       de búsqueda fuera de la pantalla y el documento desborda a lo ancho. */
+    .cabecera .contenedor { gap: .6rem; }
+    .marca { flex-shrink: 1; min-width: 0; }
+    .marca .nombre { font-size: .82rem; }
+    .marca img { height: 40px; width: 40px; }
+
+    /* Área táctil mínima de 44 px también en la barra de accesibilidad
+       y en el botón de cerrar del orientador (CLAUDE.md §6). */
+    .barra-acc button { min-height: 44px; padding-inline: .7rem; }
+    .orientador-cabeza button { width: 44px; height: 44px; }
+
+    /* El hero no necesita 620 px de alto en un celular. */
+    .hero { min-height: 0; }
+    .hero .contenedor { padding-block: 2.25rem 4.5rem; }
+    .hero-puntos { bottom: 3.25rem; }
+    .banda-servicio li { padding: 1.05rem 1.15rem; grid-template-columns: 34px 1fr; }
+    .banda-servicio svg { width: 34px; height: 34px; }
+    .orientador-boton span.texto { display: none; }
+    .orientador-boton { padding: .6rem; border-radius: 50%; min-width: 56px; }
+}
+
+/* --- Pantallas estrechas (360 px y menos) --- */
+@media (max-width: 400px) {
+    .barra-govco span { display: none; }
+    .barra-acc .contenedor { padding-block: .3rem; }
+    .marca .nombre { font-size: .78rem; }
+    .hero-etiqueta { font-size: .62rem; letter-spacing: .1em; padding: .3rem .65rem; }
+    .hero-acciones .boton { flex: 1 1 100%; }
+    .pestana { font-size: 1rem; padding-right: 2.2rem; }
+    .rail .etiqueta { font-size: .6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+    .servicio:hover { transform: none; }
+    .acceso:hover { transform: none; }
+    .servicio:hover figure img,
+    .galeria li:hover img { transform: none; }
+}

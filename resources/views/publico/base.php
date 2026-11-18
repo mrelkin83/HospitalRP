@@ -325,6 +325,63 @@ $enlaceNav = static fn (array $item): string => sprintf(
         </div>
     <?php } ?>
 
+    <?php /* --- Migas de pan (rediseño 2026-11-17) ---
+             El patrón de página interior de la maqueta aprobada. Se pintan
+             AQUÍ y no en cada vista porque son 59 vistas públicas, ninguna
+             las tenía, y el rastro se puede deducir del propio menú: se busca
+             la ruta actual entre las raíces y sus hijos, y el camino sale
+             solo. Añadir una página al menú le da migas sin tocar código.
+
+             Si la ruta no está en el menú —una ficha de servicio, una
+             noticia— se muestra «Inicio › <título de la página>», que sigue
+             situando al visitante. En la portada no se pintan: no hay rastro
+             que mostrar. */ ?>
+    <?php if (!$esPortada) {
+        $rastro = [];
+
+        foreach ($menuPrincipal as $raiz) {
+            if ($raiz['url'] === $rutaActual) {
+                $rastro = [$raiz];
+                break;
+            }
+
+            foreach ($raiz['hijos'] ?? [] as $hijo) {
+                if ($hijo['url'] === $rutaActual) {
+                    $rastro = [$raiz, $hijo];
+                    break 2;
+                }
+            }
+
+            // Ficha dentro de una sección: /servicios/urgencias cuelga de
+            // /servicios aunque no esté listada como hijo.
+            if ($raiz['url'] !== '/' && str_starts_with($rutaActual, $raiz['url'] . '/')) {
+                $rastro = [$raiz];
+            }
+        }
+        ?>
+        <nav class="miga" aria-label="Ruta de navegación">
+            <div class="mx-auto max-w-7xl px-4">
+                <ol>
+                    <li><a href="/">Inicio</a></li>
+                    <?php foreach ($rastro as $paso) { ?>
+                        <li aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                        </li>
+                        <li><a href="<?= $e($paso['url']) ?>"><?= $e($paso['etiqueta']) ?></a></li>
+                    <?php } ?>
+                    <?php /* El último escalón es la página donde se está: no
+                             es enlace, porque llevaría a donde ya se está. */ ?>
+                    <?php if ($rastro === [] || end($rastro)['url'] !== $rutaActual) { ?>
+                        <li aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                        </li>
+                        <li aria-current="page"><?= $e($titulo) ?></li>
+                    <?php } ?>
+                </ol>
+            </div>
+        </nav>
+    <?php } ?>
+
     <main id="contenido">
         <?= $contenido ?>
     </main>

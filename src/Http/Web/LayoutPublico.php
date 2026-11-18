@@ -71,6 +71,11 @@ final readonly class LayoutPublico
             'menuAccesos' => $this->menus->itemsPorUbicacion('accesos'),
             'config' => $this->config,
             'urlCanonica' => $this->aplicacion->url . ($rutaActual === '/' ? '/' : $rutaActual),
+            // La plantilla arma las migas de pan buscando esta ruta en el
+            // árbol del menú. Se pasa aquí y no en cada controlador porque
+            // son 59 vistas públicas y ninguna tenía migas: resolverlo en el
+            // layout las cubre todas de una vez.
+            'rutaActual' => $rutaActual,
         ]);
 
         $respuesta = new Response($html, $estado, ['Content-Type' => 'text/html; charset=utf-8']);

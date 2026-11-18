@@ -1632,6 +1632,43 @@ html:not([data-js]) .encuesta-paso {
 }
 
 /* =====================================================================
+   Texto corrido justificado (petición de la gerencia, 2026-11-18)
+   =====================================================================
+
+   El texto largo del portal iba en bandera y la gerencia pidió formato
+   justificado, que es lo habitual en documento institucional.
+
+   Se justifica SOLO el texto corrido del contenido —lo que viene de
+   CKEditor y los párrafos de las fichas—, nunca la interfaz: títulos,
+   botones, tarjetas, menús y pies de foto siguen alineados a la izquierda.
+   Justificar una tarjeta de dos líneas abre huecos enormes entre palabras.
+
+   `hyphens: auto` con `lang="es"` no es adorno: sin partir palabras, el
+   justificado en español abre «ríos» blancos entre columnas estrechas, que
+   es precisamente lo que la WCAG 1.4.8 reprocha al texto justificado. Con
+   guionado, el reparto es parejo. `text-wrap: pretty` evita además la
+   palabra huérfana en la última línea. */
+.prosa {
+    text-align: justify;
+    hyphens: auto;
+    text-wrap: pretty;
+}
+
+/* Lo que nunca se justifica, aunque viva dentro del contenido. */
+.prosa :is(h1, h2, h3, h4, h5, h6, figcaption, th, td) {
+    text-align: start;
+    hyphens: manual;
+}
+
+/* En pantallas estrechas el justificado hace más daño que bien: con menos
+   de ~40 caracteres por línea los huecos son inevitables. */
+@media (max-width: 640px) {
+    .prosa {
+        text-align: start;
+    }
+}
+
+/* =====================================================================
    Migas de pan de página interior (rediseño 2026-11-17)
    =====================================================================
 
@@ -1979,6 +2016,11 @@ html:not([data-js]) .encuesta-paso {
 
 .orientador-hilo {
     flex: 1;
+    /* `min-height` es la pieza que faltaba: las nueve opciones envuelven en
+       varias filas y, siendo el hilo el único elemento flexible, se quedaba
+       en ~100 px. La respuesta se escribía, pero caía fuera de la vista. Con
+       un suelo de 11rem la respuesta siempre se ve entera. */
+    min-height: 11rem;
     overflow-y: auto;
     padding: 1rem;
     display: flex;
@@ -2024,6 +2066,11 @@ html:not([data-js]) .encuesta-paso {
     padding: 0.85rem 1rem;
     border-top: 1px solid var(--borde);
     background: var(--superficie);
+    /* Topada y con su propio desplazamiento: si crece sin límite se come el
+       hilo, que es donde está la respuesta. */
+    max-height: 9.5rem;
+    overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .orientador-opciones button {

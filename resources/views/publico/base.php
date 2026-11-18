@@ -409,7 +409,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <h2 id="pie-enlaces" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_enlaces', 'Enlaces de interés')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie1 as $item) { ?>
-                        <li><a class="texto-suave font-semibold no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
+                        <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
                     <?php } ?>
                 </ul>
             </nav>
@@ -417,7 +417,7 @@ $enlaceNav = static fn (array $item): string => sprintf(
                 <h2 id="pie-normatividad" class="text-primario-200 text-base font-bold"><?= $e($config->texto('pie.titulo_normatividad', 'Normatividad')) ?></h2>
                 <ul class="mt-2 flex flex-col gap-1.5 text-sm">
                     <?php foreach ($menuPie2 as $item) { ?>
-                        <li><a class="texto-suave font-semibold no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
+                        <li><a class="text-primario-100 no-underline hover:underline" href="<?= $e($item['url']) ?>"><?= $e($item['etiqueta']) ?></a></li>
                     <?php } ?>
                 </ul>
             </nav>

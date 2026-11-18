@@ -56,6 +56,7 @@ $heroAviso2Rotulo = $config->texto('hero.aviso2_rotulo', 'Próxima cita');
 $heroAviso2Texto = $config->texto('hero.aviso2_texto', 'Agendar en 2 minutos');
 ?>
 
+
 <?php if ($heroes !== []) { ?>
 <section class="relative" aria-roledescription="carrusel" aria-label="Destacados del hospital"
          data-heroes data-rotacion-ms="<?= (int) $rotacionHeroesMs ?>">
@@ -393,6 +394,50 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
     </ul>
 </section>
 
+<?php /* El buscador va fuera de las diapositivas a propósito: si rotara con
+         ellas, desaparecería en mitad de lo que alguien está escribiendo.
+         Ya no monta sobre el héroe: ese solape lo hace ahora la banda. */ ?>
+<div class="relative z-10 mx-auto max-w-7xl px-4 pt-10">
+    <form class="flex max-w-md bg-[color:var(--fondo)] rounded-2xl shadow-lg border border-primario-100 dark:border-primario-800 p-1 focus-within:ring-2 focus-within:ring-primario-500 transition-shadow" action="/buscar" method="get" role="search">
+        <label class="sr-only" for="buscar-q">¿Qué estás buscando?</label>
+        <div class="flex-1 flex items-center px-4">
+            <svg class="h-5 w-5 text-primario-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+            <input class="w-full bg-transparent border-0 focus:ring-0 py-2.5 px-3 text-primario-900 dark:text-primario-100 placeholder-primario-400" type="search" id="buscar-q" name="q" placeholder="<?= $e($heroBuscador) ?>">
+        </div>
+        <button type="submit" class="boton boton-primario rounded-xl px-6 py-2.5 m-0.5">Buscar</button>
+    </form>
+</div>
+
+<?php if ($accesos !== []) { ?>
+<?php /* Ya no monta sobre el héroe: entre los dos está el buscador, que es
+         quien ahora hace ese solape. */ ?>
+<section class="relative z-10 mx-auto mt-10 max-w-7xl px-4 pb-12" aria-labelledby="accesos-titulo">
+    <h2 id="accesos-titulo" class="sr-only">Accesos rápidos</h2>
+    <ul class="grid gap-5 grid-cols-2 md:grid-cols-4 animar-fade-in [animation-delay:0.5s]">
+        <?php foreach ($accesos as $indiceAcceso => $acceso) {
+            $azulejo = $azulejosAcceso[$indiceAcceso % count($azulejosAcceso)];
+            ?>
+            <li>
+                <a class="tarjeta-acceso group flex h-full flex-col gap-4 rounded-3xl p-6 no-underline transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(10,25,47,0.15)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-primario-200/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm" href="<?= $e($acceso['url']) ?>"<?= $acceso['nueva_pestana'] ? ' target="_blank" rel="noopener"' : '' ?>>
+                    <span class="grid h-14 w-14 place-items-center rounded-2xl <?= $e($azulejo) ?> shadow-sm group-hover:scale-110 transition-transform duration-300" aria-hidden="true">
+                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="<?= $e($iconos->trazo($acceso['icono'])) ?>"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <span class="block font-bold text-lg texto-titular group-hover:text-primario-600 dark:group-hover:text-primario-400 transition-colors"><?= $e($acceso['etiqueta']) ?></span>
+                        <?php if ($acceso['descripcion'] !== '') { ?>
+                            <span class="block mt-1 text-sm texto-suave leading-snug"><?= $e($acceso['descripcion']) ?></span>
+                        <?php } ?>
+                    </div>
+                </a>
+            </li>
+        <?php } ?>
+    </ul>
+</section>
+<?php } ?>
+
 <?php /* --- Nuestros servicios (Portafolio de Servicios 2026) ---
          La gerencia pidió que la portada enseñe los servicios con la
          fotografía real, como en los dos sitios de referencia. No se siembra
@@ -474,218 +519,6 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
         </div>
     </div>
 </section>
-
-<?php /* --- Programas institucionales ---
-         Salen del menú, así que añadir un programa en Panel → Menús lo hace
-         aparecer aquí sin tocar la plantilla. */ ?>
-<?php if ($menuProgramas !== []) { ?>
-<section class="banda-programas mt-20 py-16" aria-labelledby="programas-titulo">
-    <div class="mx-auto max-w-7xl px-4">
-        <h2 class="pestana blanca text-xl sm:text-2xl" id="programas-titulo">Programas institucionales</h2>
-        <p class="mt-4 text-primario-100 max-w-2xl">Estrategias propias del hospital, reconocidas en la región.</p>
-        <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <?php foreach (array_slice($menuProgramas, 0, 8) as $programa) { ?>
-                <li>
-                    <a class="tarjeta-programa h-full" href="<?= $e($programa['url']) ?>">
-                        <span class="font-extrabold text-white"><?= $e($programa['etiqueta']) ?></span>
-                        <?php if (($programa['descripcion'] ?? '') !== '') { ?>
-                            <span class="text-sm text-primario-100"><?= $e($programa['descripcion']) ?></span>
-                        <?php } ?>
-                    </a>
-                </li>
-            <?php } ?>
-        </ul>
-    </div>
-</section>
-<?php } ?>
-
-<?php /* El buscador va fuera de las diapositivas a propósito: si rotara con
-         ellas, desaparecería en mitad de lo que alguien está escribiendo.
-         Ya no monta sobre el héroe: ese solape lo hace ahora la banda. */ ?>
-<div class="relative z-10 mx-auto max-w-7xl px-4 pt-10">
-    <form class="flex max-w-md bg-[color:var(--fondo)] rounded-2xl shadow-lg border border-primario-100 dark:border-primario-800 p-1 focus-within:ring-2 focus-within:ring-primario-500 transition-shadow" action="/buscar" method="get" role="search">
-        <label class="sr-only" for="buscar-q">¿Qué estás buscando?</label>
-        <div class="flex-1 flex items-center px-4">
-            <svg class="h-5 w-5 text-primario-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
-            <input class="w-full bg-transparent border-0 focus:ring-0 py-2.5 px-3 text-primario-900 dark:text-primario-100 placeholder-primario-400" type="search" id="buscar-q" name="q" placeholder="<?= $e($heroBuscador) ?>">
-        </div>
-        <button type="submit" class="boton boton-primario rounded-xl px-6 py-2.5 m-0.5">Buscar</button>
-    </form>
-</div>
-
-<?php if ($accesos !== []) { ?>
-<?php /* Ya no monta sobre el héroe: entre los dos está el buscador, que es
-         quien ahora hace ese solape. */ ?>
-<section class="relative z-10 mx-auto mt-10 max-w-7xl px-4 pb-12" aria-labelledby="accesos-titulo">
-    <h2 id="accesos-titulo" class="sr-only">Accesos rápidos</h2>
-    <ul class="grid gap-5 grid-cols-2 md:grid-cols-4 animar-fade-in [animation-delay:0.5s]">
-        <?php foreach ($accesos as $indiceAcceso => $acceso) {
-            $azulejo = $azulejosAcceso[$indiceAcceso % count($azulejosAcceso)];
-            ?>
-            <li>
-                <a class="tarjeta-acceso group flex h-full flex-col gap-4 rounded-3xl p-6 no-underline transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(10,25,47,0.15)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-primario-200/50 dark:border-primario-700/50 bg-[color:var(--fondo)]/80 backdrop-blur-sm" href="<?= $e($acceso['url']) ?>"<?= $acceso['nueva_pestana'] ? ' target="_blank" rel="noopener"' : '' ?>>
-                    <span class="grid h-14 w-14 place-items-center rounded-2xl <?= $e($azulejo) ?> shadow-sm group-hover:scale-110 transition-transform duration-300" aria-hidden="true">
-                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="<?= $e($iconos->trazo($acceso['icono'])) ?>"/>
-                        </svg>
-                    </span>
-                    <div>
-                        <span class="block font-bold text-lg texto-titular group-hover:text-primario-600 dark:group-hover:text-primario-400 transition-colors"><?= $e($acceso['etiqueta']) ?></span>
-                        <?php if ($acceso['descripcion'] !== '') { ?>
-                            <span class="block mt-1 text-sm texto-suave leading-snug"><?= $e($acceso['descripcion']) ?></span>
-                        <?php } ?>
-                    </div>
-                </a>
-            </li>
-        <?php } ?>
-    </ul>
-</section>
-<?php } ?>
-
-<?php
-    /* Carrusel de Campañas y Comunicación Interna: las dos pestañas del
-       diseño —«Salud y Prevención» para la comunidad y «Portal de Empleados»
-       para el personal— servidas desde la tabla `campanas`.
-
-       La versión anterior traía las cuatro piezas escritas a mano dentro de
-       un `x-data`, con una tarjeta que invitaba a «Ingresar a Intranet» —la
-       intranet que el hospital mandó retirar el 2026-09-14— y salía vacía,
-       porque Alpine no estaba cargado. Ahora el contenido lo publica
-       Comunicaciones en Panel → Campañas, eligiendo a qué audiencia le habla,
-       y Alpine solo alterna qué se ve. */
-    $pestanasCampanas = array_values(array_filter(
-        [
-            ['audiencia' => Audiencia::Comunidad, 'referencia' => 'Comunidad', 'campanas' => $campanasComunidad],
-            ['audiencia' => Audiencia::Personal, 'referencia' => 'Personal', 'campanas' => $campanasPersonal],
-        ],
-        static fn (array $pestana): bool => $pestana['campanas'] !== [],
-    ));
-?>
-
-<?php if ($pestanasCampanas !== []) { ?>
-    <section class="mx-auto max-w-7xl px-4 pb-16 animar-fade-in [animation-delay:0.6s]" aria-labelledby="campanas-titulo" x-data="comunicaciones"
-             data-rotacion-ms="<?= (int) $rotacionCampanasMs ?>">
-        <div class="tarjeta p-8 border-white/20 bg-[color:var(--superficie)]/80 backdrop-blur-md shadow-2xl relative overflow-hidden">
-            <div class="flex items-center justify-between border-b border-primario-100/50 dark:border-primario-800 pb-5 mb-8 flex-wrap gap-4">
-                <div>
-                    <span class="text-xs font-bold uppercase tracking-widest text-primario-500">Comunicaciones E.S.E.</span>
-                    <h2 id="campanas-titulo" class="pestana text-xl sm:text-2xl mt-1">Campañas y comunicados</h2>
-                </div>
-
-                <?php /* Las pestañas solo tienen sentido si hay dos paneles que
-                         alternar; con uno solo serían un adorno que no hace nada. */ ?>
-                <?php if (count($pestanasCampanas) === 2) { ?>
-                    <div class="comunicaciones-pestanas flex bg-primario-50 dark:bg-primario-900/50 p-1 rounded-2xl border border-primario-100/20" role="tablist" aria-label="Audiencia de las comunicaciones">
-                        <button type="button" role="tab" id="pestana-comunidad" aria-controls="panel-comunidad"
-                                x-bind:aria-selected="seleccionComunidad" x-bind:class="claseComunidad" x-on:click="verComunidad"
-                                class="px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer bg-gradient-to-tr from-primario-700 to-primario-500 text-white shadow-md">
-                            <?= $e(Audiencia::Comunidad->pestana()) ?>
-                        </button>
-                        <button type="button" role="tab" id="pestana-personal" aria-controls="panel-personal"
-                                x-bind:aria-selected="seleccionPersonal" x-bind:class="clasePersonal" x-on:click="verPersonal"
-                                class="px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer text-primario-700 dark:text-primario-300 hover:bg-white/10">
-                            <?= $e(Audiencia::Personal->pestana()) ?>
-                        </button>
-                    </div>
-                <?php } ?>
-            </div>
-
-            <?php foreach ($pestanasCampanas as $indicePestana => $pestana) {
-                $audiencia = $pestana['audiencia'];
-                $esPersonal = $audiencia === Audiencia::Personal;
-                $clave = strtolower($pestana['referencia']);
-                ?>
-                <div id="panel-<?= $e($clave) ?>" class="comunicaciones-panel" data-activa="<?= $indicePestana === 0 ? 'true' : 'false' ?>"
-                     role="tabpanel" aria-labelledby="pestana-<?= $e($clave) ?>" x-ref="panel<?= $e($pestana['referencia']) ?>">
-                    <h3 class="comunicaciones-titulo-panel text-lg font-extrabold texto-titular mb-4"><?= $e($audiencia->pestana()) ?></h3>
-
-                    <?php /* -mx-8 saca la lista del padding de la tarjeta para que el
-                             héroe llegue a los bordes. El encabezado y las pestañas se
-                             quedan dentro, que es justo lo que no debe taparse. */ ?>
-                    <ul class="-mx-8" x-ref="lista<?= $e($pestana['referencia']) ?>">
-                        <?php foreach ($pestana['campanas'] as $indiceCampana => $campana) { ?>
-                            <li class="comunicaciones-diapositiva"
-                                data-activa="<?= $indiceCampana === 0 ? 'true' : 'false' ?>">
-                                <?php /* Héroe a sangre: la imagen ocupa todo el ancho de la
-                                         tarjeta y el texto de la campaña va ENCIMA. El velo
-                                         oscuro no es decoración: sobre una foto cualquiera
-                                         el texto blanco puede quedar en 1,5:1, y aquí va el
-                                         titular de una campaña de salud. Con el degradado
-                                         de abajo a arriba el texto se apoya siempre en la
-                                         zona más oscura. */ ?>
-                                <article class="relative isolate overflow-hidden rounded-[1.25rem] min-h-[420px] sm:min-h-[520px] flex items-end">
-                                    <?php if ($campana->imagenId !== null) { ?>
-                                        <img class="absolute inset-0 -z-10 h-full w-full object-cover" src="/archivos/<?= $campana->imagenId ?>"
-                                             alt="<?= $e($imagenes[$campana->imagenId]->textoAlt ?? '') ?>"
-                                             loading="lazy" width="1280" height="720">
-                                    <?php } else { ?>
-                                        <?php /* Sin foto no se mete un logo estirado: el degradado
-                                                 de marca sostiene el texto igual de bien. */ ?>
-                                        <span class="absolute inset-0 -z-10 <?= $esPersonal
-                                            ? 'bg-gradient-to-br from-primario-800 via-primario-900 to-primario-950'
-                                            : 'bg-gradient-to-br from-primario-700 via-primario-800 to-primario-900' ?>" aria-hidden="true"></span>
-                                    <?php } ?>
-
-                                    <span class="absolute inset-0 -z-10 bg-gradient-to-t from-primario-950/95 via-primario-950/70 to-primario-950/25" aria-hidden="true"></span>
-
-                                    <div class="relative w-full p-7 sm:p-9 space-y-3 max-w-3xl">
-                                        <?php if ($campana->poblacionObjetivo !== null && $campana->poblacionObjetivo !== '') { ?>
-                                            <span class="inline-block text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border <?= $esPersonal
-                                                ? 'bg-aviso-400/20 text-aviso-100 border-aviso-200/40'
-                                                : 'bg-[color:var(--color-marca-cian)]/20 text-white border-white/30' ?>">
-                                                <?= $e($campana->poblacionObjetivo) ?>
-                                            </span>
-                                        <?php } ?>
-
-                                        <h4 class="text-3xl sm:text-4xl font-extrabold leading-tight text-white drop-shadow-sm"><?= $e($campana->titulo) ?></h4>
-
-                                        <?php if ($campana->resumen !== null && $campana->resumen !== '') { ?>
-                                            <p class="text-base text-primario-100 leading-relaxed max-w-prose"><?= $e($campana->resumen) ?></p>
-                                        <?php } ?>
-
-                                        <?php if ($campana->fin !== null) { ?>
-                                            <p class="text-xs text-primario-200">Vigente hasta el <?= $e(Fechas::larga($campana->fin)) ?></p>
-                                        <?php } ?>
-
-                                        <div class="pt-2">
-                                            <a class="boton <?= $esPersonal
-                                                ? 'bg-aviso-100 text-aviso-900 border border-aviso-200 hover:bg-aviso-200'
-                                                : 'bg-white text-primario-800 hover:bg-primario-50' ?> font-bold text-sm py-2.5 px-6 rounded-xl shadow-lg no-underline"
-                                               href="/campanas/<?= $e($campana->slug) ?>">Conoce los detalles</a>
-                                        </div>
-                                    </div>
-                                </article>
-                            </li>
-                        <?php } ?>
-                    </ul>
-
-                    <div class="mt-6 flex flex-wrap items-center gap-4">
-                        <?php if (count($pestana['campanas']) > 1) { ?>
-                            <div class="comunicaciones-navegacion flex gap-2 items-center">
-                                <button type="button" x-on:click="anterior" aria-label="Comunicación anterior"
-                                        class="p-2 rounded-xl bg-primario-50 dark:bg-primario-800 text-primario-600 dark:text-primario-200 hover:bg-primario-100 cursor-pointer">
-                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                                </button>
-                                <button type="button" x-on:click="siguiente" aria-label="Comunicación siguiente"
-                                        class="p-2 rounded-xl bg-primario-50 dark:bg-primario-800 text-primario-600 dark:text-primario-200 hover:bg-primario-100 cursor-pointer">
-                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </button>
-                                <span class="text-xs texto-suave tabular-nums" x-text="posicion" aria-live="polite"></span>
-                            </div>
-                        <?php } ?>
-
-                        <a class="text-sm font-semibold text-primario-600 hover:text-primario-700 dark:text-primario-400 hover:underline inline-flex items-center"
-                           href="<?= $e($audiencia->ruta()) ?>">
-                            <?= $esPersonal ? 'Todo para trabajadores y contratistas' : 'Ver todas las campañas' ?>
-                            <svg class="ml-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </a>
-                    </div>
-                </div>
-            <?php } ?>
-        </div>
-    </section>
-<?php } ?>
 
 <?php
     /* Información estadística en la portada: los tres grupos que pidió el
@@ -781,44 +614,40 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
     </ul>
 </section>
 
+<?php /* --- Programas institucionales ---
+         Salen del menú, así que añadir un programa en Panel → Menús lo hace
+         aparecer aquí sin tocar la plantilla. */ ?>
+<?php if ($menuProgramas !== []) { ?>
+<section class="banda-programas mt-20 py-16" aria-labelledby="programas-titulo">
+    <div class="mx-auto max-w-7xl px-4">
+        <h2 class="pestana blanca text-xl sm:text-2xl" id="programas-titulo">Programas institucionales</h2>
+        <p class="mt-4 text-primario-100 max-w-2xl">Estrategias propias del hospital, reconocidas en la región.</p>
+        <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <?php foreach (array_slice($menuProgramas, 0, 8) as $programa) { ?>
+                <li>
+                    <a class="tarjeta-programa h-full" href="<?= $e($programa['url']) ?>">
+                        <span class="font-extrabold text-white"><?= $e($programa['etiqueta']) ?></span>
+                        <?php if (($programa['descripcion'] ?? '') !== '') { ?>
+                            <span class="text-sm text-primario-100"><?= $e($programa['descripcion']) ?></span>
+                        <?php } ?>
+                    </a>
+                </li>
+            <?php } ?>
+        </ul>
+    </div>
+</section>
+<?php } ?>
+
 <section class="mx-auto max-w-7xl px-4 py-16" aria-labelledby="bento-titulo">
-    <h2 id="bento-titulo" class="sr-only">Urgencias, noticias y sedes</h2>
+    <h2 id="bento-titulo" class="sr-only">Noticias, participación y eventos</h2>
 
     <div class="grid gap-8 lg:grid-cols-3">
-        <?php /* Columna izquierda: urgencias arriba y participación debajo.
-                 Las dos son llamadas a la acción del ciudadano —una para cuando
-                 pasa algo, otra para cuando quiere opinar—, así que viven juntas
-                 y dejan las dos columnas de la derecha para el contenido. */ ?>
+        <?php /* Columna izquierda: participación ciudadana.
+                 Aquí vivían también urgencias y la sede, pero desde el rediseño
+                 de noviembre de 2026 las dos abren la portada en la banda de
+                 servicio. Repetirlas aquí era decir tres veces lo mismo y
+                 empujaba hacia abajo lo que sí es distinto. */ ?>
         <div class="flex flex-col gap-8">
-        <?php /* Gradiente oficial de tres paradas: #1D5BA7 → #35BDE9 → #1D5BA7,
-                     o sea primario-700 → primario-400 → primario-700 en los tokens.
-                     Se escribe con las variables y no con el hexadecimal suelto
-                     porque la paleta vive en un solo sitio (app.css): cambiarla ahí
-                     tiene que cambiarla aquí. */ ?>
-            <article class="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primario-700 via-primario-400 to-primario-700 p-10 text-white shadow-2xl animar-escala-hover group">
-                <span class="mancha h-72 w-72 -right-10 -top-10 bg-[color:var(--color-marca-cian)] opacity-30 group-hover:opacity-40 transition-opacity duration-500 blur-3xl" aria-hidden="true"></span>
-                <div class="relative z-10 flex flex-col h-full justify-between">
-                    <div>
-                        <span class="inline-flex items-center justify-center p-3 bg-white/10 rounded-2xl backdrop-blur-md mb-6 shadow-inner">
-                            <svg class="h-10 w-10 text-[color:var(--color-marca-cian)]" viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 8v5M12 16.5v.01M12 3.5 21 20H3l9-16.5Z"/>
-                            </svg>
-                        </span>
-                        <h3 class="text-white text-3xl font-extrabold tracking-tight">Urgencias 24h</h3>
-                        <p class="mt-4 text-primario-100 text-lg leading-relaxed">
-                            Atención prioritaria y especializada sin esperas. Llámanos o acércate a nuestra sede principal.
-                        </p>
-                    </div>
-                    <div class="mt-10 flex flex-col sm:flex-row gap-4">
-                        <a class="boton bg-white text-primario-800 font-bold shadow-lg hover:shadow-xl hover:bg-primario-50 transition-all text-lg py-3 flex-1 justify-center"
-                           href="tel:<?= $e(preg_replace('/\D+/', '', $config->texto('contacto.emergencias'))) ?>">
-                            <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            <?= $e($config->texto('contacto.emergencias')) ?>
-                        </a>
-                        <a class="boton border-2 border-white/30 hover:border-white text-white no-underline transition-all bg-white/5 hover:bg-white/10 text-lg py-3 flex-1 justify-center" href="/urgencias">Ruta de acceso</a>
-                    </div>
-                </div>
-            </article>
 
             <?php if ($encuestas !== []) { ?>
                 <?php
@@ -1116,34 +945,153 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
                     </ul>
                 <?php } ?>
             </div>
-
-            <div class="panel-vidrio rounded-[2.5rem] p-8 shadow-lg hover:shadow-xl transition-shadow border-white/40 dark:border-primario-700/40">
-                <div class="flex items-center justify-between border-b border-primario-100 dark:border-primario-800 pb-4 mb-6">
-                    <h3 id="sedes-titulo" class="text-xl font-bold flex items-center gap-2">
-                        <svg class="h-6 w-6 text-primario-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <?= count($sedes) === 1 ? 'Nuestra sede' : 'Nuestras sedes' ?>
-                    </h3>
-                    <?php if (count($sedes) > 1) { ?>
-                        <a class="text-sm font-semibold text-primario-600 hover:text-primario-700 dark:text-primario-400 hover:underline inline-flex items-center" href="/sedes">Ver todas <svg class="ml-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-                    <?php } ?>
-                </div>
-                <?php if ($sedes === []) { ?>
-                    <p class="mt-4 text-sm texto-suave">
-                        Consulta nuestra dirección y horarios en <a href="/contacto" class="text-primario-600 font-semibold hover:underline">contacto</a>.
-                    </p>
-                <?php } else { ?>
-                    <ul class="flex flex-col gap-4" aria-labelledby="sedes-titulo">
-                        <?php foreach ($sedes as $sede) { ?>
-                            <li class="transform transition-transform hover:-translate-y-1">
-                                <?= $vistas->render('publico/parciales/tarjeta-sede', ['sede' => $sede]) ?>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                <?php } ?>
-            </div>
         </div>
     </div>
 </section>
+
+<?php
+    /* Carrusel de Campañas y Comunicación Interna: las dos pestañas del
+       diseño —«Salud y Prevención» para la comunidad y «Portal de Empleados»
+       para el personal— servidas desde la tabla `campanas`.
+
+       La versión anterior traía las cuatro piezas escritas a mano dentro de
+       un `x-data`, con una tarjeta que invitaba a «Ingresar a Intranet» —la
+       intranet que el hospital mandó retirar el 2026-09-14— y salía vacía,
+       porque Alpine no estaba cargado. Ahora el contenido lo publica
+       Comunicaciones en Panel → Campañas, eligiendo a qué audiencia le habla,
+       y Alpine solo alterna qué se ve. */
+    $pestanasCampanas = array_values(array_filter(
+        [
+            ['audiencia' => Audiencia::Comunidad, 'referencia' => 'Comunidad', 'campanas' => $campanasComunidad],
+            ['audiencia' => Audiencia::Personal, 'referencia' => 'Personal', 'campanas' => $campanasPersonal],
+        ],
+        static fn (array $pestana): bool => $pestana['campanas'] !== [],
+    ));
+?>
+
+<?php if ($pestanasCampanas !== []) { ?>
+    <section class="mx-auto max-w-7xl px-4 pb-16 animar-fade-in [animation-delay:0.6s]" aria-labelledby="campanas-titulo" x-data="comunicaciones"
+             data-rotacion-ms="<?= (int) $rotacionCampanasMs ?>">
+        <div class="tarjeta p-8 border-white/20 bg-[color:var(--superficie)]/80 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-primario-100/50 dark:border-primario-800 pb-5 mb-8 flex-wrap gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-primario-500">Comunicaciones E.S.E.</span>
+                    <h2 id="campanas-titulo" class="pestana text-xl sm:text-2xl mt-1">Campañas y comunicados</h2>
+                </div>
+
+                <?php /* Las pestañas solo tienen sentido si hay dos paneles que
+                         alternar; con uno solo serían un adorno que no hace nada. */ ?>
+                <?php if (count($pestanasCampanas) === 2) { ?>
+                    <div class="comunicaciones-pestanas flex bg-primario-50 dark:bg-primario-900/50 p-1 rounded-2xl border border-primario-100/20" role="tablist" aria-label="Audiencia de las comunicaciones">
+                        <button type="button" role="tab" id="pestana-comunidad" aria-controls="panel-comunidad"
+                                x-bind:aria-selected="seleccionComunidad" x-bind:class="claseComunidad" x-on:click="verComunidad"
+                                class="px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer bg-gradient-to-tr from-primario-700 to-primario-500 text-white shadow-md">
+                            <?= $e(Audiencia::Comunidad->pestana()) ?>
+                        </button>
+                        <button type="button" role="tab" id="pestana-personal" aria-controls="panel-personal"
+                                x-bind:aria-selected="seleccionPersonal" x-bind:class="clasePersonal" x-on:click="verPersonal"
+                                class="px-5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer text-primario-700 dark:text-primario-300 hover:bg-white/10">
+                            <?= $e(Audiencia::Personal->pestana()) ?>
+                        </button>
+                    </div>
+                <?php } ?>
+            </div>
+
+            <?php foreach ($pestanasCampanas as $indicePestana => $pestana) {
+                $audiencia = $pestana['audiencia'];
+                $esPersonal = $audiencia === Audiencia::Personal;
+                $clave = strtolower($pestana['referencia']);
+                ?>
+                <div id="panel-<?= $e($clave) ?>" class="comunicaciones-panel" data-activa="<?= $indicePestana === 0 ? 'true' : 'false' ?>"
+                     role="tabpanel" aria-labelledby="pestana-<?= $e($clave) ?>" x-ref="panel<?= $e($pestana['referencia']) ?>">
+                    <h3 class="comunicaciones-titulo-panel text-lg font-extrabold texto-titular mb-4"><?= $e($audiencia->pestana()) ?></h3>
+
+                    <?php /* -mx-8 saca la lista del padding de la tarjeta para que el
+                             héroe llegue a los bordes. El encabezado y las pestañas se
+                             quedan dentro, que es justo lo que no debe taparse. */ ?>
+                    <ul class="-mx-8" x-ref="lista<?= $e($pestana['referencia']) ?>">
+                        <?php foreach ($pestana['campanas'] as $indiceCampana => $campana) { ?>
+                            <li class="comunicaciones-diapositiva"
+                                data-activa="<?= $indiceCampana === 0 ? 'true' : 'false' ?>">
+                                <?php /* Héroe a sangre: la imagen ocupa todo el ancho de la
+                                         tarjeta y el texto de la campaña va ENCIMA. El velo
+                                         oscuro no es decoración: sobre una foto cualquiera
+                                         el texto blanco puede quedar en 1,5:1, y aquí va el
+                                         titular de una campaña de salud. Con el degradado
+                                         de abajo a arriba el texto se apoya siempre en la
+                                         zona más oscura. */ ?>
+                                <article class="relative isolate overflow-hidden rounded-[1.25rem] min-h-[420px] sm:min-h-[520px] flex items-end">
+                                    <?php if ($campana->imagenId !== null) { ?>
+                                        <img class="absolute inset-0 -z-10 h-full w-full object-cover" src="/archivos/<?= $campana->imagenId ?>"
+                                             alt="<?= $e($imagenes[$campana->imagenId]->textoAlt ?? '') ?>"
+                                             loading="lazy" width="1280" height="720">
+                                    <?php } else { ?>
+                                        <?php /* Sin foto no se mete un logo estirado: el degradado
+                                                 de marca sostiene el texto igual de bien. */ ?>
+                                        <span class="absolute inset-0 -z-10 <?= $esPersonal
+                                            ? 'bg-gradient-to-br from-primario-800 via-primario-900 to-primario-950'
+                                            : 'bg-gradient-to-br from-primario-700 via-primario-800 to-primario-900' ?>" aria-hidden="true"></span>
+                                    <?php } ?>
+
+                                    <span class="absolute inset-0 -z-10 bg-gradient-to-t from-primario-950/95 via-primario-950/70 to-primario-950/25" aria-hidden="true"></span>
+
+                                    <div class="relative w-full p-7 sm:p-9 space-y-3 max-w-3xl">
+                                        <?php if ($campana->poblacionObjetivo !== null && $campana->poblacionObjetivo !== '') { ?>
+                                            <span class="inline-block text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border <?= $esPersonal
+                                                ? 'bg-aviso-400/20 text-aviso-100 border-aviso-200/40'
+                                                : 'bg-[color:var(--color-marca-cian)]/20 text-white border-white/30' ?>">
+                                                <?= $e($campana->poblacionObjetivo) ?>
+                                            </span>
+                                        <?php } ?>
+
+                                        <h4 class="text-3xl sm:text-4xl font-extrabold leading-tight text-white drop-shadow-sm"><?= $e($campana->titulo) ?></h4>
+
+                                        <?php if ($campana->resumen !== null && $campana->resumen !== '') { ?>
+                                            <p class="text-base text-primario-100 leading-relaxed max-w-prose"><?= $e($campana->resumen) ?></p>
+                                        <?php } ?>
+
+                                        <?php if ($campana->fin !== null) { ?>
+                                            <p class="text-xs text-primario-200">Vigente hasta el <?= $e(Fechas::larga($campana->fin)) ?></p>
+                                        <?php } ?>
+
+                                        <div class="pt-2">
+                                            <a class="boton <?= $esPersonal
+                                                ? 'bg-aviso-100 text-aviso-900 border border-aviso-200 hover:bg-aviso-200'
+                                                : 'bg-white text-primario-800 hover:bg-primario-50' ?> font-bold text-sm py-2.5 px-6 rounded-xl shadow-lg no-underline"
+                                               href="/campanas/<?= $e($campana->slug) ?>">Conoce los detalles</a>
+                                        </div>
+                                    </div>
+                                </article>
+                            </li>
+                        <?php } ?>
+                    </ul>
+
+                    <div class="mt-6 flex flex-wrap items-center gap-4">
+                        <?php if (count($pestana['campanas']) > 1) { ?>
+                            <div class="comunicaciones-navegacion flex gap-2 items-center">
+                                <button type="button" x-on:click="anterior" aria-label="Comunicación anterior"
+                                        class="p-2 rounded-xl bg-primario-50 dark:bg-primario-800 text-primario-600 dark:text-primario-200 hover:bg-primario-100 cursor-pointer">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                </button>
+                                <button type="button" x-on:click="siguiente" aria-label="Comunicación siguiente"
+                                        class="p-2 rounded-xl bg-primario-50 dark:bg-primario-800 text-primario-600 dark:text-primario-200 hover:bg-primario-100 cursor-pointer">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
+                                <span class="text-xs texto-suave tabular-nums" x-text="posicion" aria-live="polite"></span>
+                            </div>
+                        <?php } ?>
+
+                        <a class="text-sm font-semibold text-primario-600 hover:text-primario-700 dark:text-primario-400 hover:underline inline-flex items-center"
+                           href="<?= $e($audiencia->ruta()) ?>">
+                            <?= $esPersonal ? 'Todo para trabajadores y contratistas' : 'Ver todas las campañas' ?>
+                            <svg class="ml-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+    </section>
+<?php } ?>
 
 <?php /* --- Nuestras instalaciones ---
          Mosaico con la fotografía que ya vive en la mediateca: las mismas

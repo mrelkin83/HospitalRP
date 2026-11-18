@@ -28,7 +28,7 @@ $accesosTalentoHumano = [
         </div>
     </div>
 
-    <h2 class="text-2xl font-extrabold tracking-tight texto-titular mb-5">Accesos del talento humano</h2>
+    <h2 class="pestana text-xl sm:text-2xl mb-5">Accesos del talento humano</h2>
     <ul class="grid gap-5 sm:grid-cols-2 mb-12">
         <?php foreach ($accesosTalentoHumano as [$nombre, $detalle, $url]) { ?>
             <li>
@@ -40,7 +40,7 @@ $accesosTalentoHumano = [
         <?php } ?>
     </ul>
 
-    <h2 class="text-2xl font-extrabold tracking-tight texto-titular mb-5">Comunicados al personal</h2>
+    <h2 class="pestana text-xl sm:text-2xl mb-5">Comunicados al personal</h2>
 
     <?php if ($campanas === []) { ?>
         <div class="tarjeta p-8 text-center">

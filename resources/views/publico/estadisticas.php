@@ -52,7 +52,7 @@ $paso = static fn (float $parte, float $total): int => $total <= 0.0
 
         <?php foreach ($grupos as $codigo => $grupo) { ?>
             <section class="mt-12 scroll-mt-24" id="<?= $e($codigo) ?>">
-                <h2 class="text-2xl font-extrabold texto-titular"><?= $e($grupo['titulo']) ?></h2>
+                <h2 class="pestana text-xl sm:text-2xl"><?= $e($grupo['titulo']) ?></h2>
 
                 <ul class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     <?php foreach ($grupo['indicadores'] as $indicador) {

@@ -37,7 +37,7 @@ $soloTelefono = preg_replace('/\D+/', '', $telefono);
     <!-- Secciones Bento de Triage y Educación -->
     <div class="grid gap-8 lg:grid-cols-3 mb-12">
         <div class="lg:col-span-2 panel-vidrio rounded-[2.5rem] p-8 border-white/20">
-            <h2 class="text-2xl font-extrabold tracking-tight texto-titular mb-6">¿Qué es una Urgencia Vital? (Triage I y II)</h2>
+            <h2 class="pestana text-xl sm:text-2xl mb-6">¿Qué es una Urgencia Vital? (Triage I y II)</h2>
             <div class="grid sm:grid-cols-2 gap-6 text-sm">
                 <div class="bg-error-100/10 dark:bg-error-950/15 border border-error-500/20 rounded-2xl p-5">
                     <h3 class="text-error-600 dark:text-error-400 font-extrabold text-base mb-2">Síntomas Críticos</h3>
@@ -66,7 +66,7 @@ $soloTelefono = preg_replace('/\D+/', '', $telefono);
 
         <div class="panel-vidrio rounded-[2.5rem] p-8 border-white/20 flex flex-col justify-between">
             <div>
-                <h2 class="text-2xl font-extrabold tracking-tight texto-titular mb-4">¿No es Urgente?</h2>
+                <h2 class="pestana text-xl sm:text-2xl mb-4">¿No es Urgente?</h2>
                 <p class="text-sm texto-suave leading-relaxed mb-4">
                     Si presentas dolores de cabeza leves, gripas comunes, programaciones de cirugías o controles rutinarios, por favor agenda una consulta externa.
                 </p>
@@ -81,7 +81,7 @@ $soloTelefono = preg_replace('/\D+/', '', $telefono);
     </div>
 
     <!-- Sedes de Urgencias -->
-    <h2 class="text-2xl font-extrabold tracking-tight text-primario-900 dark:text-white mb-6">Sedes con Urgencias 24 Horas</h2>
+    <h2 class="pestana text-xl sm:text-2xl mb-6">Sedes con Urgencias 24 Horas</h2>
     <?php if ($sedes === []) { ?>
         <p class="texto-suave bg-white dark:bg-primario-900 border border-primario-100 dark:border-primario-800 p-6 rounded-2xl">
             Pronto publicaremos el catálogo interactivo de sedes con servicio activo de urgencias.

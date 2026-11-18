@@ -133,7 +133,7 @@ $pbx = $config->texto('contacto.pbx');
     </div>
 
     <!-- Listado de Sedes -->
-    <h2 class="mt-12 text-2xl font-extrabold tracking-tight text-primario-900 dark:text-white"><?= count($sedes) === 1 ? 'Nuestra Sede' : 'Nuestras Sedes' ?></h2>
+    <h2 class="pestana text-xl sm:text-2xl mt-12"><?= count($sedes) === 1 ? 'Nuestra Sede' : 'Nuestras Sedes' ?></h2>
     <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <?php foreach ($sedes as $sede) { ?>
             <li class="transform transition duration-300 hover:-translate-y-2">

@@ -1620,6 +1620,99 @@ html:not([data-js]) .encuesta-paso {
     }
 }
 
+/* La proporción va en clase y no en `style=`: la CSP del sitio público
+   descarta los estilos en línea, y sin esto la foto saldría estirada.
+   `height: auto` es obligatorio, o el atributo height="" del <img> gana
+   sobre aspect-ratio. */
+.marco-foto-imagen {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.celda-galeria {
+    aspect-ratio: 4 / 3;
+}
+
+/* --- Trama de puntos junto a la fotografía institucional ---
+   La cita visual al referente de Valledupar. Decorativa: se esconde en
+   móvil, donde solo robaría espacio. */
+.marco-foto::before {
+    content: "";
+    position: absolute;
+    top: -1.5rem;
+    inset-inline-start: -1.5rem;
+    width: 11rem;
+    height: 11rem;
+    background-image: radial-gradient(var(--color-primario-400) 1.8px, transparent 1.8px);
+    background-size: 14px 14px;
+    opacity: 0.55;
+    z-index: -1;
+}
+
+@media (max-width: 1023px) {
+    .marco-foto::before {
+        display: none;
+    }
+}
+
+/* =====================================================================
+   Programas institucionales: banda azul
+   ===================================================================== */
+.banda-programas {
+    background: linear-gradient(135deg,
+        var(--color-primario-900) 0%,
+        var(--color-primario-700) 55%,
+        var(--color-primario-600) 100%);
+}
+
+/* Sobre la banda azul la pestaña se invierte: blanca con texto azul. */
+.pestana.blanca {
+    background: #fff;
+    color: var(--color-primario-700);
+}
+
+.tarjeta-programa {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.4rem;
+    border-radius: 1rem;
+    background: rgb(255 255 255 / 0.08);
+    border: 1px solid rgb(205 241 249 / 0.22);
+    text-decoration: none;
+}
+
+.tarjeta-programa:hover {
+    background: rgb(255 255 255 / 0.16);
+    border-color: var(--color-primario-400);
+}
+
+/* =====================================================================
+   Enlaces de Transparencia (Ley 1712)
+   ===================================================================== */
+.enlace-transparencia {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 2.75rem;
+    padding: 1rem 1.15rem;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 0.75rem;
+    color: var(--titular);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    height: 100%;
+}
+
+.enlace-transparencia:hover {
+    border-color: var(--color-primario-400);
+    color: var(--enlace);
+}
+
 /* =====================================================================
    Onda decorativa que cierra el héroe
    ===================================================================== */

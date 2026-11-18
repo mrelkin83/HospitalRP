@@ -175,6 +175,14 @@ final readonly class InicioController
                 'serviciosDestacados' => $this->servicios->conFotoParaLaPortada(
                     $this->config->entero('portada.servicios', 6, 3, 12),
                 ),
+                // Programas y Transparencia salen del MENÚ, no de una lista
+                // escrita aquí: son las mismas rutas que el hospital ya
+                // administra en Panel → Menús, así que añadir un programa lo
+                // hace aparecer también en la portada (CLAUDE.md §2.2). Se
+                // buscan por URL y no por rótulo, que la auditoría puede
+                // cambiar.
+                'menuProgramas' => $this->hijosDelMenu('/programas'),
+                'menuTransparencia' => $this->hijosDelMenu('/transparencia'),
                 'heroes' => $this->heroes->paraLaPortada(),
                 'rotacionHeroesMs' => $this->config->entero('portada.heroes_segundos', self::SEGUNDOS_POR_HEROE, 0, 120) * 1000,
                 'noticias' => $noticias,
@@ -204,5 +212,24 @@ final readonly class InicioController
             ]),
             esPortada: true,
         );
+    }
+    /**
+     * Los hijos de la raíz del menú principal que cuelga de $prefijo.
+     *
+     * Por URL y no por rótulo: los rótulos los cambia el hospital —y la
+     * Auditoría Visual V9 ya obligó a renombrar varios—, mientras que la ruta
+     * es lo que de verdad identifica la sección.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function hijosDelMenu(string $prefijo): array
+    {
+        foreach ($this->menus->itemsPorUbicacion('principal') as $raiz) {
+            if (str_starts_with((string) $raiz['url'], $prefijo)) {
+                return $raiz['hijos'] ?? [];
+            }
+        }
+
+        return [];
     }
 }

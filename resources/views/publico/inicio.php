@@ -438,6 +438,67 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
 </section>
 <?php } ?>
 
+<?php /* --- ¿Quiénes somos? ---
+         Fotografía con trama de puntos a un lado y los cuatro rasgos que
+         distinguen al hospital al otro. Es el bloque del referente de
+         Valledupar que la gerencia aprobó. */ ?>
+<section class="mx-auto max-w-7xl px-4 pt-20" aria-labelledby="nosotros-titulo">
+    <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
+        <div class="marco-foto relative">
+            <img class="marco-foto-imagen w-full rounded-3xl shadow-xl"
+                 src="/archivos/62" alt="Equipo asistencial del hospital" loading="lazy" width="900" height="675">
+        </div>
+        <div>
+            <h2 class="pestana text-xl sm:text-2xl" id="nosotros-titulo">¿Quiénes somos?</h2>
+            <p class="mt-5 texto-suave text-lg leading-relaxed">
+                La E.S.E. Hospital Rosario Pumarejo de López es la institución pública
+                de referencia del departamento del Cesar. Prestamos servicios de salud
+                con calidad, oportunidad y trato digno.
+            </p>
+            <ul class="mt-6 flex flex-col gap-4">
+                <?php
+                $rasgos = [
+                    ['Atención humanizada.', 'Programa institucional de humanización y espacio etnocultural para las comunidades del Cesar.'],
+                    ['Referente materno-infantil.', 'Banco de leche humana, Programa Madre Canguro e Institución Amiga de la Mujer y la Infancia.'],
+                    ['Hospital universitario.', 'Escenario de práctica para la formación de personal de la salud en la región.'],
+                    ['Rendición de cuentas.', 'Información presupuestal, contractual y estadística conforme a la Ley 1712 de 2014.'],
+                ];
+                foreach ($rasgos as [$titulo, $detalle]) { ?>
+                    <li class="grid grid-cols-[1.5rem_1fr] gap-3 items-start">
+                        <svg class="h-6 w-6 text-[color:var(--color-marca-verde)] mt-0.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span class="texto-suave"><strong class="texto-titular"><?= $e($titulo) ?></strong> <?= $e($detalle) ?></span>
+                    </li>
+                <?php } ?>
+            </ul>
+            <p class="mt-8"><a class="boton boton-primario" href="/el-hospital">Conoce el hospital</a></p>
+        </div>
+    </div>
+</section>
+
+<?php /* --- Programas institucionales ---
+         Salen del menú, así que añadir un programa en Panel → Menús lo hace
+         aparecer aquí sin tocar la plantilla. */ ?>
+<?php if ($menuProgramas !== []) { ?>
+<section class="banda-programas mt-20 py-16" aria-labelledby="programas-titulo">
+    <div class="mx-auto max-w-7xl px-4">
+        <h2 class="pestana blanca text-xl sm:text-2xl" id="programas-titulo">Programas institucionales</h2>
+        <p class="mt-4 text-primario-100 max-w-2xl">Estrategias propias del hospital, reconocidas en la región.</p>
+        <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <?php foreach (array_slice($menuProgramas, 0, 8) as $programa) { ?>
+                <li>
+                    <a class="tarjeta-programa h-full" href="<?= $e($programa['url']) ?>">
+                        <span class="font-extrabold text-white"><?= $e($programa['etiqueta']) ?></span>
+                        <?php if (($programa['descripcion'] ?? '') !== '') { ?>
+                            <span class="text-sm text-primario-100"><?= $e($programa['descripcion']) ?></span>
+                        <?php } ?>
+                    </a>
+                </li>
+            <?php } ?>
+        </ul>
+    </div>
+</section>
+<?php } ?>
+
 <?php /* El buscador va fuera de las diapositivas a propósito: si rotara con
          ellas, desaparecería en mitad de lo que alguien está escribiendo.
          Ya no monta sobre el héroe: ese solape lo hace ahora la banda. */ ?>
@@ -1083,3 +1144,54 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
         </div>
     </div>
 </section>
+
+<?php /* --- Nuestras instalaciones ---
+         Mosaico con la fotografía que ya vive en la mediateca: las mismas
+         imágenes del Portafolio 2026 que usan las fichas de servicio. Si el
+         hospital sube más, salen aquí sin tocar nada. */ ?>
+<?php if ($imagenes !== []) { ?>
+<section class="mx-auto max-w-7xl px-4 pt-20" aria-labelledby="galeria-titulo">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <h2 class="pestana text-xl sm:text-2xl" id="galeria-titulo">Nuestras instalaciones</h2>
+        <a class="font-bold no-underline hover:underline shrink-0" href="/galeria">Ver la galería completa →</a>
+    </div>
+    <ul class="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+        <?php foreach (array_slice($imagenes, 0, 8) as $imagen) { ?>
+            <li class="celda-galeria overflow-hidden rounded-xl">
+                <?php /* `$imagenes` son objetos Archivo, no arrays: el texto
+                         alternativo viene de la mediateca y, si falta, se usa
+                         uno genérico antes que dejar la imagen sin `alt`. */ ?>
+                <img class="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                     src="/archivos/<?= (int) $imagen->id ?>"
+                     alt="<?= $e($imagen->textoAlt ?? 'Instalaciones del hospital') ?>"
+                     loading="lazy" width="480" height="360">
+            </li>
+        <?php } ?>
+    </ul>
+</section>
+<?php } ?>
+
+<?php /* --- Transparencia y acceso a la información ---
+         Los ocho enlaces obligatorios de la Ley 1712 salen del menú, que es
+         donde la Auditoría del ITA los mantiene al día. La pestaña va en
+         verde: es el único acento distinto de la página y marca el bloque
+         normativo. */ ?>
+<?php if ($menuTransparencia !== []) { ?>
+<section class="mx-auto max-w-7xl px-4 py-20" aria-labelledby="transparencia-titulo">
+    <h2 class="pestana verde text-xl sm:text-2xl" id="transparencia-titulo">Transparencia y acceso a la información</h2>
+    <p class="mt-4 texto-suave max-w-3xl">
+        Información pública obligatoria conforme a la Ley 1712 de 2014 y a la
+        Resolución 1519 de 2020 del MinTIC.
+    </p>
+    <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <?php foreach ($menuTransparencia as $enlace) { ?>
+            <li>
+                <a class="enlace-transparencia" href="<?= $e($enlace['url']) ?>">
+                    <svg class="h-5 w-5 shrink-0 text-primario-500" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                    <?= $e($enlace['etiqueta']) ?>
+                </a>
+            </li>
+        <?php } ?>
+    </ul>
+</section>
+<?php } ?>

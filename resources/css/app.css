@@ -565,19 +565,19 @@
        Es una clase y no utilidades repetidas en nueve plantillas porque las
        nueve cabeceras son la misma pieza: cambiarla en un sitio debe cambiarlas
        todas. */
+    /* Rediseño 2026-11-17: el degradado se retira.
+       La banda de color con esquinas de 2,5rem era el mismo lenguaje de
+       «panel flotante» que la gerencia rechazó en la portada. La maqueta
+       aprobada pone el título plano, en azul, sobre el fondo de la página y
+       debajo de las migas. La clase se conserva —la usan nueve vistas— pero
+       ahora solo neutraliza las utilidades de caja que traen las plantillas,
+       para no tener que quitarlas una por una.
+
+       La neutralización NO puede vivir aquí: `shadow-2xl`, `border` y
+       `rounded-[2.5rem]` son utilidades, y la capa `utilities` va después de
+       `components`, así que le ganarían. Está más abajo, fuera de capa. */
     .cabecera-seccion {
-        background-image:
-            linear-gradient(
-                color-mix(in srgb, var(--color-primario-950) 20%, transparent),
-                color-mix(in srgb, var(--color-primario-950) 20%, transparent)
-            ),
-            linear-gradient(
-                135deg,
-                var(--color-primario-700) 0%,
-                var(--color-primario-600) 35%,
-                var(--color-primario-500) 70%,
-                var(--color-primario-400) 100%
-            );
+        background: none;
     }
 
     /* Enlaces del menú principal premium con subrayado deslizante brillante */
@@ -1572,6 +1572,63 @@ html:not([data-js]) .encuesta-paso {
     .banda-servicio .destacada {
         border-top-color: transparent;
     }
+}
+
+/* =====================================================================
+   Cabecera de página interior (rediseño 2026-11-17)
+   =====================================================================
+
+   Antes era una caja de degradado con esquinas de 2,5rem y el título en
+   blanco: el mismo lenguaje de «panel flotante» que la gerencia rechazó en
+   la portada. La maqueta aprobada pone el título plano, en azul, sobre el
+   fondo de la página, debajo de las migas.
+
+   Todo va fuera de @layer: las plantillas visten esta cabecera con
+   utilidades pensadas para fondo oscuro —`shadow-2xl`, `border`,
+   `rounded-[2.5rem]`, `p-10`, `text-white`— y la capa `utilities` gana a
+   `components`. Sin capa, estas reglas ganan a las utilidades sin recurrir
+   a !important. */
+.cabecera-seccion {
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 2.5rem;
+}
+
+/* La mancha de color decorativa no pinta nada sobre fondo claro. */
+.cabecera-seccion .mancha {
+    display: none;
+}
+
+/* El título deja el blanco —sobre el fondo claro sería invisible— y toma el
+   azul de acento, al tamaño de la maqueta. */
+.cabecera-seccion h1 {
+    color: var(--enlace);
+    font-size: clamp(1.9rem, 4.2vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 0.75rem;
+}
+
+/* La píldora de sección pasa de vidrio blanco a pastilla azul clara. */
+.cabecera-seccion > div > span:first-child,
+.cabecera-seccion span.text-xs {
+    background: var(--color-primario-50);
+    color: var(--color-primario-700);
+    border-color: var(--color-primario-200);
+}
+
+/* Y el resumen deja el primario-100, que sobre blanco no se lee. */
+.cabecera-seccion p {
+    color: var(--texto-suave);
+}
+
+[data-tema="oscuro"] .cabecera-seccion > div > span:first-child,
+[data-tema="oscuro"] .cabecera-seccion span.text-xs {
+    background: var(--color-primario-800);
+    color: var(--color-primario-100);
+    border-color: var(--color-primario-700);
 }
 
 /* =====================================================================

@@ -18,11 +18,12 @@
 
 // Subir la versión purga TODO lo cacheado en el `activate`. Se sube al
 // desplegar cambios que el visitante deba ver sí o sí.
+// v10 (2026-11-17): servicios con fotografía, pestañas de sección y onda.
 // v9 (2026-11-17): rediseño aprobado por la gerencia —cabecera azul, velo
 // del héroe, banda de servicio y orientador—. Se sube la versión para que
 // quien ya había visitado el sitio no siga sirviéndose la hoja de estilos y
 // los scripts anteriores desde su propia caché.
-var VERSION = 'hrpl-v9';
+var VERSION = 'hrpl-v10';
 var CASCARON = [
     '/desconectado.html',
     '/build/app.css',

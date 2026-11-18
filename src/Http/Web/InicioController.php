@@ -11,6 +11,7 @@ use App\Modules\Contenido\Entity\Audiencia;
 use App\Modules\Contenido\Repository\CampanaRepository;
 use App\Modules\Contenido\Repository\NoticiaRepository;
 use App\Modules\Directorio\Repository\SedeRepository;
+use App\Modules\Directorio\Repository\ServicioRepository;
 use App\Modules\Encuestas\Repository\EncuestaRepository;
 use App\Modules\Eventos\Repository\EventoRepository;
 use App\Modules\Indicadores\Repository\IndicadorRepository;
@@ -75,6 +76,7 @@ final readonly class InicioController
         private EventoRepository $eventos,
         private MenuRepository $menus,
         private HeroRepository $heroes,
+        private ServicioRepository $servicios,
         private CatalogoIconos $iconos,
     ) {
     }
@@ -167,6 +169,12 @@ final readonly class InicioController
                 // El héroe: una fila por diapositiva, con su imagen, su texto y
                 // sus botones, desde Panel → Héroe de la portada. Antes era un
                 // bloque fijo repartido en claves sueltas de Ajustes.
+                // Portafolio de Servicios 2026: la portada enseña los
+                // primeros con fotografía. Cuáles y en qué orden se decide en
+                // Panel → Servicios, no aquí.
+                'serviciosDestacados' => $this->servicios->conFotoParaLaPortada(
+                    $this->config->entero('portada.servicios', 6, 3, 12),
+                ),
                 'heroes' => $this->heroes->paraLaPortada(),
                 'rotacionHeroesMs' => $this->config->entero('portada.heroes_segundos', self::SEGUNDOS_POR_HEROE, 0, 120) * 1000,
                 'noticias' => $noticias,

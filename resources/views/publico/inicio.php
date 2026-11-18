@@ -346,6 +346,14 @@ $heroAviso2Texto = $config->texto('hero.aviso2_texto', 'Agendar en 2 minutos');
             </button>
         </div>
     <?php } ?>
+
+    <?php /* Onda que cierra el héroe contra el fondo de la página: el recurso
+             que la gerencia aprobó del referente de Valledupar. La pinta
+             `currentColor`, que aquí es el fondo, así que sigue al tema claro
+             u oscuro sin necesidad de una segunda regla. */ ?>
+    <svg class="onda-heroe" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M0,52 C180,92 340,16 560,36 C780,56 900,96 1120,72 C1280,54 1370,28 1440,34 L1440,90 L0,90 Z"></path>
+    </svg>
 </section>
 <?php } ?>
 
@@ -384,6 +392,51 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
         </li>
     </ul>
 </section>
+
+<?php /* --- Nuestros servicios (Portafolio de Servicios 2026) ---
+         La gerencia pidió que la portada enseñe los servicios con la
+         fotografía real, como en los dos sitios de referencia. No se siembra
+         nada: las quince fichas del Portafolio ya están en Panel → Servicios
+         desde el 2026-10-06, con su descripción y su imagen. Aquí salen las
+         primeras que tienen foto; el orden lo decide el panel. */ ?>
+<?php if ($serviciosDestacados !== []) { ?>
+<section class="mx-auto max-w-7xl px-4 pt-16" aria-labelledby="servicios-titulo">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+            <h2 class="pestana text-xl sm:text-2xl" id="servicios-titulo">Nuestros servicios</h2>
+            <p class="mt-4 max-w-2xl texto-suave">
+                Servicios habilitados ante la Secretaría de Salud Departamental.
+                Consulta los requisitos de acceso y los horarios de cada uno.
+            </p>
+        </div>
+        <a class="font-bold no-underline hover:underline shrink-0" href="/servicios">Ver el portafolio completo →</a>
+    </div>
+
+    <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <?php foreach ($serviciosDestacados as $servicio) { ?>
+            <li>
+                <a class="tarjeta-servicio h-full" href="/servicios/<?= $e($servicio->slug) ?>">
+                    <figure>
+                        <?php /* `alt` con el nombre del servicio: aquí la imagen
+                                 SÍ aporta —distingue una tarjeta de otra de un
+                                 vistazo— a diferencia del fondo del héroe. */ ?>
+                        <img src="/archivos/<?= (int) $servicio->imagenId ?>"
+                             alt="<?= $e($servicio->nombre) ?>" loading="lazy"
+                             width="800" height="500">
+                    </figure>
+                    <span class="flex flex-1 flex-col gap-2 p-5">
+                        <span class="font-extrabold text-lg texto-titular"><?= $e($servicio->nombre) ?></span>
+                        <?php if ($servicio->descripcion !== null && $servicio->descripcion !== '') { ?>
+                            <span class="text-sm texto-suave flex-1"><?= $e(mb_strimwidth(strip_tags($servicio->descripcion), 0, 140, '…')) ?></span>
+                        <?php } ?>
+                        <span class="font-bold text-sm mt-1 text-[color:var(--enlace)]">Conocer el servicio →</span>
+                    </span>
+                </a>
+            </li>
+        <?php } ?>
+    </ul>
+</section>
+<?php } ?>
 
 <?php /* El buscador va fuera de las diapositivas a propósito: si rotara con
          ellas, desaparecería en mitad de lo que alguien está escribiendo.
@@ -456,7 +509,7 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
             <div class="flex items-center justify-between border-b border-primario-100/50 dark:border-primario-800 pb-5 mb-8 flex-wrap gap-4">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-widest text-primario-500">Comunicaciones E.S.E.</span>
-                    <h2 id="campanas-titulo" class="text-2xl font-extrabold tracking-tight texto-titular mt-1">Campañas y comunicados</h2>
+                    <h2 id="campanas-titulo" class="pestana text-xl sm:text-2xl mt-1">Campañas y comunicados</h2>
                 </div>
 
                 <?php /* Las pestañas solo tienen sentido si hay dos paneles que
@@ -592,7 +645,7 @@ $telUrgenciasE164 = preg_replace('/\D+/', '', $telUrgencias);
         <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-primario-500">Datos abiertos</span>
-                <h2 id="indicadores-titulo" class="text-2xl font-extrabold tracking-tight texto-titular mt-1">Así va la entidad</h2>
+                <h2 id="indicadores-titulo" class="pestana text-xl sm:text-2xl mt-1">Así va la entidad</h2>
                 <p class="mt-2 text-sm texto-suave max-w-2xl">
                     Cifras publicadas por la E.S.E., cada una con el periodo al que corresponde y su fuente.
                 </p>

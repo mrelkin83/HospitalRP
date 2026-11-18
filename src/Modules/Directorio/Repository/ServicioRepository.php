@@ -30,6 +30,31 @@ final readonly class ServicioRepository
         return $this->conSedes('');
     }
 
+    /**
+     * Los servicios que la portada muestra con fotografía.
+     *
+     * Exige `imagen_id`: una tarjeta de servicio sin foto deja un hueco gris
+     * en medio de una retícula que vive de las imágenes, y queda peor que no
+     * estar. Los que no tienen fotografía siguen apareciendo en el portafolio
+     * completo, que es una lista y no una retícula.
+     *
+     * El orden es el de Panel → Servicios, así que el hospital decide cuáles
+     * salen primero sin tocar código.
+     *
+     * @return list<Servicio>
+     */
+    public function conFotoParaLaPortada(int $limite = 6): array
+    {
+        // El recorte va en PHP y no en la consulta: conSedes() pega la
+        // condición ANTES del ORDER BY, así que un LIMIT ahí sería un error
+        // de sintaxis. Son quince filas como mucho; cortar aquí no cuesta.
+        return array_slice(
+            $this->conSedes('WHERE activo = 1 AND imagen_id IS NOT NULL'),
+            0,
+            max(1, min(12, $limite)),
+        );
+    }
+
     public function publicoPorSlug(string $slug): ?Servicio
     {
         $fila = $this->conexion->fetchAssociative(

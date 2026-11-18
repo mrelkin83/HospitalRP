@@ -216,19 +216,23 @@ a { color: var(--acento); text-decoration-thickness: 1px; text-underline-offset:
     z-index: 50;
     box-shadow: 0 6px 20px -12px rgb(10 27 58 / .9);
 }
-/* Dos filas: marca + acciones arriba, menú abajo.
-   Medido: en una sola fila el contenido pide 1303 px y la retícula del sitio
-   solo ofrece 1136, así que o se encogía la tipografía por debajo de lo
-   legible o se sacaba el menú de esa fila. Con su propia fila el menú
-   dispone de los 1136 px completos y le sobran 400. */
+/* Logotipo a la IZQUIERDA y el menú a su lado (gerencia, 2026-11-17).
+   El menú no cabe en una línea junto al logotipo —los rótulos completos que
+   exige la Res. 1519 piden más ancho del que queda—, así que envuelve en dos
+   líneas dentro de su columna. Es eso o encoger la letra hasta lo ilegible,
+   o mandar el logotipo arriba, que es justo lo que se rechazó. */
 .cabecera .contenedor {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: .75rem 1.25rem;
-    padding-block: .65rem .35rem;
+    gap: .5rem 1.25rem;
+    padding-block: .6rem;
 }
-.cabecera nav { order: 3; width: 100%; min-width: 0; }
+.cabecera nav {
+    /* Se queda con lo que sobra entre el logotipo y las acciones. */
+    flex: 1 1 22rem;
+    min-width: 0;
+}
 
 .marca {
     display: flex;
@@ -263,11 +267,9 @@ a { color: var(--acento); text-decoration-thickness: 1px; text-underline-offset:
 .marca .lema { font-size: .68rem; color: var(--azul-200); font-style: italic; }
 
 .menu {
-    /* -.5rem compensa el padding del primer enlace para que su texto quede
-       a plomo con el logotipo de la fila de arriba. */
-    margin-left: -.5rem;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: .15rem;
     list-style: none;
     padding: 0;

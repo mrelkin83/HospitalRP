@@ -1273,6 +1273,41 @@ html:not([data-js]) .encuesta-paso {
     box-shadow: 0 6px 20px -12px rgb(10 27 58 / 0.9);
 }
 
+/* Aire. La cabecera iba tan apretada que las tres franjas —GOV.CO,
+   accesibilidad y menú— se leían como un bloque. */
+.cabecera-institucional > div > div {
+    padding-block: 0.9rem;
+    column-gap: 2rem;
+    row-gap: 0.9rem;
+}
+
+/* La placa blanca despega el logotipo del azul: sus trazos son del mismo
+   azul de la cabecera y sin ella se funde con el fondo. */
+.logo-placa {
+    background: #fff;
+    border-radius: 50%;
+    padding: 4px;
+}
+
+/* Línea superior de la marca: la naturaleza jurídica. En primario-200, que
+   mide 4,63:1 sobre el azul 700 (el cian de marca solo llegaba a 3,09:1 y la
+   Auditoría V9 lo descartó para texto). */
+.marca-eslabon {
+    font-size: 0.6rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-primario-200);
+    line-height: 1.4;
+}
+
+/* El menú respira: las dos líneas estaban pegadas una a otra. */
+@media (min-width: 1024px) {
+    .cabecera-institucional .menu-principal-lista {
+        row-gap: 0.3rem;
+    }
+}
+
 [data-tema="oscuro"] .cabecera-institucional {
     background: var(--color-primario-900);
 }

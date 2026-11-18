@@ -170,11 +170,27 @@ $enlaceNav = static fn (array $item): string => sprintf(
                          Sube de 48 a 56 px para que el detalle de la marca se
                          lea; el máximo del estándar 2022 es 80-90 px. En tema
                          oscuro, .logo-entidad le da un halo claro (app.css). */ ?>
-                <a href="/" class="no-underline flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-                    <img src="<?= $e($logoEntidad) ?>" alt="Logotipo <?= $e($nombreEntidad) ?>" class="logo-entidad h-14 w-auto object-contain" width="56" height="56">
+                <?php /* Marca a tres líneas, como la maqueta aprobada: la
+                         naturaleza jurídica arriba, el nombre en grande y el
+                         lema del logotipo oficial debajo. Antes eran dos
+                         líneas con el nombre repitiendo «E.S.E.» y un eslogan
+                         distinto del lema de la marca.
+
+                         Los tres textos salen de Ajustes con su valor por
+                         defecto: el hospital los cambia desde el panel sin
+                         tocar la plantilla (CLAUDE.md §2.2). `entidad.nombre`
+                         NO se toca —lo usan el <title>, el Schema.org y el
+                         pie—; la cabecera usa su propia clave. */ ?>
+                <a href="/" class="no-underline flex min-w-0 flex-1 items-center gap-3.5 lg:flex-none">
+                    <?php /* Sobre el azul de la cabecera el logotipo desnudo
+                             se funde con el fondo: sus trazos son del mismo
+                             azul. La placa blanca lo despega, y es como va en
+                             la maqueta aprobada. */ ?>
+                    <img src="<?= $e($logoEntidad) ?>" alt="Logotipo <?= $e($nombreEntidad) ?>" class="logo-placa h-14 w-14 shrink-0 object-contain" width="56" height="56">
                     <span class="min-w-0">
-                        <span class="block font-bold leading-tight texto-titular"><?= $e($nombreEntidad) ?></span>
-                        <span class="hidden text-sm texto-suave sm:block"><?= $e($config->texto('entidad.eslogan')) ?></span>
+                        <span class="block marca-eslabon"><?= $e($config->texto('marca.eslabon', 'Empresa Social del Estado')) ?></span>
+                        <span class="block font-bold leading-tight texto-titular"><?= $e($config->texto('marca.nombre_cabecera', 'Hospital Rosario Pumarejo de López')) ?></span>
+                        <span class="hidden text-sm italic texto-suave sm:block"><?= $e($config->texto('marca.lema', '¡Por ti, tu familia y la vida!')) ?></span>
                     </span>
                 </a>
 

@@ -18,6 +18,7 @@
 
 // Subir la versión purga TODO lo cacheado en el `activate`. Se sube al
 // desplegar cambios que el visitante deba ver sí o sí.
+// v13 (2026-11-17): marca a tres lineas con placa, hero con fotografia.
 // v12 (2026-11-17): portada reordenada segun la maqueta, sin duplicados.
 // v11 (2026-11-17): portada recompuesta segun la maqueta aprobada.
 // v10 (2026-11-17): servicios con fotografía, pestañas de sección y onda.
@@ -25,7 +26,7 @@
 // del héroe, banda de servicio y orientador—. Se sube la versión para que
 // quien ya había visitado el sitio no siga sirviéndose la hoja de estilos y
 // los scripts anteriores desde su propia caché.
-var VERSION = 'hrpl-v12';
+var VERSION = 'hrpl-v13';
 var CASCARON = [
     '/desconectado.html',
     '/build/app.css',
